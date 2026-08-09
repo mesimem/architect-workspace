@@ -1,0 +1,1828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solution Architect Field Guide — MedFlow AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cherry:#FB2832; --berry:#367895; --leaf:#5BA63C; --amber:#E8920C;
+  --text:#1A1A1A; --muted:#6B6B6B; --border:#E4E4E3; --surface:#FFFFFF; --surface-alt:#F8F8F7;
+  --font-body:'Roboto',system-ui,Arial,sans-serif; --font-mono:'Roboto Mono',ui-monospace,Consolas,monospace;
+  --header-h:64px; --side-w:290px; --radius:8px;
+  --shadow:0 2px 10px rgba(26,26,26,.08); --shadow-lg:0 8px 28px rgba(26,26,26,.16);
+}
+html[data-theme="dark"]{
+  --cherry:#FF5960; --berry:#5EA9C4; --leaf:#8AC759; --amber:#E8920C;
+  --text:#F2F2F1; --muted:#A6A6A4; --border:#2A2A2A; --surface:#0F0F0F; --surface-alt:#171717;
+  --shadow:0 2px 10px rgba(0,0,0,.5); --shadow-lg:0 8px 28px rgba(0,0,0,.6);
+}
+@media (prefers-color-scheme: dark){
+  html:not([data-theme="light"]){
+    --cherry:#FF5960; --berry:#5EA9C4; --leaf:#8AC759; --amber:#E8920C;
+    --text:#F2F2F1; --muted:#A6A6A4; --border:#2A2A2A; --surface:#0F0F0F; --surface-alt:#171717;
+    --shadow:0 2px 10px rgba(0,0,0,.5); --shadow-lg:0 8px 28px rgba(0,0,0,.6);
+  }
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{font-family:var(--font-body);color:var(--text);background:var(--surface-alt);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+h1,h2,h3,h4{font-family:var(--font-body);color:var(--berry);font-weight:700;line-height:1.25;margin:0 0 .5em;}
+h1{font-size:1.9rem;} h2{font-size:1.4rem;margin-top:2.2em;padding-top:.2em;border-top:1px solid var(--border);}
+h2:first-child{border-top:none;margin-top:0;}
+h3{font-size:1.12rem;color:var(--text);margin-top:1.6em;}
+h4{font-size:.98rem;color:var(--berry);margin-top:1.2em;text-transform:uppercase;letter-spacing:.04em;font-size:.8rem;}
+p{margin:.6em 0;}
+a{color:var(--berry);}
+code,.mono{font-family:var(--font-mono);}
+code{background:var(--surface-alt);border:1px solid var(--border);border-radius:4px;padding:.1em .4em;font-size:.9em;}
+ul,ol{padding-left:1.4em;}
+li{margin:.3em 0;}
+.muted{color:var(--muted);}
+.small{font-size:.85rem;}
+
+/* ---------- HEADER ---------- */
+header.topbar{
+  position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--surface);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;gap:18px;
+  padding:0 20px;z-index:200;box-shadow:var(--shadow);
+}
+header.topbar img.logo{height:36px;width:auto;display:block;}
+.brandblock{display:flex;flex-direction:column;line-height:1.15;margin-right:8px;white-space:nowrap;}
+.brandblock .t1{font-weight:700;font-size:.95rem;color:var(--text);}
+.brandblock .t2{font-size:.72rem;color:var(--muted);letter-spacing:.03em;}
+.search-wrap{flex:1;max-width:520px;position:relative;}
+.search-wrap input{
+  width:100%;padding:9px 14px 9px 38px;border-radius:20px;border:1px solid var(--border);
+  background:var(--surface-alt);color:var(--text);font-family:var(--font-body);font-size:.9rem;outline:none;
+}
+.search-wrap input:focus{border-color:var(--berry);}
+.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--muted);}
+#searchResultsBox{
+  position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);box-shadow:var(--shadow-lg);max-height:60vh;overflow:auto;display:none;z-index:250;
+}
+#searchResultsBox a{display:block;padding:10px 14px;border-bottom:1px solid var(--border);text-decoration:none;color:var(--text);font-size:.86rem;}
+#searchResultsBox a:last-child{border-bottom:none;}
+#searchResultsBox a:hover{background:var(--surface-alt);}
+#searchResultsBox .grp{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--berry);font-weight:700;}
+.spacer{flex:1;}
+.iconbtn{
+  background:none;border:1px solid var(--border);color:var(--text);width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;
+}
+.iconbtn:hover{border-color:var(--berry);}
+.iconbtn svg{width:18px;height:18px;stroke:var(--text);}
+
+/* ---------- LAYOUT ---------- */
+.shell{display:flex;padding-top:var(--header-h);min-height:100vh;}
+nav.sidebar{
+  position:fixed;top:var(--header-h);left:0;bottom:0;width:var(--side-w);overflow-y:auto;
+  background:var(--surface);border-right:1px solid var(--border);padding:18px 0 60px;z-index:100;
+}
+nav.sidebar .navgroup{margin-bottom:6px;}
+nav.sidebar .navgroup-title{
+  font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;
+  padding:14px 20px 6px;
+}
+nav.sidebar a{
+  display:flex;align-items:center;gap:8px;padding:8px 20px;text-decoration:none;color:var(--text);font-size:.87rem;
+  border-left:3px solid transparent;
+}
+nav.sidebar a .num{font-family:var(--font-mono);font-size:.72rem;color:var(--muted);flex:0 0 auto;}
+nav.sidebar a:hover{background:var(--surface-alt);color:var(--berry);}
+nav.sidebar a.active{border-left-color:var(--cherry);color:var(--berry);font-weight:700;background:var(--surface-alt);}
+nav.sidebar a.hidden-by-search{display:none;}
+
+main{margin-left:var(--side-w);flex:1;max-width:1180px;padding:36px 44px 120px;}
+section.page{scroll-margin-top:calc(var(--header-h) + 12px);}
+section.page + section.page{margin-top:64px;padding-top:44px;border-top:2px solid var(--border);}
+.flash{animation:flashbg 1.6s ease;}
+@keyframes flashbg{0%{background:rgba(251,40,50,.14);}100%{background:transparent;}}
+
+/* ---------- COMPONENTS ---------- */
+.kicker{font-family:var(--font-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--cherry);font-weight:700;margin-bottom:.4em;}
+.lede{font-size:1.05rem;color:var(--muted);max-width:820px;}
+
+.callout{border-radius:var(--radius);padding:14px 18px;margin:1.1em 0;border:1px solid var(--border);border-left-width:5px;background:var(--surface);}
+.callout.info{border-left-color:var(--berry);}
+.callout.success{border-left-color:var(--leaf);}
+.callout.warn{border-left-color:var(--amber);}
+.callout.key{border-left-color:var(--cherry);}
+.callout .cotitle{font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35em;}
+.callout.info .cotitle{color:var(--berry);}
+.callout.success .cotitle{color:var(--leaf);}
+.callout.warn .cotitle{color:var(--amber);}
+.callout.key .cotitle{color:var(--cherry);}
+
+.grid{display:grid;gap:16px;}
+.grid.cols2{grid-template-columns:repeat(2,1fr);}
+.grid.cols3{grid-template-columns:repeat(3,1fr);}
+.grid.cols4{grid-template-columns:repeat(4,1fr);}
+@media(max-width:1000px){.grid.cols4{grid-template-columns:repeat(2,1fr);}.grid.cols3{grid-template-columns:repeat(2,1fr);}.grid.cols2{grid-template-columns:1fr;}}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);}
+.card h4{margin-top:0;}
+.card.accent-cherry{border-top:3px solid var(--cherry);}
+.card.accent-berry{border-top:3px solid var(--berry);}
+.card.accent-leaf{border-top:3px solid var(--leaf);}
+
+table{width:100%;border-collapse:collapse;margin:1em 0;font-size:.88rem;background:var(--surface);}
+table.datatable th{background:var(--berry);color:#fff;text-align:left;padding:9px 12px;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.03em;}
+table.datatable td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top;}
+table.datatable tr:nth-child(even) td{background:var(--surface-alt);}
+table.datatable td.mono{font-family:var(--font-mono);font-size:.8rem;white-space:nowrap;}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;}
+.badge.must{background:rgba(251,40,50,.13);color:var(--cherry);}
+.badge.should{background:rgba(54,120,149,.13);color:var(--berry);}
+.badge.critical{background:rgba(251,40,50,.16);color:var(--cherry);}
+.badge.high{background:rgba(232,146,12,.16);color:var(--amber);}
+.badge.medium{background:rgba(54,120,149,.14);color:var(--berry);}
+.badge.low{background:rgba(91,166,60,.15);color:var(--leaf);}
+.badge.approved{background:rgba(91,166,60,.15);color:var(--leaf);}
+.badge.proposed{background:rgba(232,146,12,.16);color:var(--amber);}
+
+.doc-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 22px;}
+.btn{
+  display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:6px;font-size:.83rem;font-weight:700;
+  border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;text-decoration:none;font-family:var(--font-body);
+}
+.btn:hover{border-color:var(--berry);}
+.btn.primary{background:var(--cherry);border-color:var(--cherry);color:#fff;}
+.btn.primary:hover{opacity:.92;}
+.btn svg{width:15px;height:15px;stroke:currentColor;}
+
+.doc-control-strip{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:0;border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;margin:16px 0 26px;font-size:.78rem;background:var(--surface);
+}
+.doc-control-strip div{padding:10px 14px;border-right:1px solid var(--border);}
+.doc-control-strip div:last-child{border-right:none;}
+.doc-control-strip .lbl{display:block;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-size:.65rem;margin-bottom:3px;}
+.doc-control-strip .val{font-weight:700;color:var(--text);}
+@media(max-width:900px){.doc-control-strip{grid-template-columns:repeat(2,1fr);}.doc-control-strip div{border-bottom:1px solid var(--border);}}
+
+.signoff{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:2.4em;}
+.signoff .sobox{border:1px solid var(--border);border-radius:var(--radius);padding:16px;background:var(--surface);}
+.signoff .sobox .role{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--berry);font-weight:700;margin-bottom:10px;}
+.signoff .sobox .name{font-weight:700;}
+.signoff .sobox .title{color:var(--muted);font-size:.85rem;}
+.signoff .sobox .sigline{margin-top:22px;border-top:1px solid var(--border);padding-top:6px;font-size:.75rem;color:var(--muted);}
+@media(max-width:900px){.signoff{grid-template-columns:1fr;}}
+
+.adr{border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;margin:1.4em 0;background:var(--surface);}
+.adr .adrhead{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px;}
+.adr .adrhead h3{margin:0;}
+.adr h4{margin-top:1.1em;margin-bottom:.3em;}
+
+.kpirow{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin:1.2em 0;}
+@media(max-width:1100px){.kpirow{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:600px){.kpirow{grid-template-columns:repeat(2,1fr);}}
+.kpitile{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--berry);border-radius:var(--radius);padding:12px 14px;text-align:left;}
+.kpitile .kv{font-family:var(--font-mono);font-weight:700;font-size:1.35rem;color:var(--cherry);}
+.kpitile .kl{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-top:2px;}
+
+.svgwrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;overflow-x:auto;margin:1.2em 0;}
+.svgwrap svg{display:block;margin:0 auto;min-width:640px;}
+.svg-caption{text-align:center;font-size:.78rem;color:var(--muted);margin-top:8px;}
+.diagram-legend{display:flex;gap:18px;flex-wrap:wrap;font-size:.76rem;color:var(--muted);margin-top:10px;justify-content:center;}
+.diagram-legend span{display:inline-flex;align-items:center;gap:6px;}
+.diagram-legend i{width:12px;height:12px;border-radius:2px;display:inline-block;}
+
+footer.pagefoot{margin-left:var(--side-w);padding:26px 44px 60px;color:var(--muted);font-size:.78rem;border-top:1px solid var(--border);}
+
+/* ---------- ASK ASSISTANT ---------- */
+#askFab{
+  position:fixed;right:24px;bottom:24px;z-index:300;background:var(--cherry);color:#fff;border:none;
+  border-radius:28px;padding:13px 20px 13px 16px;display:flex;align-items:center;gap:9px;font-family:var(--font-body);
+  font-weight:700;font-size:.88rem;cursor:pointer;box-shadow:var(--shadow-lg);
+}
+#askFab svg{width:19px;height:19px;stroke:#fff;}
+#askPanel{
+  position:fixed;right:24px;bottom:88px;width:380px;max-width:92vw;height:520px;max-height:72vh;background:var(--surface);
+  border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);z-index:300;display:none;
+  flex-direction:column;overflow:hidden;
+}
+#askPanel.open{display:flex;}
+#askPanel .askhead{background:var(--berry);color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;}
+#askPanel .askhead .t{font-weight:700;font-size:.92rem;}
+#askPanel .askhead .s{font-size:.7rem;opacity:.85;}
+#askPanel .askclose{background:none;border:none;color:#fff;cursor:pointer;font-size:1.1rem;line-height:1;}
+#askLog{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;background:var(--surface-alt);}
+.askmsg{max-width:88%;padding:10px 13px;border-radius:10px;font-size:.86rem;line-height:1.5;}
+.askmsg.user{align-self:flex-end;background:var(--berry);color:#fff;border-bottom-right-radius:2px;}
+.askmsg.bot{align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:2px;}
+.askmsg.bot a{color:var(--cherry);font-weight:700;font-size:.8rem;display:inline-block;margin-top:6px;}
+#askForm{display:flex;gap:8px;padding:10px;border-top:1px solid var(--border);background:var(--surface);}
+#askInput{flex:1;padding:9px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface-alt);color:var(--text);font-family:var(--font-body);font-size:.85rem;outline:none;}
+#askInput:focus{border-color:var(--berry);}
+#askSend{background:var(--cherry);color:#fff;border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;}
+#askSend svg{width:16px;height:16px;fill:#fff;}
+.ask-suggest{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 12px;background:var(--surface-alt);}
+.ask-suggest button{font-size:.72rem;padding:5px 10px;border-radius:14px;border:1px solid var(--border);background:var(--surface);color:var(--berry);cursor:pointer;font-family:var(--font-body);}
+
+@media print{
+  header.topbar,nav.sidebar,#askFab,#askPanel,.doc-toolbar,footer.pagefoot{display:none !important;}
+  main{margin-left:0;padding:0;}
+  body{background:#fff;}
+}
+@media(max-width:960px){
+  nav.sidebar{transform:translateX(-100%);transition:transform .2s;}
+  nav.sidebar.open{transform:translateX(0);}
+  main,footer.pagefoot{margin-left:0;}
+  .brandblock .t2{display:none;}
+}
+
+/* ---------- DIAGRAM SVG CLASSES ---------- */
+.c4-box{fill:var(--surface);stroke:var(--berry);stroke-width:2;}
+.c4-box.person{fill:var(--surface-alt);stroke:var(--muted);}
+.c4-box.focus{stroke:var(--cherry);stroke-width:2.5;fill:rgba(251,40,50,.05);}
+.c4-box.external{fill:var(--surface-alt);stroke:var(--muted);}
+.c4-boundary{fill:none;stroke:var(--berry);stroke-width:1.5;stroke-dasharray:7 4;}
+.c4-title{font-family:'Roboto',sans-serif;font-weight:700;font-size:13px;fill:var(--text);}
+.c4-type{font-family:'Roboto Mono',monospace;font-size:9.5px;fill:var(--muted);}
+.c4-desc{font-family:'Roboto',sans-serif;font-size:10px;fill:var(--muted);}
+.c4-line{stroke:var(--muted);stroke-width:1.5;fill:none;}
+.c4-line.hl{stroke:var(--berry);stroke-width:1.8;}
+.c4-label{font-family:'Roboto',sans-serif;font-size:9.5px;fill:var(--berry);font-weight:500;}
+.c4-boundlabel{font-family:'Roboto Mono',monospace;font-size:10px;fill:var(--berry);font-weight:700;}
+.seq-life{stroke:var(--border);stroke-width:1.5;stroke-dasharray:4 3;}
+.seq-head{fill:var(--surface);stroke:var(--berry);stroke-width:1.5;}
+.seq-msg{stroke:var(--text);stroke-width:1.5;fill:none;}
+.seq-msg.async{stroke-dasharray:5 3;}
+.seq-msg.self{stroke:var(--cherry);}
+.seq-text{font-family:'Roboto',sans-serif;font-size:10px;fill:var(--text);}
+.seq-note{fill:rgba(232,146,12,.12);stroke:var(--amber);stroke-width:1;}
+.seq-notetext{font-family:'Roboto',sans-serif;font-size:9.5px;fill:var(--text);}
+.erd-box{fill:var(--surface);stroke:var(--berry);stroke-width:1.5;}
+.erd-head{fill:var(--berry);}
+.erd-headtext{fill:#fff;font-weight:700;font-size:11.5px;font-family:'Roboto',sans-serif;}
+.erd-attr{font-family:'Roboto Mono',monospace;font-size:10px;fill:var(--text);}
+.erd-line{stroke:var(--muted);stroke-width:1.3;fill:none;}
+.dfw-zone{fill:rgba(54,120,149,.05);stroke:var(--berry);stroke-dasharray:6 4;stroke-width:1.3;}
+.dfw-zone.ext{fill:rgba(107,107,107,.05);stroke:var(--muted);}
+.chart-axis{stroke:var(--border);stroke-width:1;}
+.chart-bar{fill:var(--berry);}
+.chart-bar.winner{fill:var(--cherry);}
+.chart-label{font-family:'Roboto',sans-serif;font-size:11px;fill:var(--text);}
+.chart-value{font-family:'Roboto Mono',monospace;font-size:11px;font-weight:700;fill:var(--text);}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="iconbtn" id="navToggle" title="Toggle navigation" aria-label="Toggle navigation"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  <img class="logo" src="data:image/png;base64,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" alt="Colaberry">
+  <div class="brandblock"><span class="t1">Colaberry</span><span class="t2">Enterprise AI Leadership Accelerator</span></div>
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+    <input id="globalSearch" type="text" placeholder="Search the field guide — try 'C4', 'ADR', 'triage latency', 'risk register'…" autocomplete="off">
+    <div id="searchResultsBox"></div>
+  </div>
+  <div class="spacer"></div>
+  <button class="iconbtn" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+  </button>
+</header>
+
+<div class="shell">
+<nav class="sidebar" id="sidebar">
+  <div class="navgroup">
+    <div class="navgroup-title">Start Here</div>
+    <a href="#home" data-kw="welcome overview how to use guide">Welcome &amp; How to Use</a>
+    <a href="#case-study" data-kw="meridian health network medflow ai initiative background approved requirements">Case Study: MedFlow AI</a>
+  </div>
+  <div class="navgroup">
+    <div class="navgroup-title">The Architect's 20%</div>
+    <a href="#why-sa" data-kw="why solution architecture exists probabilistic deterministic role">Why Solution Architecture Exists</a>
+    <a href="#quality-attributes" data-kw="quality attributes non functional requirements nfr performance availability">Quality Attributes (NFRs)</a>
+    <a href="#styles" data-kw="architecture styles monolith microservices event driven">Architecture Styles</a>
+    <a href="#c4-model-primer" data-kw="c4 model context container component code diagrams">The C4 Model</a>
+    <a href="#adr-primer" data-kw="architecture decision records adr template context decision consequences">Architecture Decision Records</a>
+    <a href="#tradeoff-primer" data-kw="trade off analysis weighted scoring decision matrix">Trade-off Analysis</a>
+    <a href="#patterns" data-kw="key patterns bff circuit breaker saga cqrs strangler fig">Key Patterns</a>
+    <a href="#fitness-functions" data-kw="fitness functions architecture governance automated checks">Fitness Functions</a>
+    <a href="#build-vs-buy" data-kw="build vs buy make or buy decision criteria">Build vs Buy</a>
+    <a href="#good-vs-bad" data-kw="good bad architecture characteristics anti patterns">Good vs Bad Architecture</a>
+    <a href="#kpis" data-kw="architecture kpis metrics deployment frequency mttr">Architecture KPIs</a>
+    <a href="#review-lens" data-kw="architect review lens checklist evaluate approve ai generated designs">The Review Lens</a>
+  </div>
+  <div class="navgroup">
+    <div class="navgroup-title">Deliverables — MedFlow AI</div>
+    <a href="#doc-sad"><span class="num">01</span> Solution Architecture Doc</a>
+    <a href="#doc-c4"><span class="num">02</span> C4 Diagrams</a>
+    <a href="#doc-adr"><span class="num">03</span> Architecture Decision Records</a>
+    <a href="#doc-nfr"><span class="num">04</span> NFR Specification</a>
+    <a href="#doc-tradeoff"><span class="num">05</span> Tech Trade-off Matrix</a>
+    <a href="#doc-sequence"><span class="num">06</span> Sequence &amp; Data-Flow</a>
+    <a href="#doc-risk"><span class="num">07</span> Architecture Risk Register</a>
+    <a href="#doc-onepage"><span class="num">08</span> One-Page Sign-off Package</a>
+  </div>
+</nav>
+
+<main id="mainContent">
+
+<!-- =================== HOME =================== -->
+<section class="page" id="home" data-kw="welcome introduction field guide purpose">
+  <div class="kicker">Solution Architect Field Guide · Week 2 Deep Dive</div>
+  <h1>Directing, Evaluating &amp; Approving AI-Generated Technical Designs</h1>
+  <p class="lede">You will not spend your career hand-drawing every box on every diagram. You will spend it deciding whether the box an AI agent just drew is the right box — and whether the trade-off it quietly made on your behalf is one you're willing to sign your name to. This guide is the ~20% of solution architecture that makes that judgment possible.</p>
+
+  <div class="callout info">
+    <div class="cotitle">How this guide is organized</div>
+    <p>Two halves. The first half (<strong>The Architect's 20%</strong> in the left nav) teaches the concepts. The second half (<strong>Deliverables</strong>) applies every concept to one real, concrete initiative — <strong>MedFlow AI</strong> at a fictional regional hospital network, Meridian Health Network — so you see the discipline in use, not just in the abstract. Every deliverable is downloadable as a standalone, presentation-ready document, printable to PDF, and (where tabular) exportable to CSV.</p>
+  </div>
+
+  <div class="grid cols3">
+    <div class="card accent-berry"><h4>Search everything</h4><p class="small">The search box in the header indexes every section and every document. Try "latency," "ADR," or "risk."</p></div>
+    <div class="card accent-cherry"><h4>Ask the Guide</h4><p class="small">The red button in the bottom-right corner answers questions from this guide's own content — entirely offline, no external calls.</p></div>
+    <div class="card accent-leaf"><h4>Download anything</h4><p class="small">Every deliverable has its own Download HTML, Print / Save as PDF, and (where relevant) Download CSV buttons at the top of its section.</p></div>
+  </div>
+
+  <h2>What "the 20%" means here</h2>
+  <p>Solution architecture as a full discipline is enormous — distributed systems theory, every cloud vendor's service catalog, a decade of pattern literature. You do not need all of it to do your job. Your job is to <strong>direct</strong> an AI system toward a sound design, <strong>evaluate</strong> what it proposes, and <strong>approve or reject</strong> it with a defensible rationale. That requires exactly the following, covered in depth in this guide:</p>
+  <ol>
+    <li><strong>Quality attributes</strong> — because "does it work" is not the same question as "does it work at 3am during flu season under load."</li>
+    <li><strong>Architecture styles</strong> — so you can tell when an AI has over-engineered a simple problem or under-engineered a hard one.</li>
+    <li><strong>The C4 model</strong> — a shared visual vocabulary so a diagram means the same thing to you, your engineers, and your auditors.</li>
+    <li><strong>Architecture Decision Records</strong> — the paper trail that turns "the AI suggested it" into "here is why we chose it, and here is what we gave up."</li>
+    <li><strong>Trade-off analysis</strong> — because every architecture decision is a trade, never a free win, and your job is to make the cost visible.</li>
+    <li><strong>Patterns, fitness functions, and build-vs-buy</strong> — the recurring shapes and guardrails that let you evaluate a design quickly instead of from first principles every time.</li>
+  </ol>
+</section>
+
+<!-- =================== CASE STUDY =================== -->
+<section class="page" id="case-study" data-kw="meridian health network medflow ai patient intake triage hospital background requirements approved">
+  <div class="kicker">Case Study</div>
+  <h1>MedFlow AI — Meridian Health Network</h1>
+  <p class="lede">This is the running example for every deliverable in this guide. Its Business Requirements Document is treated as already reviewed and approved by Meridian's Clinical Operations Steering Committee — your job starts at the architecture, not the requirements gathering.</p>
+
+  <div class="kpirow">
+    <div class="kpitile"><div class="kv">12</div><div class="kl">Facilities (3 ED, 9 clinic)</div></div>
+    <div class="kpitile"><div class="kv">450K</div><div class="kl">Annual patient visits</div></div>
+    <div class="kpitile"><div class="kv">800</div><div class="kl">Peak concurrent sessions</div></div>
+    <div class="kpitile"><div class="kv">30%</div><div class="kl">Target wait-time reduction</div></div>
+    <div class="kpitile"><div class="kv">99.95%</div><div class="kl">Critical-path uptime target</div></div>
+    <div class="kpitile"><div class="kv">7 yr</div><div class="kl">Audit log retention</div></div>
+  </div>
+
+  <h2>The organization</h2>
+  <p><strong>Meridian Health Network</strong> operates 3 emergency departments and 9 urgent-care/primary-care clinics across a mid-sized metro region. It runs a commercial EHR platform, referred to in this guide as <strong>MeridianChart</strong>, integrated across all facilities via HL7v2 ADT feeds and a FHIR R4 API. Identity is federated through Okta; patient SMS/voice reminders already run on a licensed Twilio account. Infrastructure is mid-migration from an on-premise data center to Azure, under an existing Microsoft Enterprise Agreement.</p>
+
+  <h2>The initiative</h2>
+  <p><strong>MedFlow AI</strong> is a clinical decision-<em>support</em> platform (never decision-<em>making</em> — this distinction matters enormously and drives ADR-002 later in this guide) that:</p>
+  <ul>
+    <li>Lets patients complete structured symptom intake via a conversational web/mobile app before or upon arrival.</li>
+    <li>Produces a triage acuity <strong>recommendation</strong> — never an autonomous decision — for the triage nurse to review, confirm, or override.</li>
+    <li>Routes acknowledged cases to the correct care-team queue automatically, reducing manual handoff delay.</li>
+    <li>Writes the outcome back into MeridianChart via the existing HL7v2/FHIR integration layer.</li>
+  </ul>
+
+  <div class="callout key">
+    <div class="cotitle">Why this example is a good teaching case</div>
+    <p>It has everything a solution architect actually has to reason about in one place: hard real-time-ish latency targets, a regulated data class (PHI), a legacy system you don't get to rewrite, a build-vs-buy call on AI infrastructure, and a governance boundary (avoiding FDA SaMD reclassification) that directly shapes the technical design. It is not a toy CRUD app — and it is not so large that it can't be held in your head after 20 minutes of reading.</p>
+  </div>
+
+  <h2>Approved scope (assumed)</h2>
+  <table class="datatable">
+    <tr><th>In Scope — Phase 1 (GA)</th><th>Out of Scope — Deferred to Phase 2+</th></tr>
+    <tr><td>English + Spanish conversational intake</td><td>Additional languages (3 more planned)</td></tr>
+    <tr><td>Rules + ML hybrid triage acuity scoring (decision support only)</td><td>Autonomous triage decisioning (explicitly rejected — see ADR-002)</td></tr>
+    <tr><td>Care-team queue routing across all 12 facilities</td><td>Cross-facility capacity load-balancing / transfer recommendations</td></tr>
+    <tr><td>HL7v2 / FHIR write-back to MeridianChart</td><td>Bi-directional real-time chart sync beyond triage encounter</td></tr>
+    <tr><td>Okta SSO/MFA for all clinical users</td><td>Patient-facing biometric authentication</td></tr>
+  </table>
+</section>
+
+<!-- =================== WHY SA =================== -->
+<section class="page" id="why-sa" data-kw="why solution architecture exists purpose role of the architect">
+  <div class="kicker">The Architect's 20%</div>
+  <h1>Why Solution Architecture Exists</h1>
+  <p class="lede">Every system that works in a demo and fails in production failed for the same underlying reason: someone solved the functional problem and never named the non-functional one. Solution architecture is the discipline of naming it first.</p>
+
+  <p>A business requirement says <em>what</em> the system must do. It almost never says how fast, how available, how secure, how much it may cost to run, or what happens when a dependency fails. Left unstated, those properties don't disappear — they get decided by accident, usually at the worst possible moment, by whichever engineer (or AI agent) happened to write that piece of code. Solution architecture exists to make those decisions on purpose, in advance, in writing, so they can be reviewed before they become expensive to undo.</p>
+
+  <div class="grid cols2">
+    <div class="card accent-berry">
+      <h4>Without a solution architect</h4>
+      <ul>
+        <li>Non-functional requirements are discovered in production incidents, not design reviews.</li>
+        <li>Every service picks its own patterns; the system has no coherent shape.</li>
+        <li>"Why did we build it this way?" has no answer six months later.</li>
+        <li>AI-generated code ships fast and wrong at the same rate it ships fast and right.</li>
+      </ul>
+    </div>
+    <div class="card accent-leaf">
+      <h4>With a solution architect</h4>
+      <ul>
+        <li>Quality attributes are specified with measurable targets before a line of code is written.</li>
+        <li>Every significant decision has a written record of what was rejected, and why.</li>
+        <li>Trade-offs are visible and owned, not accidental and invisible.</li>
+        <li>AI proposals are evaluated against explicit criteria — not vibes.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Your specific job, stated plainly</h3>
+  <p>In an AI-accelerated delivery model, the AI agent (Claude Code or otherwise) can draft a Solution Architecture Document, generate C4 diagrams, propose ADRs, and write an NFR spec faster than any human. What it cannot do is decide, on your organization's behalf, which trade-off is acceptable and which one crosses a line — that requires context the AI doesn't have: your compliance posture, your team's operational maturity, your actual budget, your risk appetite. <strong>You direct it toward the right questions, you evaluate its answers against the criteria in this guide, and you are the name on the approval.</strong></p>
+
+  <div class="callout warn">
+    <div class="cotitle">A caution about AI-generated architecture</div>
+    <p>An AI system will produce a plausible-sounding architecture for almost any prompt, including ones with contradictory or impossible requirements. Plausibility is not correctness. The review lens later in this guide is specifically designed to catch the failure mode where a design "sounds right" but hasn't actually been checked against a measurable target.</p>
+  </div>
+</section>
+
+<!-- =================== QUALITY ATTRIBUTES =================== -->
+<section class="page" id="quality-attributes" data-kw="quality attributes non functional requirements nfr performance availability scalability security maintainability">
+  <div class="kicker">The Architect's 20%</div>
+  <h1>Quality Attributes (Non-Functional Requirements)</h1>
+  <p class="lede">A quality attribute is any property of the system that is not "what it does" — it's "how well it does it, under what conditions, and how you'd know if it stopped." An NFR without a number attached is an opinion, not a requirement.</p>
+
+  <div class="grid cols4">
+    <div class="card"><h4>Performance</h4><p class="small">Latency and throughput under specified load. Always stated as a percentile (p95, p99), never an average.</p></div>
+    <div class="card"><h4>Availability</h4><p class="small">Uptime as a percentage, with a stated measurement window and what counts as "down."</p></div>
+    <div class="card"><h4>Scalability</h4><p class="small">The load ceiling the system must sustain, and how gracefully it degrades past that ceiling.</p></div>
+    <div class="card"><h4>Security</h4><p class="small">Confidentiality, integrity, and access-control guarantees — and what regulatory regime enforces them.</p></div>
+    <div class="card"><h4>Reliability / DR</h4><p class="small">RPO (how much data you can afford to lose) and RTO (how long you can afford to be down).</p></div>
+    <div class="card"><h4>Maintainability</h4><p class="small">How cheaply the system can be changed safely — deploy frequency, change failure rate, blast radius.</p></div>
+    <div class="card"><h4>Observability</h4><p class="small">Whether a failure can be diagnosed from logs/traces alone, without guessing.</p></div>
+    <div class="card"><h4>Usability / Accessibility</h4><p class="small">Standards-based, testable targets (e.g. WCAG 2.1 AA), not "should be intuitive."</p></div>
+  </div>
+
+  <h3>The rule that makes an NFR real</h3>
+  <div class="callout key">
+    <div class="cotitle">If you can't test it, it isn't a requirement yet</div>
+    <p>"The system should be fast" is not testable. "p95 intake response time under 2.0 seconds at 150 concurrent sessions, verified by load test" is. Every quality attribute in the MedFlow AI NFR Specification (Deliverable 04) follows this shape: <code>requirement → measurable target → verification method</code>. When you evaluate an AI-generated NFR spec, the first thing to check is whether every row survives that test.</p>
+  </div>
+
+  <h3>How quality attributes drive architecture, not the other way around</h3>
+  <p>The order of operations matters. Quality attributes are decided first, from the business requirements and regulatory context. The architecture style, the patterns, the technology choices — all of that is downstream, chosen <em>because</em> it satisfies the quality attributes, not chosen first and then rationalized. In MedFlow AI, the 99.95% availability target on the triage-critical path and the FDA SaMD compliance boundary are what rule out a simpler monolithic design (see <a href="#styles">Architecture Styles</a> and ADR-001) — not architectural taste.</p>
+</section>
+
+<!-- =================== STYLES =================== -->
+<section class="page" id="styles" data-kw="architecture styles monolith microservices event driven layered soa serverless">
+  <div class="kicker">The Architect's 20%</div>
+  <h1>Architecture Styles: Monolith vs. Services vs. Event-Driven</h1>
+  <p class="lede">There is no "best" architecture style — only the style that best fits the load shape, team topology, and failure-isolation needs of the specific problem. Your job when reviewing an AI proposal is to check whether the chosen style is justified by those three things, or just chosen by default.</p>
+
+  <table class="datatable">
+    <tr><th>Style</th><th>Best fit when…</th><th>Watch out for</th></tr>
+    <tr><td><strong>Monolith</strong> (single deployable)</td><td>Small team, low-to-moderate scale, requirements still shifting fast, deployment simplicity matters more than independent scaling.</td><td>Becomes a bottleneck once teams or load scale past what one deploy pipeline and one failure domain can handle.</td></tr>
+    <tr><td><strong>Service-Oriented / Microservices</strong></td><td>Independent scaling needs per component, independent team ownership, different reliability tiers for different capabilities (exactly MedFlow AI's shape — see NFR-AVAIL-01 vs NFR-AVAIL-02).</td><td>Operational overhead multiplies. A microservices architecture for a two-person team is over-engineering, not rigor.</td></tr>
+    <tr><td><strong>Event-Driven</strong></td><td>Producers and consumers should be decoupled in time, multiple downstream systems need the same fact (an intake completing, a score being produced), and you need replayability/auditability of what happened and when.</td><td>Eventual consistency has to be an explicit, reviewed decision — not a surprise discovered in production. Debugging a chain of async events is harder than a synchronous call stack.</td></tr>
+    <tr><td><strong>Serverless / FaaS</strong></td><td>Spiky, unpredictable load; you want to pay only for actual execution; startup latency is not on the critical path.</td><td>Cold-start latency, execution time limits, and vendor lock-in on triggers/bindings.</td></tr>
+  </table>
+
+  <h3>Why MedFlow AI is event-driven microservices, not a monolith</h3>
+  <p>Three quality attributes forced the decision, documented formally in <a href="#doc-adr">ADR-001</a>:</p>
+  <ul>
+    <li><strong>Differentiated availability tiers.</strong> The Nurse Triage Console and Triage Scoring Service need 99.95% uptime; the Patient Intake BFF only needs 99.9% (it has a manual paper-intake fallback). A monolith can't offer two different SLAs for two halves of itself.</li>
+    <li><strong>Multiple independent consumers of the same fact.</strong> When intake completes, the Triage Scoring Service, the Audit &amp; Compliance Service, and (eventually) analytics all need to know — independently, without one blocking another. That's the textbook case for an event bus.</li>
+    <li><strong>Independent deployability under a hybrid team.</strong> The HL7 interface engine is operated by an integration engineering team with different release cadence and change-control requirements than the AI/ML services. Coupling their deploys would violate NFR-MAINT-01.</li>
+  </ul>
+
+  <div class="callout warn">
+    <div class="cotitle">The over-engineering trap</div>
+    <p>Event-driven microservices is the <em>right</em> answer for MedFlow AI because three specific NFRs demand it. It would be the <em>wrong</em> answer for, say, a single internal reporting dashboard used by six people. If an AI-generated design reaches for microservices and you can't point to the specific quality attribute that requires it, that's a finding — send it back.</p>
+  </div>
+</section>
+
+<!-- =================== C4 PRIMER =================== -->
+<section class="page" id="c4-model-primer" data-kw="c4 model context container component code diagrams levels abstraction simon brown">
+  <div class="kicker">The Architect's 20%</div>
+  <h1>The C4 Model</h1>
+  <p class="lede">C4 (Context, Container, Component, Code) gives every stakeholder — from a CMIO to a junior engineer — the right level of detail for their question, without forcing everyone to read the same overloaded diagram.</p>
+
+  <table class="datatable">
+    <tr><th>Level</th><th>Answers</th><th>Audience</th><th>Used in this guide</th></tr>
+    <tr><td><strong>1. Context</strong></td><td>What is this system, and who/what does it talk to?</td><td>Executives, business stakeholders, new team members</td><td>Deliverable 02</td></tr>
+    <tr><td><strong>2. Container</strong></td><td>What are the deployable/runnable pieces, and how do they communicate?</td><td>Architects, tech leads, ops/SRE</td><td>Deliverable 02</td></tr>
+    <tr><td><strong>3. Component</strong></td><td>Inside one container, what are the major structural building blocks?</td><td>Engineers working inside that container</td><td>Deliverable 02</td></tr>
+    <tr><td>4. Code</td><td>Class/module-level detail.</td><td>The engineer writing the code — generally left to the IDE, not a hand-maintained diagram.</td><td>Out of scope for this guide — generated on demand, not maintained as a static artifact.</td></tr>
+  </table>
+
+  <div class="callout info">
+    <div class="cotitle">Reviewer's rule of thumb</div>
+    <p>If a Context diagram has more than ~10 boxes, it's actually a Container diagram wearing a Context diagram's label — push detail down a level. If a Component diagram spans multiple containers, it's not a Component diagram at all — it's a Container diagram missing a boundary. This single check catches a large share of AI-generated diagram sprawl.</p>
+  </div>
+
+  <p>See <a href="#doc-c4">Deliverable 02 — C4 Diagrams</a> for the full Context, Container, and Component views built for MedFlow AI.</p>
+</section>
+
+<!-- =================== ADR PRIMER =================== -->
+<section class="page" id="adr-primer" data-kw="architecture decision records adr template context decision consequences status">
+  <div class="kicker">The Architect's 20%</div>
+  <h1>Architecture Decision Records (ADRs)</h1>
+  <p class="lede">An ADR is a short document that captures one significant, hard-to-reverse decision: what was decided, what else was considered, why the alternatives were rejected, and what the decision costs. It is the single most important artifact for making an AI-assisted architecture process auditable.</p>
+
+  <h3>Standard ADR shape</h3>
+  <table class="datatable">
+    <tr><th>Field</th><th>Purpose</th></tr>
+    <tr><td class="mono">Status</td><td>Proposed / Accepted / Superseded — never silently changed without a new ADR.</td></tr>
+    <tr><td class="mono">Context</td><td>The forces in tension: the requirement, the constraint, the quality attribute that's driving a decision.</td></tr>
+    <tr><td class="mono">Decision</td><td>The one sentence that states what was chosen, stated as a commitment, not a suggestion.</td></tr>
+    <tr><td class="mono">Rejected Alternatives</td><td>Every option seriously considered, and the specific reason each one lost. This is the part AI-generated ADRs most often skip — insist on it.</td></tr>
+    <tr><td class="mono">Consequences</td><td>Both the benefit gained <em>and</em> the cost incurred. An ADR with no negative consequences listed has not been thought through.</td></tr>
+  </table>
+
+  <div class="callout key">
+    <div class="cotitle">Why ADRs matter more, not less, in an AI-assisted workflow</div>
+    <p>When a human architect makes a decision slowly, the reasoning tends to live in their head and in Slack threads. When an AI agent proposes a decision in seconds, there is no slow deliberation to fall back on — the ADR <em>is</em> the deliberation, written down where it can be reviewed before it's acted on. An AI-generated design with no ADRs is not a fast design; it's an unreviewable one.</p>
+  </div>
+
+  <p>See <a href="#doc-adr">Deliverable 03</a> for six full ADRs written for MedFlow AI, including the one that keeps this system out of FDA medical-device territory.</p>
+</section>
+
+<!-- =================== TRADEOFF PRIMER =================== -->
+<section class="page" id="tradeoff-primer" data-kw="trade off analysis weighted scoring criteria decision matrix">
+  <div class="kicker">The Architect's 20%</div>
+  <h1>Trade-off Analysis</h1>
+  <p class="lede">Every technology choice is a bundle of pros and cons scored against criteria that matter to <em>this</em> system, not against an abstract "best practice" ranking. A trade-off matrix makes that scoring explicit and repeatable.</p>
+
+  <h3>How to build one</h3>
+  <ol>
+    <li><strong>Name the decision precisely.</strong> Not "pick a database" — "pick the event backbone for cross-service routing events."</li>
+    <li><strong>List real candidates</strong> — options someone would actually consider, not straw men included to make the preferred option look good.</li>
+    <li><strong>Choose criteria and weight them</strong> before scoring any option, so the weighting reflects what matters to the system, not what favors your preferred answer in hindsight.</li>
+    <li><strong>Score each option against each criterion</strong> on a consistent scale (this guide uses 1–5), with a one-line justification per score.</li>
+    <li><strong>State the losers' cost, not just the winner's benefit.</strong> A trade-off matrix that only explains why the winner is good hasn't done the trade-off part.</li>
+  </ol>
+
+  <div class="callout warn">
+    <div class="cotitle">What to distrust in an AI-generated trade-off matrix</div>
+    <p>Watch for criteria weights that were clearly reverse-engineered to justify a pre-chosen winner (e.g., "team familiarity" weighted at 40% for a brand-new team), and for scores with no justification text. A trade-off matrix that produces the "obvious" answer with suspiciously round weights deserves a second look.</p>
+  </div>
+
+  <p>See <a href="#doc-tradeoff">Deliverable 05</a> for the full event-backbone trade-off matrix built for MedFlow AI, including the weighted-score chart.</p>
+</section>
+
+<!-- =================== PATTERNS =================== -->
+<section class="page" id="patterns" data-kw="key patterns backend for frontend bff circuit breaker saga cqrs strangler fig outbox event sourcing api gateway">
+  <div class="kicker">The Architect's 20%</div>
+  <h1>Key Patterns Worth Knowing by Name</h1>
+  <p class="lede">You don't need to memorize a pattern catalog. You need to recognize these when an AI proposes them, know what problem each one actually solves, and know its cost — because every pattern here is used, by name, in the MedFlow AI deliverables that follow.</p>
+
+  <div class="grid cols2">
+    <div class="card accent-berry">
+      <h4>Backend-for-Frontend (BFF)</h4>
+      <p class="small">A dedicated backend tailored to one specific client experience, instead of one general-purpose API serving every client. MedFlow AI uses two: the Patient Intake BFF and the Nurse Triage Console BFF — different users, different data shapes, different availability tiers.</p>
+    </div>
+    <div class="card accent-berry">
+      <h4>Circuit Breaker</h4>
+      <p class="small">Stop calling a dependency that's failing, fast, instead of letting every request hang until it times out. Used at the Symptom NLP Orchestrator's boundary with Azure OpenAI — see the failure-handling notes in Deliverable 01.</p>
+    </div>
+    <div class="card accent-berry">
+      <h4>Event Bus / Pub-Sub</h4>
+      <p class="small">Producers publish facts; consumers subscribe independently. Decouples the Triage Scoring Service from needing to know who cares about a score being produced. The spine of MedFlow AI's Container diagram.</p>
+    </div>
+    <div class="card accent-berry">
+      <h4>Idempotency Key</h4>
+      <p class="small">A unique key attached to an operation so replaying it (retry, duplicate event delivery) produces the same end state instead of a duplicate side effect. Applied to every HL7 write-back in MedFlow AI.</p>
+    </div>
+    <div class="card accent-berry">
+      <h4>Anti-Corruption Layer</h4>
+      <p class="small">A translation boundary that keeps a legacy system's data model from leaking into your new system's domain model. The HL7 Interface Engine plays this role between MedFlow AI and MeridianChart.</p>
+    </div>
+    <div class="card accent-berry">
+      <h4>Strangler Fig</h4>
+      <p class="small">Incrementally replace a legacy capability by routing traffic to the new implementation piece by piece, rather than a big-bang rewrite. Not used in Phase 1 of MedFlow AI (there's nothing legacy being replaced yet) but the pattern to reach for if MeridianChart's triage module is ever retired in favor of MedFlow AI directly.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =================== FITNESS FUNCTIONS =================== -->
+<section class="page" id="fitness-functions" data-kw="fitness functions architecture governance automated checks ci cd architecture tests">
+  <div class="kicker">The Architect's 20%</div>
+  <h1>Fitness Functions</h1>
+  <p class="lede">A fitness function is an automated, objective check that a specific architectural characteristic still holds — run continuously, in CI, the same way a unit test protects a function's behavior. It turns "the architecture should stay decoupled" from a hope into something that fails a build.</p>
+
+  <table class="datatable">
+    <tr><th>Architectural characteristic</th><th>Fitness function example (MedFlow AI)</th></tr>
+    <tr><td>Service boundary integrity (no illegal coupling)</td><td>Dependency-analysis check in CI that fails the build if the Triage Scoring Service imports anything from the Care Routing Service's internal package — cross-service calls must go through the event bus or a published API contract.</td></tr>
+    <tr><td>Latency budget (NFR-PERF-02)</td><td>Synthetic transaction in staging that fails the pipeline if p95 intake-to-score latency exceeds 3.0s under a fixed load profile.</td></tr>
+    <tr><td>PHI never reaches the LLM identifiable</td><td>Contract test on the Symptom NLP Orchestrator's outbound payload asserting zero matches against a PHI-pattern detector (name, MRN, DOB) before any call to Azure OpenAI is allowed to fire.</td></tr>
+    <tr><td>No autonomous clinical decisioning (ADR-002 boundary)</td><td>A static check over the Triage Scoring Service's API contract that fails the build if any response schema field is renamed from <code>*_recommendation</code> to anything implying a final decision (e.g. <code>diagnosis</code>, <code>final_acuity</code> without an <code>acknowledged_by</code> field).</td></tr>
+  </table>
+
+  <div class="callout info">
+    <div class="cotitle">Why this matters for AI-directed engineering specifically</div>
+    <p>Fitness functions are what let you approve an architecture once and then trust that future AI-generated changes won't silently violate it. Without them, every future change requires you to re-review the whole system by eye. With them, the CI pipeline does that re-review for you, every time.</p>
+  </div>
+</section>
+
+<!-- =================== BUILD VS BUY =================== -->
+<section class="page" id="build-vs-buy" data-kw="build vs buy make or buy decision criteria vendor saas licensing">
+  <div class="kicker">The Architect's 20%</div>
+  <h1>Build vs. Buy</h1>
+  <p class="lede">The default should be buy. Building is justified only when the capability is genuinely core to your competitive differentiation, or nothing on the market meets a hard constraint (regulatory, data-residency, or otherwise).</p>
+
+  <table class="datatable">
+    <tr><th>Ask</th><th>Leans Buy</th><th>Leans Build</th></tr>
+    <tr><td>Is this capability core to why customers choose us?</td><td>No — it's infrastructure everyone needs</td><td>Yes — it's the actual product</td></tr>
+    <tr><td>Does a vendor solution meet our compliance/data-residency constraints?</td><td>Yes</td><td>No usable vendor exists</td></tr>
+    <tr><td>What's the total cost including integration and ongoing ops?</td><td>Lower than build + maintain</td><td>Lower than license + integrate at our scale</td></tr>
+    <tr><td>How fast do we need it?</td><td>Now</td><td>We have runway to build it right</td></tr>
+  </table>
+
+  <h3>Applied: the MedFlow AI symptom-intake NLP layer</h3>
+  <p>Meridian already holds an enterprise Azure agreement including a contracted, HIPAA-eligible Azure OpenAI Service commitment with a no-data-retention/no-training clause. Building a proprietary clinical NLP model from scratch would take a specialized ML team Meridian doesn't have, months of clinical-data-scarce training, and ongoing model-safety validation — for a capability (natural-language symptom structuring) that is not Meridian's competitive differentiator; the differentiator is the workflow around it. <strong>Decision: buy the LLM capability, build a thin proprietary orchestration and safety layer around it.</strong> Full reasoning in <a href="#doc-adr">ADR-006</a>.</p>
+</section>
+
+<!-- =================== GOOD VS BAD =================== -->
+<section class="page" id="good-vs-bad" data-kw="good bad architecture anti patterns characteristics smells">
+  <div class="kicker">The Architect's 20%</div>
+  <h1>Good vs. Bad Architecture</h1>
+  <p class="lede">Neither extreme is about complexity. A good architecture matches its complexity to the problem; a bad one mismatches it — in either direction.</p>
+
+  <table class="datatable">
+    <tr><th>Good architecture</th><th>Bad architecture</th></tr>
+    <tr><td>Every quality attribute has a measurable target tied to a business reason.</td><td>NFRs are vague ("fast," "secure") or absent.</td></tr>
+    <tr><td>Complexity matches the actual load and team topology.</td><td>Microservices for a six-person internal tool, or a monolith for a 400K-request-per-second system.</td></tr>
+    <tr><td>Every significant decision has an ADR with rejected alternatives.</td><td>Decisions exist only in the code, undocumented and unreviewable.</td></tr>
+    <tr><td>Failure modes are designed for before they happen (timeouts, retries, circuit breakers, dead-letter handling).</td><td>Happy-path only; failure handling is "we'll add it later."</td></tr>
+    <tr><td>Trade-offs are visible: every choice states what it costs, not just what it gains.</td><td>Decisions are presented as pure wins with no downside acknowledged.</td></tr>
+    <tr><td>The system can be explained to a new engineer using the C4 model in under 30 minutes.</td><td>Understanding the system requires reading the entire codebase.</td></tr>
+  </table>
+</section>
+
+<!-- =================== KPIS =================== -->
+<section class="page" id="kpis" data-kw="architecture kpis metrics deployment frequency change failure rate mttr lead time">
+  <div class="kicker">The Architect's 20%</div>
+  <h1>Architecture KPIs</h1>
+  <p class="lede">You judge an architecture's health the same way you judge any system — with metrics, not opinions. These are the ones worth tracking on an ongoing basis, independent of any single project.</p>
+
+  <table class="datatable">
+    <tr><th>KPI</th><th>What it tells you</th><th>MedFlow AI target</th></tr>
+    <tr><td>Deployment frequency</td><td>How safely decoupled services are from each other</td><td>Independent per-service deploys, ≤15 min build-to-staging (NFR-MAINT-01)</td></tr>
+    <tr><td>Change failure rate</td><td>Whether "fast" is coming at the cost of "safe"</td><td>&lt;10% of production deploys require a rollback or hotfix</td></tr>
+    <tr><td>Mean time to recovery (MTTR)</td><td>Whether the system is observable and the team can act on what it observes</td><td>&lt;30 min for critical-path incidents (matches RTO, NFR-REL-02)</td></tr>
+    <tr><td>p95 / p99 latency vs. budget</td><td>Whether performance NFRs hold under real load, not just synthetic tests</td><td>Tracked continuously against NFR-PERF-01/02 targets</td></tr>
+    <tr><td>Escaped defects touching a quality attribute</td><td>Whether fitness functions are actually catching regressions</td><td>Zero PHI-boundary or availability-tier violations reaching production</td></tr>
+  </table>
+</section>
+
+<!-- =================== REVIEW LENS =================== -->
+<section class="page" id="review-lens" data-kw="architect review lens checklist evaluate approve ai generated designs">
+  <div class="kicker">The Architect's 20%</div>
+  <h1>The Architect's Review Lens</h1>
+  <p class="lede">This is the checklist to run over any AI-generated technical design before you approve it. Every deliverable in this guide was built to pass it.</p>
+
+  <div class="grid cols2">
+    <div class="card accent-cherry">
+      <h4>1. Are the quality attributes measurable?</h4>
+      <p class="small">Every NFR has a number and a verification method — not an adjective.</p>
+    </div>
+    <div class="card accent-cherry">
+      <h4>2. Is the architecture style justified by load and team shape?</h4>
+      <p class="small">Not chosen by default, not over-engineered, not under-engineered.</p>
+    </div>
+    <div class="card accent-cherry">
+      <h4>3. Does every significant decision have an ADR with rejected alternatives?</h4>
+      <p class="small">If the only option discussed is the one chosen, the decision wasn't actually evaluated.</p>
+    </div>
+    <div class="card accent-cherry">
+      <h4>4. Do trade-offs state costs, not just wins?</h4>
+      <p class="small">A trade-off matrix or ADR with zero downsides listed is incomplete, not clean.</p>
+    </div>
+    <div class="card accent-cherry">
+      <h4>5. Is the failure path designed, not assumed?</h4>
+      <p class="small">Timeouts, retries, circuit breakers, and a defined recovery path exist at every external boundary.</p>
+    </div>
+    <div class="card accent-cherry">
+      <h4>6. Does the design cross any governance boundary silently?</h4>
+      <p class="small">New vendor, compliance posture, or production infrastructure change hiding inside an "implementation detail."</p>
+    </div>
+    <div class="card accent-cherry">
+      <h4>7. Can a junior engineer understand it from the C4 diagrams alone?</h4>
+      <p class="small">If the diagrams need the author standing next to them to explain it, it's not documented — it's illustrated.</p>
+    </div>
+    <div class="card accent-cherry">
+      <h4>8. Is it no bigger than the problem requires?</h4>
+      <p class="small">Every additional service, queue, or abstraction should trace back to a specific quality attribute it satisfies.</p>
+    </div>
+  </div>
+
+  <div class="callout success">
+    <div class="cotitle">This is the lens applied to every deliverable that follows</div>
+    <p>The eight documents in the rest of this guide were authored to survive exactly this checklist — including stating rejected alternatives, listing costs alongside benefits, and designing failure paths explicitly. Use this checklist on your own future projects the same way.</p>
+  </div>
+</section>
+
+<!-- =================== DELIVERABLE 01: SAD =================== -->
+<section class="page" id="doc-sad" data-kw="solution architecture document sad introduction scope stakeholders goals constraints deployment integration security data architecture cross cutting concerns glossary">
+  <div class="kicker">Deliverable 01</div>
+  <h1>Solution Architecture Document</h1>
+  <p class="lede">The master reference document for MedFlow AI. Every other deliverable in this guide is a detailed expansion of one section here.</p>
+  <div class="doc-toolbar">
+    <button class="btn primary" onclick="downloadDocHTML('sad')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>Download HTML</button>
+    <button class="btn" onclick="printDoc('sad')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>Print / Save as PDF</button>
+  </div>
+
+  <div id="printable-sad" class="doc-printable">
+  <div class="doc-control-strip">
+    <div><span class="lbl">Document</span><span class="val">Solution Architecture Document</span></div>
+    <div><span class="lbl">Version</span><span class="val">1.0</span></div>
+    <div><span class="lbl">Owner</span><span class="val">Solution Architecture — MedFlow AI</span></div>
+    <div><span class="lbl">Status</span><span class="val"><span class="badge approved">Approved</span></span></div>
+    <div><span class="lbl">Date</span><span class="val">2026-08-07</span></div>
+  </div>
+
+  <h2>1. Introduction &amp; Purpose</h2>
+  <p>This document defines the target-state architecture for <strong>MedFlow AI</strong>, a clinical decision-support platform for patient intake, triage-acuity recommendation, and care-team routing at Meridian Health Network. It is the primary reference for engineering, security, clinical informatics, and audit stakeholders, and the artifact against which all subsequent design changes are evaluated. Business requirements are assumed approved by the Clinical Operations Steering Committee (2026-06-30) and are not re-litigated here.</p>
+
+  <h2>2. Scope</h2>
+  <p>In-scope for Phase 1 (General Availability): conversational patient intake (English/Spanish), hybrid rules+ML triage acuity <em>recommendation</em>, care-team queue routing, and HL7v2/FHIR write-back to MeridianChart across all 12 Meridian facilities. Explicitly out of scope: autonomous triage decisioning, cross-facility capacity load-balancing, and additional languages beyond the GA pair — see the Case Study section of this guide for the full scope table.</p>
+
+  <h2>3. Stakeholders</h2>
+  <table class="datatable">
+    <tr><th>Stakeholder</th><th>Concern</th></tr>
+    <tr><td>Chief Medical Information Officer (CMIO)</td><td>Clinical safety, decision-support boundary, regulatory posture</td></tr>
+    <tr><td>Triage Nurses (end users)</td><td>Console usability, trust in the acuity recommendation, workflow speed</td></tr>
+    <tr><td>Patients (end users)</td><td>Intake speed, language support, data privacy</td></tr>
+    <tr><td>Security &amp; Compliance</td><td>PHI handling, HIPAA/HITECH audit trail, third-party data flows</td></tr>
+    <tr><td>Integration Engineering</td><td>MeridianChart interface stability, HL7 schema management</td></tr>
+    <tr><td>Platform / SRE</td><td>Availability, scalability, incident response</td></tr>
+  </table>
+
+  <h2>4. Architectural Goals &amp; Constraints</h2>
+  <div class="grid cols2">
+    <div class="card accent-berry"><h4>Goals</h4><ul><li>Reduce average triage wait time by 30% within two flu seasons of GA.</li><li>Keep the triage-critical path at 99.95% availability.</li><li>Never let the system render an autonomous clinical decision.</li></ul></div>
+    <div class="card accent-cherry"><h4>Constraints</h4><ul><li>Must integrate with MeridianChart via existing HL7v2/FHIR interfaces — no direct database access.</li><li>Must run on the existing Azure Enterprise Agreement.</li><li>Must not trigger FDA Software-as-a-Medical-Device (SaMD) reclassification.</li></ul></div>
+  </div>
+
+  <h2>5. System Context</h2>
+  <p>MedFlow AI sits between three human actor groups (Patient, Triage Nurse, Care Coordinator) and four external systems (MeridianChart EHR, Azure OpenAI Service, Twilio, Okta). The full annotated Context diagram is in <a href="#doc-c4">Deliverable 02</a>.</p>
+
+  <h2>6. Architecture Overview &amp; Style Justification</h2>
+  <p>MedFlow AI is an <strong>event-driven microservices architecture</strong>, hosted on Azure. This style was chosen — not defaulted to — because three quality attributes specifically require it: differentiated availability tiers between the Patient Intake BFF and the triage-critical path, multiple independent consumers of the same domain events (scoring, audit, future analytics), and independent deployability across teams with different release cadences. Full reasoning and rejected alternatives are in <a href="#doc-adr">ADR-001</a>.</p>
+
+  <h2>7. Container-Level Design</h2>
+  <p>Ten containers make up the system: two BFFs (Patient Intake, Nurse Triage Console), three domain services (Symptom NLP Orchestrator, Triage Scoring Service, Care Routing Service), an event bus (Azure Event Hubs), a hybrid HL7 Interface Engine (Mirth Connect), an Audit &amp; Compliance Service, an operational Postgres database, and a Redis session cache. Full container diagram, responsibilities, and communication protocols are in <a href="#doc-c4">Deliverable 02</a>.</p>
+
+  <h2>8. Data Architecture</h2>
+  <p>Operational data (patient sessions, intake responses, triage scores, routing decisions, audit events) is persisted in Azure Database for PostgreSQL, partitioned by facility, with all PHI-bearing columns encrypted at rest (AES-256). Session-scoped intermediate state lives in Azure Cache for Redis with a 4-hour TTL. Patient identity is never sent to Azure OpenAI in identifiable form — see the de-identification boundary in <a href="#doc-sequence">Deliverable 06</a>. The full entity model is in the ERD in Deliverable 06.</p>
+
+  <h2>9. Integration Architecture</h2>
+  <p>All communication with MeridianChart is mediated through a Mirth Connect HL7 Interface Engine, deployed hybrid (on Meridian's private network segment, adjacent to the existing EHR interface tier), acting as an anti-corruption layer so MeridianChart's HL7v2 segment structure never leaks into MedFlow AI's domain model. Full reasoning in <a href="#doc-adr">ADR-003</a>. Inbound patient identity/demographics arrive via the existing ADT feed; triage outcomes are written back as HL7v2 ORU messages and, where supported, FHIR R4 Encounter/Observation resources.</p>
+
+  <h2>10. Security Architecture</h2>
+  <ul>
+    <li><strong>Authentication:</strong> Okta SSO + MFA for all clinical users; session timeout 15 minutes idle (NFR-SEC-03).</li>
+    <li><strong>Encryption:</strong> TLS 1.2+ on every hop, AES-256 at rest for all PHI-bearing stores (NFR-SEC-01/02).</li>
+    <li><strong>De-identification boundary:</strong> the Symptom NLP Orchestrator strips patient-identifying fields before any call to Azure OpenAI and re-associates the response using a session-scoped token map that never leaves Meridian's private network.</li>
+    <li><strong>Audit:</strong> every PHI read/write is logged with actor, timestamp, patient reference, and correlation ID, retained 7 years (NFR-COMP-01).</li>
+  </ul>
+
+  <h2>11. Deployment / Infrastructure View</h2>
+  <p>Azure hosts the Patient Intake BFF, Nurse Triage Console BFF, Symptom NLP Orchestrator, Triage Scoring Service, Care Routing Service, Event Hubs namespace, Audit &amp; Compliance Service, PostgreSQL, and Redis — all within an Azure landing zone under the existing Meridian Enterprise Agreement, with a paired-region DR posture (NFR-REL-01/02). The Mirth Connect HL7 Interface Engine remains hybrid, deployed on Meridian's private network adjacent to MeridianChart, connected to the Azure environment via a private ExpressRoute circuit rather than public internet. Full reasoning in <a href="#doc-adr">ADR-004</a>.</p>
+
+  <h2>12. Cross-Cutting Concerns</h2>
+  <h3>12.1 Observability</h3>
+  <p>Every request on the critical path (intake → scoring → routing) carries a correlation ID propagated through HTTP headers, event payloads, and log lines, satisfying NFR-OBS-01. Structured JSON logs ship to Azure Monitor; dashboards track the KPIs defined in the Architecture KPIs section of this guide.</p>
+  <h3>12.2 Failure Handling</h3>
+  <div class="callout warn">
+    <div class="cotitle">Designed failure path: Azure OpenAI unavailable</div>
+    <p>The Symptom NLP Orchestrator wraps its Azure OpenAI calls in a circuit breaker (trip after 3 consecutive failures or a 10s timeout). On trip, the Patient Intake BFF falls back to a structured multiple-choice intake form — no free-text NLP, but the patient can still complete intake and reach a triage nurse. An alert pages the on-call engineer; the breaker attempts a half-open retry every 60 seconds. Intake is never fully blocked by an LLM outage.</p>
+  </div>
+  <h3>12.3 Idempotency</h3>
+  <p>Every HL7 write-back to MeridianChart carries an idempotency key of <code>(session_id, event_type)</code>; the HL7 Interface Engine checks for a prior successful write before re-sending on retry, so a duplicate delivery from the event bus can never produce a duplicate chart entry.</p>
+
+  <h2>13. NFR Summary</h2>
+  <p>The full, measurable Non-Functional Requirements Specification is <a href="#doc-nfr">Deliverable 04</a>. Headline targets: p95 intake response &lt;2.0s, p95 triage score delivery &lt;3.0s, 99.95% critical-path availability, RPO ≤5 min / RTO ≤30 min.</p>
+
+  <h2>14. Risk Summary</h2>
+  <p>The full Architecture Risk Register is <a href="#doc-risk">Deliverable 07</a>. Top risk: automation bias — a triage nurse over-trusting the AI recommendation without independent clinical judgment (R-01, Critical severity).</p>
+
+  <h2>15. Glossary</h2>
+  <table class="datatable">
+    <tr><th>Term</th><th>Definition</th></tr>
+    <tr><td>ADT</td><td>Admit/Discharge/Transfer — the HL7v2 message feed carrying patient demographic and encounter events.</td></tr>
+    <tr><td>BFF</td><td>Backend-for-Frontend — a backend service tailored to one specific client experience.</td></tr>
+    <tr><td>ESI</td><td>Emergency Severity Index — the 5-level clinical triage acuity scale used as the basis for the Rules Engine.</td></tr>
+    <tr><td>PHI</td><td>Protected Health Information, as defined under HIPAA.</td></tr>
+    <tr><td>SaMD</td><td>Software as a Medical Device — an FDA classification MedFlow AI is architecturally designed to avoid triggering.</td></tr>
+  </table>
+
+  <div class="signoff">
+    <div class="sobox"><div class="role">Prepared By</div><div class="name">Jordan Blake</div><div class="title">Solution Architect, MedFlow AI Program</div><div class="sigline">Signature / Date</div></div>
+    <div class="sobox"><div class="role">Reviewed By</div><div class="name">Priya Nandakumar · Marcus Webb</div><div class="title">Engineering Lead, Platform · Security &amp; Compliance Lead</div><div class="sigline">Signature / Date</div></div>
+    <div class="sobox"><div class="role">Approved By</div><div class="name">Dr. Elena Ruiz · Sam Okafor</div><div class="title">Chief Medical Information Officer · VP Engineering</div><div class="sigline">Signature / Date</div></div>
+  </div>
+  </div>
+</section>
+
+<!-- =================== DELIVERABLE 02: C4 =================== -->
+<section class="page" id="doc-c4" data-kw="c4 diagrams context container component patient intake bff triage scoring service event bus mirth connect">
+  <div class="kicker">Deliverable 02</div>
+  <h1>C4 Diagrams — Context, Container &amp; Component</h1>
+  <p class="lede">The three-level view of MedFlow AI's structure, from "what is this system" down to "what's inside the scoring engine."</p>
+  <div class="doc-toolbar">
+    <button class="btn primary" onclick="downloadDocHTML('c4')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>Download HTML</button>
+    <button class="btn" onclick="printDoc('c4')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>Print / Save as PDF</button>
+  </div>
+
+  <div id="printable-c4" class="doc-printable">
+  <div class="doc-control-strip">
+    <div><span class="lbl">Document</span><span class="val">C4 Diagrams</span></div>
+    <div><span class="lbl">Version</span><span class="val">1.0</span></div>
+    <div><span class="lbl">Owner</span><span class="val">Solution Architecture — MedFlow AI</span></div>
+    <div><span class="lbl">Status</span><span class="val"><span class="badge approved">Approved</span></span></div>
+    <div><span class="lbl">Date</span><span class="val">2026-08-07</span></div>
+  </div>
+
+  <h2>Level 1 — System Context</h2>
+  <p>Who and what MedFlow AI talks to, with no internal structure shown.</p>
+  <div class="svgwrap">
+  <svg viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
+    <defs><marker id="arw1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--muted)"/></marker></defs>
+    <!-- persons -->
+    <g><rect class="c4-box person" x="40" y="30" width="220" height="80" rx="8"/><text class="c4-title" x="150" y="55" text-anchor="middle">Patient</text><text class="c4-type" x="150" y="70" text-anchor="middle">[Person]</text><text class="c4-desc" x="150" y="88" text-anchor="middle">Completes intake, receives triage outcome</text></g>
+    <g><rect class="c4-box person" x="390" y="30" width="220" height="80" rx="8"/><text class="c4-title" x="500" y="55" text-anchor="middle">Triage Nurse</text><text class="c4-type" x="500" y="70" text-anchor="middle">[Person]</text><text class="c4-desc" x="500" y="88" text-anchor="middle">Reviews &amp; acknowledges acuity recommendation</text></g>
+    <g><rect class="c4-box person" x="740" y="30" width="220" height="80" rx="8"/><text class="c4-title" x="850" y="55" text-anchor="middle">Care Coordinator</text><text class="c4-type" x="850" y="70" text-anchor="middle">[Person]</text><text class="c4-desc" x="850" y="88" text-anchor="middle">Manages care-team queues</text></g>
+    <!-- focus system -->
+    <rect class="c4-box focus" x="150" y="220" width="700" height="140" rx="10"/>
+    <text class="c4-title" x="500" y="255" text-anchor="middle" style="font-size:16px;fill:var(--cherry)">MedFlow AI Platform</text>
+    <text class="c4-type" x="500" y="273" text-anchor="middle">[Software System — Focus of this Guide]</text>
+    <text class="c4-desc" x="500" y="298" text-anchor="middle">Conversational intake, hybrid rules+ML triage acuity recommendation,</text>
+    <text class="c4-desc" x="500" y="314" text-anchor="middle">and care-team routing. Decision support only — never autonomous.</text>
+    <text class="c4-desc" x="500" y="336" text-anchor="middle" style="fill:var(--cherry);font-weight:700">See ADR-002: clinician always confirms the final acuity</text>
+    <!-- externals -->
+    <g><rect class="c4-box external" x="20" y="450" width="210" height="90" rx="8"/><text class="c4-title" x="125" y="478" text-anchor="middle">MeridianChart EHR</text><text class="c4-type" x="125" y="494" text-anchor="middle">[Existing System]</text><text class="c4-desc" x="125" y="512" text-anchor="middle">HL7v2 ADT feed + FHIR R4 API</text></g>
+    <g><rect class="c4-box external" x="270" y="450" width="210" height="90" rx="8"/><text class="c4-title" x="375" y="478" text-anchor="middle">Azure OpenAI Service</text><text class="c4-type" x="375" y="494" text-anchor="middle">[SaaS — Enterprise Agreement]</text><text class="c4-desc" x="375" y="512" text-anchor="middle">De-identified symptom structuring</text></g>
+    <g><rect class="c4-box external" x="520" y="450" width="210" height="90" rx="8"/><text class="c4-title" x="625" y="478" text-anchor="middle">Twilio</text><text class="c4-type" x="625" y="494" text-anchor="middle">[SaaS]</text><text class="c4-desc" x="625" y="512" text-anchor="middle">SMS / voice intake reminders</text></g>
+    <g><rect class="c4-box external" x="770" y="450" width="210" height="90" rx="8"/><text class="c4-title" x="875" y="478" text-anchor="middle">Okta</text><text class="c4-type" x="875" y="494" text-anchor="middle">[Identity Provider]</text><text class="c4-desc" x="875" y="512" text-anchor="middle">SSO + MFA for clinical users</text></g>
+    <!-- connectors persons -> system -->
+    <line class="c4-line" x1="150" y1="110" x2="280" y2="220" marker-end="url(#arw1)"/><text class="c4-label" x="150" y="165">completes intake</text>
+    <line class="c4-line" x1="500" y1="110" x2="500" y2="220" marker-end="url(#arw1)"/><text class="c4-label" x="510" y="165">reviews &amp; acknowledges</text>
+    <line class="c4-line" x1="850" y1="110" x2="720" y2="220" marker-end="url(#arw1)"/><text class="c4-label" x="740" y="165">confirms routing</text>
+    <!-- connectors system -> externals -->
+    <line class="c4-line" x1="300" y1="360" x2="150" y2="450" marker-end="url(#arw1)"/><text class="c4-label" x="120" y="410">HL7v2 / FHIR</text>
+    <line class="c4-line" x1="420" y1="360" x2="400" y2="450" marker-end="url(#arw1)"/><text class="c4-label" x="360" y="410">de-identified prompt</text>
+    <line class="c4-line" x1="560" y1="360" x2="620" y2="450" marker-end="url(#arw1)"/><text class="c4-label" x="600" y="410">SMS reminder</text>
+    <line class="c4-line" x1="680" y1="360" x2="850" y2="450" marker-end="url(#arw1)"/><text class="c4-label" x="800" y="410">SSO / MFA</text>
+  </svg>
+  </div>
+  <div class="diagram-legend"><span><i style="background:var(--muted)"></i>Person</span><span><i style="background:var(--cherry);opacity:.4"></i>MedFlow AI (focus system)</span><span><i style="background:var(--surface-alt);border:1px solid var(--muted)"></i>External System</span></div>
+  <div class="svg-caption">Figure 1 — System Context. Full-size in the downloaded document.</div>
+
+  <h2>Level 2 — Container</h2>
+  <p>The deployable pieces inside MedFlow AI and how they communicate. The Event Bus is the spine of the design — see <a href="#doc-adr">ADR-005</a>.</p>
+  <div class="svgwrap">
+  <svg viewBox="0 0 1120 780" xmlns="http://www.w3.org/2000/svg">
+    <defs><marker id="arw2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--muted)"/></marker></defs>
+    <rect class="c4-boundary" x="20" y="20" width="1080" height="720" rx="10"/>
+    <text class="c4-boundlabel" x="40" y="45">MedFlow AI Platform [Software System]</text>
+
+    <g><rect class="c4-box" x="50" y="70" width="260" height="90" rx="8"/><text class="c4-title" x="180" y="100" text-anchor="middle">Patient Intake BFF</text><text class="c4-type" x="180" y="117" text-anchor="middle">[Web/Mobile SPA · Node.js]</text><text class="c4-desc" x="180" y="138" text-anchor="middle">Conversational intake UI, session mgmt</text></g>
+    <g><rect class="c4-box" x="810" y="70" width="260" height="90" rx="8"/><text class="c4-title" x="940" y="100" text-anchor="middle">Nurse Triage Console BFF</text><text class="c4-type" x="940" y="117" text-anchor="middle">[Web SPA · Node.js]</text><text class="c4-desc" x="940" y="138" text-anchor="middle">Queue view, acuity ack UI, WCAG 2.1 AA</text></g>
+
+    <g><rect class="c4-box" x="50" y="220" width="260" height="90" rx="8"/><text class="c4-title" x="180" y="250" text-anchor="middle">Symptom NLP Orchestrator</text><text class="c4-type" x="180" y="267" text-anchor="middle">[Service · Node.js]</text><text class="c4-desc" x="180" y="288" text-anchor="middle">De-identify → Azure OpenAI → structure</text></g>
+    <g><rect class="c4-box focus" x="430" y="220" width="260" height="90" rx="8"/><text class="c4-title" x="560" y="250" text-anchor="middle" style="fill:var(--cherry)">Triage Scoring Service</text><text class="c4-type" x="560" y="267" text-anchor="middle">[Service · Node.js · Rules+ML]</text><text class="c4-desc" x="560" y="288" text-anchor="middle">See Component view below</text></g>
+    <g><rect class="c4-box" x="810" y="220" width="260" height="90" rx="8"/><text class="c4-title" x="940" y="250" text-anchor="middle">Care Routing Service</text><text class="c4-type" x="940" y="267" text-anchor="middle">[Service · Node.js]</text><text class="c4-desc" x="940" y="288" text-anchor="middle">Queue assignment, ack-gated write-back trigger</text></g>
+
+    <rect class="c4-box" x="50" y="400" width="1020" height="80" rx="8" style="fill:rgba(54,120,149,.06)"/>
+    <text class="c4-title" x="560" y="428" text-anchor="middle">Event Bus — Azure Event Hubs (Kafka-protocol)</text>
+    <text class="c4-desc" x="560" y="448" text-anchor="middle">Topics: intake.completed · triage.scored · routing.requested · audit.* — see ADR-005</text>
+
+    <g><rect class="c4-box" x="50" y="580" width="260" height="90" rx="8"/><text class="c4-title" x="180" y="608" text-anchor="middle">HL7 Interface Engine</text><text class="c4-type" x="180" y="625" text-anchor="middle">[Mirth Connect · Hybrid/On-Prem]</text><text class="c4-desc" x="180" y="646" text-anchor="middle">Anti-corruption layer to MeridianChart</text></g>
+    <g><rect class="c4-box" x="430" y="580" width="260" height="90" rx="8"/><text class="c4-title" x="560" y="608" text-anchor="middle">Audit &amp; Compliance Service</text><text class="c4-type" x="560" y="625" text-anchor="middle">[Service · Node.js]</text><text class="c4-desc" x="560" y="646" text-anchor="middle">Subscribes to all topics, 7-yr retention</text></g>
+    <g><rect class="c4-box" x="770" y="580" width="150" height="90" rx="8"/><text class="c4-title" x="845" y="608" text-anchor="middle" style="font-size:11.5px">Operational DB</text><text class="c4-type" x="845" y="625" text-anchor="middle">[Azure PostgreSQL]</text><text class="c4-desc" x="845" y="646" text-anchor="middle">AES-256 at rest</text></g>
+    <g><rect class="c4-box" x="940" y="580" width="130" height="90" rx="8"/><text class="c4-title" x="1005" y="608" text-anchor="middle" style="font-size:11.5px">Session Cache</text><text class="c4-type" x="1005" y="625" text-anchor="middle">[Azure Redis]</text><text class="c4-desc" x="1005" y="646" text-anchor="middle">4hr TTL</text></g>
+
+    <line class="c4-line" x1="180" y1="160" x2="180" y2="220" marker-end="url(#arw2)"/>
+    <line class="c4-line" x1="180" y1="310" x2="180" y2="400" marker-end="url(#arw2)"/><text class="c4-label" x="188" y="365">publish intake.completed</text>
+    <line class="c4-line" x1="560" y1="400" x2="560" y2="310" marker-end="url(#arw2)"/><text class="c4-label" x="380" y="385">consume intake.completed</text>
+    <line class="c4-line" x1="600" y1="310" x2="600" y2="400" marker-end="url(#arw2)"/><text class="c4-label" x="608" y="365">publish triage.scored</text>
+    <line class="c4-line" x1="940" y1="400" x2="940" y2="310" marker-end="url(#arw2)"/><text class="c4-label" x="760" y="385">consume triage.scored</text>
+    <line class="c4-line hl" x1="940" y1="160" x2="940" y2="220" marker-end="url(#arw2)"/><text class="c4-label" x="950" y="190">nurse ack / override</text>
+    <line class="c4-line" x1="900" y1="310" x2="900" y2="400" marker-end="url(#arw2)"/><text class="c4-label" x="700" y="500">publish routing.requested</text>
+    <line class="c4-line" x1="180" y1="480" x2="180" y2="580" marker-end="url(#arw2)"/><text class="c4-label" x="188" y="535">consumes audit.*</text>
+    <line class="c4-line" x1="560" y1="480" x2="560" y2="580" marker-end="url(#arw2)"/>
+    <line class="c4-line" x1="940" y1="480" x2="940" y2="580" marker-end="url(#arw2)" style="opacity:.6"/><text class="c4-label" x="700" y="560">routing decision</text>
+    <line class="c4-line" x1="845" y1="580" x2="700" y2="480" marker-end="url(#arw2)" style="opacity:.5"/>
+    <line class="c4-line" x1="1005" y1="580" x2="1000" y2="480" marker-end="url(#arw2)" style="opacity:.5"/>
+  </svg>
+  </div>
+  <div class="svg-caption">Figure 2 — Container view. Straight connectors carry the topic/protocol label nearest their midpoint.</div>
+
+  <h2>Level 3 — Component: Triage Scoring Service</h2>
+  <p>The internal structure of the one container with the most regulatory sensitivity — this is where the decision-support boundary from ADR-002 is enforced in code.</p>
+  <div class="svgwrap">
+  <svg viewBox="0 0 900 480" xmlns="http://www.w3.org/2000/svg">
+    <defs><marker id="arw3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--muted)"/></marker></defs>
+    <rect class="c4-boundary" x="20" y="20" width="860" height="440" rx="10"/>
+    <text class="c4-boundlabel" x="40" y="45">Triage Scoring Service [Container]</text>
+
+    <g><rect class="c4-box" x="330" y="70" width="240" height="70" rx="8"/><text class="c4-title" x="450" y="98" text-anchor="middle">Event Controller</text><text class="c4-type" x="450" y="115" text-anchor="middle">[Component]</text></g>
+
+    <g><rect class="c4-box" x="80" y="190" width="240" height="70" rx="8"/><text class="c4-title" x="200" y="218" text-anchor="middle">Rules Engine</text><text class="c4-type" x="200" y="235" text-anchor="middle">[Component — ESI-based]</text></g>
+    <g><rect class="c4-box" x="580" y="190" width="240" height="70" rx="8"/><text class="c4-title" x="700" y="218" text-anchor="middle">ML Inference Adapter</text><text class="c4-type" x="700" y="235" text-anchor="middle">[Component — hosted model]</text></g>
+
+    <g><rect class="c4-box focus" x="330" y="300" width="240" height="70" rx="8"/><text class="c4-title" x="450" y="325" text-anchor="middle" style="fill:var(--cherry);font-size:12px">Score Aggregator / Safety Arbiter</text><text class="c4-type" x="450" y="343" text-anchor="middle">[Component — rules may only escalate]</text></g>
+
+    <g><rect class="c4-box" x="330" y="400" width="240" height="55" rx="8"/><text class="c4-title" x="450" y="424" text-anchor="middle">Audit Emitter</text><text class="c4-type" x="450" y="440" text-anchor="middle">[Component → Event Bus]</text></g>
+
+    <line class="c4-line" x1="400" y1="140" x2="230" y2="190" marker-end="url(#arw3)"/>
+    <line class="c4-line" x1="500" y1="140" x2="670" y2="190" marker-end="url(#arw3)"/>
+    <line class="c4-line" x1="230" y1="260" x2="400" y2="300" marker-end="url(#arw3)"/>
+    <line class="c4-line" x1="670" y1="260" x2="500" y2="300" marker-end="url(#arw3)"/>
+    <line class="c4-line hl" x1="450" y1="370" x2="450" y2="400" marker-end="url(#arw3)"/><text class="c4-label" x="465" y="388">acknowledged recommendation only</text>
+  </svg>
+  </div>
+  <div class="svg-caption">Figure 3 — Component view. The Safety Arbiter is the single point where the "recommendation, never decision" rule from ADR-002 is code-enforced: a rules-engine escalation can raise an ML-suggested acuity but never lower one below the safer rules-based floor.</div>
+
+  <div class="signoff">
+    <div class="sobox"><div class="role">Prepared By</div><div class="name">Jordan Blake</div><div class="title">Solution Architect, MedFlow AI Program</div><div class="sigline">Signature / Date</div></div>
+    <div class="sobox"><div class="role">Reviewed By</div><div class="name">Priya Nandakumar</div><div class="title">Engineering Lead, Platform</div><div class="sigline">Signature / Date</div></div>
+    <div class="sobox"><div class="role">Approved By</div><div class="name">Dr. Elena Ruiz</div><div class="title">Chief Medical Information Officer</div><div class="sigline">Signature / Date</div></div>
+  </div>
+  </div>
+</section>
+
+<!-- =================== DELIVERABLE 03: ADRs =================== -->
+<section class="page" id="doc-adr" data-kw="architecture decision records adr event driven microservices rules ml hybrid fhir hl7 azure event hubs build buy openai">
+  <div class="kicker">Deliverable 03</div>
+  <h1>Architecture Decision Records</h1>
+  <p class="lede">Six decisions, each with its rejected alternatives and the cost of the choice actually made.</p>
+  <div class="doc-toolbar">
+    <button class="btn primary" onclick="downloadDocHTML('adr')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>Download HTML</button>
+    <button class="btn" onclick="printDoc('adr')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>Print / Save as PDF</button>
+  </div>
+
+  <div id="printable-adr" class="doc-printable">
+  <div class="doc-control-strip">
+    <div><span class="lbl">Document</span><span class="val">Architecture Decision Records</span></div>
+    <div><span class="lbl">Version</span><span class="val">1.0</span></div>
+    <div><span class="lbl">Owner</span><span class="val">Solution Architecture — MedFlow AI</span></div>
+    <div><span class="lbl">Status</span><span class="val"><span class="badge approved">6 Accepted</span></span></div>
+    <div><span class="lbl">Date</span><span class="val">2026-08-07</span></div>
+  </div>
+
+  <div class="adr">
+    <div class="adrhead"><h3>ADR-001 — Event-Driven Microservices over a Monolithic Extension</h3><span class="badge approved">Accepted</span></div>
+    <h4>Context</h4><p>MeridianChart's vendor customization layer could technically host triage-assist logic as a plugin. Meridian must satisfy two different availability tiers (99.95% critical path vs. 99.9% intake) and give the Audit Service, Triage Scoring Service, and future analytics independent, non-blocking access to the same intake-completion fact.</p>
+    <h4>Decision</h4><p>Build MedFlow AI as a standalone event-driven microservices platform integrated with MeridianChart via HL7v2/FHIR, not as a plugin inside the EHR's customization layer.</p>
+    <h4>Rejected Alternatives</h4>
+    <ul>
+      <li><strong>EHR vendor customization plugin.</strong> Rejected: shares the EHR's single release train and availability envelope, making a differentiated 99.95%/99.9% SLA split impossible; vendor certification cycle for plugin changes is 6-8 weeks, incompatible with iterative delivery.</li>
+      <li><strong>Single new monolith service.</strong> Rejected: works initially, but collapses the moment a second independent consumer (Audit Service) needs the same event — every new consumer would require a code change inside the monolith rather than an independent subscription.</li>
+    </ul>
+    <h4>Consequences</h4>
+    <p><strong>Gain:</strong> independent scaling and deployment per service; clean audit trail via event replay. <strong>Cost:</strong> operational complexity of running and monitoring 6+ independently deployable services instead of 1; eventual consistency between intake completion and score availability must be explicitly designed for (see NFR-PERF-02).</p>
+  </div>
+
+  <div class="adr">
+    <div class="adrhead"><h3>ADR-002 — Hybrid Rules + ML Ensemble for Triage Acuity, Not Pure ML</h3><span class="badge approved">Accepted</span></div>
+    <h4>Context</h4><p>A pure ML model could plausibly produce more accurate acuity predictions on average. But an autonomous or purely ML-driven clinical recommendation risks reclassification as an FDA Software-as-a-Medical-Device (SaMD), which would trigger a multi-year regulatory pathway Meridian's program is not funded or scoped for.</p>
+    <h4>Decision</h4><p>Triage acuity is computed by a deterministic, auditable Rules Engine (ESI-based) running alongside an ML Inference Adapter; a Safety Arbiter combines both under the fixed policy "rules may only escalate acuity, never downgrade it," and the combined output is always labeled a <em>recommendation</em> requiring explicit nurse acknowledgment before it affects the chart.</p>
+    <h4>Rejected Alternatives</h4>
+    <ul>
+      <li><strong>Pure ML model, autonomous output.</strong> Rejected: crosses into FDA CDS-exemption-losing territory per 21st Century Cures Act guidance on the boundary between decision support and autonomous decisioning; unacceptable regulatory risk.</li>
+      <li><strong>Pure rules engine, no ML.</strong> Rejected: forgoes the accuracy and nuance gains of an ML signal entirely; clinically weaker without a commensurate safety gain, since the arbiter policy already bounds ML's ability to under-triage.</li>
+    </ul>
+    <h4>Consequences</h4>
+    <p><strong>Gain:</strong> stays inside the FDA's clinical decision-support exemption; deterministic rules component is fully explainable to auditors and clinicians. <strong>Cost:</strong> more complex scoring pipeline (two engines + an arbiter) than either approach alone; ML component's incremental accuracy benefit is capped by the "escalate-only" safety policy.</p>
+  </div>
+
+  <div class="adr">
+    <div class="adrhead"><h3>ADR-003 — HL7v2/FHIR Interface Engine over Direct Database Integration</h3><span class="badge approved">Accepted</span></div>
+    <h4>Context</h4><p>MedFlow AI needs patient demographics on intake and must write triage outcomes back into MeridianChart. A direct database connection to MeridianChart's schema would be technically faster to build.</p>
+    <h4>Decision</h4><p>All integration with MeridianChart goes through a Mirth Connect HL7 Interface Engine using the existing ADT feed (inbound) and HL7v2 ORU / FHIR R4 Encounter-Observation resources (outbound) — never a direct database connection.</p>
+    <h4>Rejected Alternatives</h4>
+    <ul>
+      <li><strong>Direct database read/write against MeridianChart's schema.</strong> Rejected: couples MedFlow AI to the EHR vendor's internal schema, which changes on the vendor's upgrade cycle without notice; violates the EHR vendor's support agreement; bypasses the EHR's own data-integrity and audit hooks.</li>
+      <li><strong>Vendor-proprietary API-only integration (no HL7 engine).</strong> Rejected: the vendor's REST API does not yet cover triage-outcome write-back for Meridian's contracted module tier; would require a separate paid module upgrade not currently budgeted.</li>
+    </ul>
+    <h4>Consequences</h4>
+    <p><strong>Gain:</strong> integration is vendor-upgrade-safe and stays within the supported interface surface; the interface engine acts as an anti-corruption layer, isolating MedFlow AI's domain model from EHR schema churn. <strong>Cost:</strong> HL7v2 message construction and parsing is more verbose than a direct API/DB call; the interface engine itself becomes a component that must be operated and monitored (see Risk R-02).</p>
+  </div>
+
+  <div class="adr">
+    <div class="adrhead"><h3>ADR-004 — Azure (Hybrid) over AWS or Full On-Premise</h3><span class="badge approved">Accepted</span></div>
+    <h4>Context</h4><p>Meridian already holds an enterprise agreement with Microsoft covering Azure consumption and a contracted, HIPAA-eligible Azure OpenAI Service commitment with no data-retention/training clause. Meridian's data center is mid-migration to Azure for other workloads.</p>
+    <h4>Decision</h4><p>Host MedFlow AI's cloud-native containers on Azure, keeping the HL7 Interface Engine hybrid (on Meridian's private network, connected via ExpressRoute) rather than fully on-premise or on a second cloud vendor.</p>
+    <h4>Rejected Alternatives</h4>
+    <ul>
+      <li><strong>AWS.</strong> Rejected: would require a net-new BAA and enterprise agreement negotiation, duplicate identity federation work with Okta, and cross-cloud egress cost/latency for no offsetting capability gain — Azure OpenAI already satisfies the LLM requirement under the existing agreement.</li>
+      <li><strong>Full on-premise.</strong> Rejected: cannot meet the 800-concurrent-session flu-season burst target (NFR-SCALE-01) without over-provisioning idle on-prem capacity for 10 months of the year; conflicts with Meridian's active on-prem-to-Azure migration direction.</li>
+    </ul>
+    <h4>Consequences</h4>
+    <p><strong>Gain:</strong> reuses existing enterprise agreement, identity federation, and network connectivity; autoscale absorbs seasonal peak load without idle capacity cost. <strong>Cost:</strong> the HL7 Interface Engine's hybrid placement adds a network dependency (ExpressRoute) whose outage becomes a shared point of failure between MedFlow AI and other Azure-hosted Meridian workloads.</p>
+  </div>
+
+  <div class="adr">
+    <div class="adrhead"><h3>ADR-005 — Azure Event Hubs as the Cross-Service Event Backbone</h3><span class="badge approved">Accepted</span></div>
+    <h4>Context</h4><p>Intake completion, triage scoring, and routing decisions must fan out to multiple independent consumers (scoring, audit, future analytics) without tight coupling. See the full weighted trade-off analysis in <a href="#doc-tradeoff">Deliverable 05</a>.</p>
+    <h4>Decision</h4><p>Use Azure Event Hubs (Kafka-protocol compatible) as the event backbone, topic-partitioned by facility.</p>
+    <h4>Rejected Alternatives</h4>
+    <ul>
+      <li><strong>Confluent Cloud (managed Kafka).</strong> Rejected: strongest latency/throughput profile of the options evaluated, but requires PHI-adjacent event metadata to cross a cloud boundary out of the Azure compliance envelope, needing a second BAA; scored 3.55/5 weighted vs. Event Hubs' 4.25/5.</li>
+      <li><strong>Self-hosted RabbitMQ on AKS.</strong> Rejected: cheapest option and no vendor lock-in, but shifts cluster operation, patching, and HA configuration onto a platform team not sized for it; scored 3.65/5 weighted.</li>
+      <li><strong>AWS SQS/SNS.</strong> Rejected: would duplicate ADR-004's cross-cloud objections at the messaging layer specifically; scored 2.75/5 weighted, lowest of the four.</li>
+    </ul>
+    <h4>Consequences</h4>
+    <p><strong>Gain:</strong> stays inside the existing Azure compliance boundary and BAA; Kafka-protocol compatibility keeps a future migration path open if requirements outgrow Event Hubs. <strong>Cost:</strong> Event Hubs' consumer-group model is less flexible than self-hosted Kafka for complex routing topologies; throughput-unit-based pricing requires active capacity planning ahead of flu-season peaks (NFR-SCALE-02).</p>
+  </div>
+
+  <div class="adr">
+    <div class="adrhead"><h3>ADR-006 — Buy the LLM Capability, Build the Orchestration Layer</h3><span class="badge approved">Accepted</span></div>
+    <h4>Context</h4><p>Symptom-intake conversational NLP could be built as a proprietary clinical language model or bought as a managed service. See the Build vs. Buy framework applied in full in the discipline section of this guide.</p>
+    <h4>Decision</h4><p>License Azure OpenAI Service (already under contract, HIPAA-eligible, no-retention/no-training terms) for the underlying LLM capability; build a proprietary Symptom NLP Orchestrator that owns de-identification, prompt construction, response structuring, and the provider-abstraction interface in-house.</p>
+    <h4>Rejected Alternatives</h4>
+    <ul>
+      <li><strong>Build a proprietary clinical NLP model from scratch.</strong> Rejected: requires a specialized ML research team Meridian does not have, months of clinically-scarce labeled training data, and independent model-safety validation, for a capability that is not Meridian's competitive differentiator.</li>
+      <li><strong>Buy a fully packaged third-party clinical-intake SaaS product (LLM + UI + workflow).</strong> Rejected: would replace, not integrate with, Meridian's existing HL7 interface investment and Okta identity federation, and locks the entire patient-facing experience — not just the LLM call — to one vendor's roadmap.</li>
+    </ul>
+    <h4>Consequences</h4>
+    <p><strong>Gain:</strong> fastest path to a clinically safe intake experience; the internal orchestration layer keeps the AI provider swappable behind one interface, limiting lock-in to the LLM call itself rather than the whole workflow. <strong>Cost:</strong> ongoing dependency on Azure OpenAI Service pricing and availability (see Risk R-03, R-09); the orchestration layer is Meridian-maintained code that must absorb any future provider API changes.</p>
+  </div>
+
+  <div class="signoff">
+    <div class="sobox"><div class="role">Prepared By</div><div class="name">Jordan Blake</div><div class="title">Solution Architect, MedFlow AI Program</div><div class="sigline">Signature / Date</div></div>
+    <div class="sobox"><div class="role">Reviewed By</div><div class="name">Priya Nandakumar</div><div class="title">Engineering Lead, Platform</div><div class="sigline">Signature / Date</div></div>
+    <div class="sobox"><div class="role">Approved By</div><div class="name">Sam Okafor</div><div class="title">VP Engineering</div><div class="sigline">Signature / Date</div></div>
+  </div>
+  </div>
+</section>
+
+<!-- =================== DELIVERABLE 04: NFR =================== -->
+<section class="page" id="doc-nfr" data-kw="non functional requirements nfr specification performance availability scalability security compliance latency uptime">
+  <div class="kicker">Deliverable 04</div>
+  <h1>Non-Functional Requirements Specification</h1>
+  <p class="lede">Seventeen measurable targets across nine quality-attribute categories, each with a stated verification method.</p>
+  <div class="doc-toolbar">
+    <button class="btn primary" onclick="downloadDocHTML('nfr')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>Download HTML</button>
+    <button class="btn" onclick="printDoc('nfr')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>Print / Save as PDF</button>
+    <button class="btn" onclick="downloadCSV('nfr')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 3h18v18H3zM3 9h18M9 21V9"/></svg>Download CSV</button>
+  </div>
+
+  <div id="printable-nfr" class="doc-printable">
+  <div class="doc-control-strip">
+    <div><span class="lbl">Document</span><span class="val">NFR Specification</span></div>
+    <div><span class="lbl">Version</span><span class="val">1.0</span></div>
+    <div><span class="lbl">Owner</span><span class="val">Solution Architecture — MedFlow AI</span></div>
+    <div><span class="lbl">Status</span><span class="val"><span class="badge approved">Approved</span></span></div>
+    <div><span class="lbl">Date</span><span class="val">2026-08-07</span></div>
+  </div>
+
+  <p>Every row follows the same shape: requirement, measurable target, verification method. A row without all three is not yet a requirement — see the <a href="#quality-attributes">Quality Attributes</a> primer. <strong>Must</strong> priority items block GA sign-off; <strong>Should</strong> items are tracked but non-blocking.</p>
+
+  <div id="nfrTableMount"></div>
+
+  <div class="callout info">
+    <div class="cotitle">Reading NFR-COMP-02</div>
+    <p>This is the requirement that keeps MedFlow AI a decision-support tool rather than an autonomous medical device — it is verified by both a UX audit and a per-release Clinical Informatics Committee sign-off, not by automated testing alone, because the thing being verified is partly a human-judgment boundary.</p>
+  </div>
+
+  <div class="signoff">
+    <div class="sobox"><div class="role">Prepared By</div><div class="name">Jordan Blake</div><div class="title">Solution Architect, MedFlow AI Program</div><div class="sigline">Signature / Date</div></div>
+    <div class="sobox"><div class="role">Reviewed By</div><div class="name">Marcus Webb</div><div class="title">Security &amp; Compliance Lead</div><div class="sigline">Signature / Date</div></div>
+    <div class="sobox"><div class="role">Approved By</div><div class="name">Dr. Elena Ruiz</div><div class="title">Chief Medical Information Officer</div><div class="sigline">Signature / Date</div></div>
+  </div>
+  </div>
+</section>
+
+<!-- =================== DELIVERABLE 05: TRADEOFF =================== -->
+<section class="page" id="doc-tradeoff" data-kw="technology selection trade off matrix event backbone azure event hubs confluent kafka rabbitmq aws sqs sns weighted score">
+  <div class="kicker">Deliverable 05</div>
+  <h1>Technology Selection &amp; Trade-off Matrix</h1>
+  <p class="lede">Decision under analysis: <strong>the event backbone for cross-service routing events</strong> — the spine of the Container diagram in Deliverable 02, formalized as ADR-005.</p>
+  <div class="doc-toolbar">
+    <button class="btn primary" onclick="downloadDocHTML('tradeoff')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>Download HTML</button>
+    <button class="btn" onclick="printDoc('tradeoff')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>Print / Save as PDF</button>
+    <button class="btn" onclick="downloadCSV('tradeoff')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 3h18v18H3zM3 9h18M9 21V9"/></svg>Download CSV</button>
+  </div>
+
+  <div id="printable-tradeoff" class="doc-printable">
+  <div class="doc-control-strip">
+    <div><span class="lbl">Document</span><span class="val">Trade-off Matrix</span></div>
+    <div><span class="lbl">Version</span><span class="val">1.0</span></div>
+    <div><span class="lbl">Owner</span><span class="val">Solution Architecture — MedFlow AI</span></div>
+    <div><span class="lbl">Status</span><span class="val"><span class="badge approved">Approved</span></span></div>
+    <div><span class="lbl">Date</span><span class="val">2026-08-07</span></div>
+  </div>
+
+  <h2>Criteria &amp; Weights</h2>
+  <p>Weights were set before scoring, based on what actually matters for MedFlow AI: staying inside the existing Azure compliance boundary carries the most weight, ahead of raw performance.</p>
+  <table class="datatable">
+    <tr><th>Criterion</th><th>Weight</th><th>Why it's weighted this way</th></tr>
+    <tr><td>Compliance / Data Residency</td><td>25%</td><td>PHI-adjacent event metadata must stay inside the Azure BAA boundary — non-negotiable, not a preference.</td></tr>
+    <tr><td>Operational Overhead</td><td>20%</td><td>Platform/SRE team is not currently sized to operate a self-managed cluster 24/7.</td></tr>
+    <tr><td>Latency / Throughput Fit</td><td>20%</td><td>Must sustain NFR-SCALE-02 (2,000 events/sec sustained, 6,000 burst).</td></tr>
+    <tr><td>Cost at Projected Volume</td><td>15%</td><td>Real but secondary to compliance and ops sustainability.</td></tr>
+    <tr><td>Team Familiarity</td><td>10%</td><td>Faster ramp reduces launch risk, but is the most gameable criterion — kept deliberately low-weighted.</td></tr>
+    <tr><td>Vendor Lock-in Risk</td><td>10%</td><td>Real long-term concern, mitigated by choosing a Kafka-protocol-compatible option regardless of winner.</td></tr>
+  </table>
+
+  <h2>Scored Options (1–5 per criterion)</h2>
+  <div id="tradeoffTableMount"></div>
+
+  <h2>Weighted Result</h2>
+  <div class="svgwrap">
+  <svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg">
+    <line class="chart-axis" x1="220" y1="20" x2="220" y2="230"/>
+    <text class="chart-label" x="60" y="55">Azure Event Hubs</text><rect class="chart-bar winner" x="220" y="38" width="382.5" height="28" rx="3"/><text class="chart-value" x="612" y="57">4.25</text>
+    <text class="chart-label" x="90" y="105">RabbitMQ (self-host)</text><rect class="chart-bar" x="220" y="88" width="328.5" height="28" rx="3"/><text class="chart-value" x="558" y="107">3.65</text>
+    <text class="chart-label" x="100" y="155">Confluent Cloud</text><rect class="chart-bar" x="220" y="138" width="319.5" height="28" rx="3"/><text class="chart-value" x="549" y="157">3.55</text>
+    <text class="chart-label" x="120" y="205">AWS SQS/SNS</text><rect class="chart-bar" x="220" y="188" width="247.5" height="28" rx="3"/><text class="chart-value" x="477" y="207">2.75</text>
+    <text class="chart-label" x="220" y="248" text-anchor="middle" style="fill:var(--muted);font-size:10px">Weighted score out of 5.00 — Azure Event Hubs selected (ADR-005)</text>
+  </svg>
+  </div>
+
+  <h2>What the Losing Options Cost (Not Just Why They Lost)</h2>
+  <table class="datatable">
+    <tr><th>Option</th><th>What you'd give up by choosing it</th></tr>
+    <tr><td>RabbitMQ (self-hosted on AKS)</td><td>Lowest cost and zero lock-in, but the platform team absorbs 24/7 cluster operation, patching, and HA failover design — a standing ops cost this matrix's weighting says is not worth the savings.</td></tr>
+    <tr><td>Confluent Cloud (managed Kafka)</td><td>Best raw latency/throughput profile of the four, but requires a second BAA and moves PHI-adjacent metadata outside the existing Azure compliance boundary — the single largest weighted criterion.</td></tr>
+    <tr><td>AWS SQS/SNS</td><td>Mature, well-understood primitives, but duplicates ADR-004's cross-cloud objections specifically at the messaging layer, adding egress cost and a second cloud's worth of operational surface area.</td></tr>
+  </table>
+
+  <div class="signoff">
+    <div class="sobox"><div class="role">Prepared By</div><div class="name">Jordan Blake</div><div class="title">Solution Architect, MedFlow AI Program</div><div class="sigline">Signature / Date</div></div>
+    <div class="sobox"><div class="role">Reviewed By</div><div class="name">Priya Nandakumar</div><div class="title">Engineering Lead, Platform</div><div class="sigline">Signature / Date</div></div>
+    <div class="sobox"><div class="role">Approved By</div><div class="name">Sam Okafor</div><div class="title">VP Engineering</div><div class="sigline">Signature / Date</div></div>
+  </div>
+  </div>
+</section>
+
+<!-- =================== DELIVERABLE 06: SEQUENCE/DATAFLOW/ERD =================== -->
+<section class="page" id="doc-sequence" data-kw="sequence diagram data flow erd entity relationship phi encryption tls aes patient session intake response triage score routing decision audit event">
+  <div class="kicker">Deliverable 06</div>
+  <h1>Sequence, Data-Flow &amp; Entity Diagrams</h1>
+  <p class="lede">How a single patient encounter actually moves through the system, end to end — and where PHI is, and isn't, exposed along the way.</p>
+  <div class="doc-toolbar">
+    <button class="btn primary" onclick="downloadDocHTML('sequence')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>Download HTML</button>
+    <button class="btn" onclick="printDoc('sequence')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>Print / Save as PDF</button>
+  </div>
+
+  <div id="printable-sequence" class="doc-printable">
+  <div class="doc-control-strip">
+    <div><span class="lbl">Document</span><span class="val">Sequence &amp; Data-Flow Diagrams</span></div>
+    <div><span class="lbl">Version</span><span class="val">1.0</span></div>
+    <div><span class="lbl">Owner</span><span class="val">Solution Architecture — MedFlow AI</span></div>
+    <div><span class="lbl">Status</span><span class="val"><span class="badge approved">Approved</span></span></div>
+    <div><span class="lbl">Date</span><span class="val">2026-08-07</span></div>
+  </div>
+
+  <h2>Sequence — Intake Through Chart Write-Back</h2>
+  <div class="svgwrap">
+  <svg viewBox="0 0 1080 640" xmlns="http://www.w3.org/2000/svg">
+    <defs><marker id="arwS" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--text)"/></marker></defs>
+    <!-- lifelines -->
+    <!-- 8 lifelines at x=60,190,340,490,610,750,900,1020 -->
+    <g>
+    <text class="seq-text" x="60" y="24" text-anchor="middle" style="font-weight:700">Patient</text>
+    <text class="seq-text" x="190" y="24" text-anchor="middle" style="font-weight:700">Intake BFF</text>
+    <text class="seq-text" x="340" y="24" text-anchor="middle" style="font-weight:700">NLP Orch. +</text><text class="seq-text" x="340" y="36" text-anchor="middle" style="font-weight:700">Azure OpenAI</text>
+    <text class="seq-text" x="500" y="24" text-anchor="middle" style="font-weight:700">Event Bus</text>
+    <text class="seq-text" x="640" y="24" text-anchor="middle" style="font-weight:700">Triage Scoring</text>
+    <text class="seq-text" x="790" y="24" text-anchor="middle" style="font-weight:700">Nurse Console</text><text class="seq-text" x="790" y="36" text-anchor="middle" style="font-weight:700">+ Nurse</text>
+    <text class="seq-text" x="920" y="24" text-anchor="middle" style="font-weight:700">Care Routing</text>
+    <text class="seq-text" x="1030" y="24" text-anchor="middle" style="font-weight:700">MeridianChart</text><text class="seq-text" x="1030" y="36" text-anchor="middle" style="font-weight:700">(via HL7 Engine)</text>
+    </g>
+    <line class="seq-life" x1="60" y1="46" x2="60" y2="610"/><line class="seq-life" x1="190" y1="46" x2="190" y2="610"/><line class="seq-life" x1="340" y1="46" x2="340" y2="610"/><line class="seq-life" x1="500" y1="46" x2="500" y2="610"/><line class="seq-life" x1="640" y1="46" x2="640" y2="610"/><line class="seq-life" x1="790" y1="46" x2="790" y2="610"/><line class="seq-life" x1="920" y1="46" x2="920" y2="610"/><line class="seq-life" x1="1030" y1="46" x2="1030" y2="610"/>
+
+    <line class="seq-msg" x1="60" y1="70" x2="190" y2="70" marker-end="url(#arwS)"/><text class="seq-text" x="65" y="64">1. starts intake session</text>
+    <line class="seq-msg" x1="190" y1="100" x2="340" y2="100" marker-end="url(#arwS)"/><text class="seq-text" x="195" y="94">2. sends conversational turn</text>
+    <rect class="seq-note" x="345" y="112" width="220" height="30" rx="4"/><text class="seq-notetext" x="355" y="131">de-identifies PHI before LLM call</text>
+    <line class="seq-msg" x1="340" y1="165" x2="190" y2="165" marker-end="url(#arwS)"/><text class="seq-text" x="195" y="159">3. structured symptom JSON</text>
+    <text class="seq-text" x="195" y="185" style="fill:var(--muted)">(steps 2–3 repeat per turn until intake complete)</text>
+    <line class="seq-msg" x1="190" y1="215" x2="500" y2="215" marker-end="url(#arwS)"/><text class="seq-text" x="195" y="209">4. publish intake.completed</text>
+    <line class="seq-msg async" x1="500" y1="245" x2="640" y2="245" marker-end="url(#arwS)"/><text class="seq-text" x="505" y="239">5. deliver intake.completed</text>
+    <rect class="seq-note" x="560" y="257" width="230" height="30" rx="4"/><text class="seq-notetext" x="570" y="276">rules + ML score, safety arbiter</text>
+    <line class="seq-msg" x1="640" y1="305" x2="500" y2="305" marker-end="url(#arwS)"/><text class="seq-text" x="505" y="299">6. publish triage.scored</text>
+    <line class="seq-msg async" x1="500" y1="335" x2="790" y2="335" marker-end="url(#arwS)"/><text class="seq-text" x="505" y="329">7. deliver triage.scored → queue</text>
+    <line class="seq-msg hl" x1="790" y1="370" x2="920" y2="370" marker-end="url(#arwS)" style="stroke:var(--cherry)"/><text class="seq-text" x="700" y="364" style="fill:var(--cherry);font-weight:700">8. nurse acknowledges / confirms or overrides acuity</text>
+    <line class="seq-msg" x1="920" y1="400" x2="500" y2="400" marker-end="url(#arwS)"/><text class="seq-text" x="600" y="394">9. publish routing.requested</text>
+    <line class="seq-msg" x1="920" y1="430" x2="1030" y2="430" marker-end="url(#arwS)"/><text class="seq-text" x="925" y="424">10. HL7v2 ORU / FHIR write-back</text>
+    <rect class="seq-note" x="60" y="460" width="480" height="34" rx="4"/><text class="seq-notetext" x="70" y="481">Every step 1–10 also delivers to the Audit &amp; Compliance Service via audit.* — logged with a single correlation ID end to end</text>
+    <line class="seq-msg async" x1="500" y1="520" x2="900" y2="520" marker-end="url(#arwS)" style="opacity:.6"/><text class="seq-text" x="505" y="514" style="fill:var(--muted)">11. audit.* delivered to Audit Service (all steps)</text>
+  </svg>
+  </div>
+  <div class="diagram-legend"><span><i style="background:var(--text)"></i>Synchronous call</span><span><i style="background:var(--text);opacity:.4"></i>Async event</span><span><i style="background:var(--amber);opacity:.5"></i>Internal processing note</span></div>
+  <div class="svg-caption">Figure 4 — Full sequence, patient arrival through EHR write-back.</div>
+
+  <h2>Data-Flow — PHI Boundary Map</h2>
+  <div class="svgwrap">
+  <svg viewBox="0 0 1080 380" xmlns="http://www.w3.org/2000/svg">
+    <defs><marker id="arwD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--muted)"/></marker></defs>
+    <rect class="dfw-zone ext" x="20" y="30" width="220" height="120" rx="8"/><text class="c4-boundlabel" x="35" y="50" style="fill:var(--muted)">Public Internet</text>
+    <rect class="dfw-zone" x="270" y="30" width="620" height="320" rx="8"/><text class="c4-boundlabel" x="285" y="50">Azure PaaS — Meridian Compliance Boundary (BAA)</text>
+    <rect class="dfw-zone ext" x="920" y="30" width="140" height="320" rx="8"/><text class="c4-boundlabel" x="930" y="50" style="fill:var(--muted)">Meridian Private Net</text>
+
+    <g><rect class="c4-box" x="40" y="75" width="180" height="55" rx="6"/><text class="c4-title" x="130" y="98" text-anchor="middle" style="font-size:12px">Patient Device</text><text class="c4-desc" x="130" y="115" text-anchor="middle">Browser / mobile app</text></g>
+    <g><rect class="c4-box" x="300" y="75" width="170" height="55" rx="6"/><text class="c4-title" x="385" y="98" text-anchor="middle" style="font-size:12px">Intake BFF</text><text class="c4-desc" x="385" y="115" text-anchor="middle">PHI identifiable</text></g>
+    <g><rect class="c4-box focus" x="510" y="75" width="190" height="55" rx="6"/><text class="c4-title" x="605" y="98" text-anchor="middle" style="font-size:11.5px;fill:var(--cherry)">De-identification Layer</text><text class="c4-desc" x="605" y="115" text-anchor="middle">tokenizes patient ref</text></g>
+    <g><rect class="c4-box external" x="750" y="75" width="140" height="55" rx="6"/><text class="c4-title" x="820" y="98" text-anchor="middle" style="font-size:11px">Azure OpenAI</text><text class="c4-desc" x="820" y="115" text-anchor="middle">no PHI, no retention</text></g>
+
+    <g><rect class="c4-box" x="300" y="200" width="170" height="55" rx="6"/><text class="c4-title" x="385" y="223" text-anchor="middle" style="font-size:12px">Triage Scoring</text><text class="c4-desc" x="385" y="240" text-anchor="middle">token-scoped</text></g>
+    <g><rect class="c4-box" x="510" y="200" width="190" height="55" rx="6"/><text class="c4-title" x="605" y="223" text-anchor="middle" style="font-size:12px">Operational DB</text><text class="c4-desc" x="605" y="240" text-anchor="middle">AES-256 at rest</text></g>
+    <g><rect class="c4-box" x="750" y="200" width="140" height="55" rx="6"/><text class="c4-title" x="820" y="223" text-anchor="middle" style="font-size:12px">Care Routing</text></g>
+    <g><rect class="c4-box external" x="940" y="200" width="100" height="55" rx="6"/><text class="c4-title" x="990" y="223" text-anchor="middle" style="font-size:11px">HL7 Engine</text><text class="c4-desc" x="990" y="240" text-anchor="middle">re-identifies</text></g>
+
+    <g><rect class="c4-box external" x="940" y="290" width="100" height="45" rx="6"/><text class="c4-title" x="990" y="315" text-anchor="middle" style="font-size:11px">MeridianChart</text></g>
+
+    <line class="c4-line" x1="220" y1="102" x2="300" y2="102" marker-end="url(#arwD)"/><text class="c4-label" x="222" y="95">TLS 1.2+</text>
+    <line class="c4-line" x1="470" y1="102" x2="510" y2="102" marker-end="url(#arwD)"/>
+    <line class="c4-line" x1="700" y1="102" x2="750" y2="102" marker-end="url(#arwD)"/><text class="c4-label" x="702" y="95">de-identified only</text>
+    <line class="c4-line" x1="385" y1="130" x2="385" y2="200" marker-end="url(#arwD)"/>
+    <line class="c4-line" x1="470" y1="227" x2="510" y2="227" marker-end="url(#arwD)"/><text class="c4-label" x="472" y="220">AES-256</text>
+    <line class="c4-line" x1="700" y1="227" x2="750" y2="227" marker-end="url(#arwD)"/>
+    <line class="c4-line" x1="890" y1="227" x2="940" y2="227" marker-end="url(#arwD)"/><text class="c4-label" x="882" y="220">ExpressRoute</text>
+    <line class="c4-line" x1="990" y1="255" x2="990" y2="290" marker-end="url(#arwD)"/><text class="c4-label" x="900" y="278">re-identification join, private net only</text>
+  </svg>
+  </div>
+  <div class="svg-caption">Figure 5 — Data flow with trust boundaries. Re-identification (token → patient) happens only inside Meridian's private network, never inside the Azure PaaS boundary shared with Azure OpenAI.</div>
+
+  <h2>Entity Relationship Diagram — Operational Data</h2>
+  <div class="svgwrap">
+  <svg viewBox="0 0 1080 420" xmlns="http://www.w3.org/2000/svg">
+    <g>
+      <rect class="erd-box" x="30" y="30" width="220" height="150" rx="6"/><rect class="erd-head" x="30" y="30" width="220" height="30" rx="6"/>
+      <text class="erd-headtext" x="140" y="50" text-anchor="middle">PatientSession</text>
+      <text class="erd-attr" x="42" y="76">id (PK)</text><text class="erd-attr" x="42" y="93">patient_ref_token</text><text class="erd-attr" x="42" y="110">facility_id</text><text class="erd-attr" x="42" y="127">started_at</text><text class="erd-attr" x="42" y="144">status</text><text class="erd-attr" x="42" y="161">language</text>
+    </g>
+    <g>
+      <rect class="erd-box" x="310" y="30" width="220" height="130" rx="6"/><rect class="erd-head" x="310" y="30" width="220" height="30" rx="6"/>
+      <text class="erd-headtext" x="420" y="50" text-anchor="middle">IntakeResponse</text>
+      <text class="erd-attr" x="322" y="76">id (PK)</text><text class="erd-attr" x="322" y="93">session_id (FK)</text><text class="erd-attr" x="322" y="110">question_code</text><text class="erd-attr" x="322" y="127">response_structured</text><text class="erd-attr" x="322" y="144">captured_at</text>
+    </g>
+    <g>
+      <rect class="erd-box" x="590" y="30" width="220" height="150" rx="6"/><rect class="erd-head" x="590" y="30" width="220" height="30" rx="6"/>
+      <text class="erd-headtext" x="700" y="50" text-anchor="middle">TriageScore</text>
+      <text class="erd-attr" x="602" y="76">id (PK)</text><text class="erd-attr" x="602" y="93">session_id (FK)</text><text class="erd-attr" x="602" y="110">rules_score</text><text class="erd-attr" x="602" y="127">ml_score</text><text class="erd-attr" x="602" y="144">final_acuity</text><text class="erd-attr" x="602" y="161">model_version</text>
+    </g>
+    <g>
+      <rect class="erd-box" x="310" y="230" width="220" height="150" rx="6"/><rect class="erd-head" x="310" y="230" width="220" height="30" rx="6"/>
+      <text class="erd-headtext" x="420" y="250" text-anchor="middle">RoutingDecision</text>
+      <text class="erd-attr" x="322" y="276">id (PK)</text><text class="erd-attr" x="322" y="293">session_id (FK)</text><text class="erd-attr" x="322" y="310">care_team</text><text class="erd-attr" x="322" y="327">nurse_ack_by</text><text class="erd-attr" x="322" y="344">acknowledged_at</text><text class="erd-attr" x="322" y="361">routed_at</text>
+    </g>
+    <g>
+      <rect class="erd-box" x="590" y="230" width="220" height="130" rx="6"/><rect class="erd-head" x="590" y="230" width="220" height="30" rx="6"/>
+      <text class="erd-headtext" x="700" y="250" text-anchor="middle">AuditEvent</text>
+      <text class="erd-attr" x="602" y="276">id (PK)</text><text class="erd-attr" x="602" y="293">session_id (FK)</text><text class="erd-attr" x="602" y="310">actor / action</text><text class="erd-attr" x="602" y="327">correlation_id</text><text class="erd-attr" x="602" y="344">timestamp</text>
+    </g>
+    <line class="erd-line" x1="250" y1="90" x2="310" y2="90"/><text class="c4-label" x="255" y="84">1 — *</text>
+    <line class="erd-line" x1="530" y1="90" x2="590" y2="90"/><text class="c4-label" x="535" y="84">1 — 1</text>
+    <line class="erd-line" x1="420" y1="160" x2="420" y2="230"/><text class="c4-label" x="428" y="198">1 — 1</text>
+    <line class="erd-line" x1="700" y1="180" x2="700" y2="230"/><text class="c4-label" x="708" y="208">1 — 1</text>
+    <line class="erd-line" x1="140" y1="180" x2="140" y2="380" style="stroke-dasharray:3 3"/><line class="erd-line" x1="140" y1="380" x2="590" y2="330" style="stroke-dasharray:3 3"/><text class="c4-label" x="150" y="395">1 session → * audit events (all tables)</text>
+  </svg>
+  </div>
+  <div class="svg-caption">Figure 6 — Operational entity model. All five tables live in Azure Database for PostgreSQL with AES-256 encryption at rest; <code>patient_ref_token</code> is never the patient's MRN directly.</div>
+
+  <div class="signoff">
+    <div class="sobox"><div class="role">Prepared By</div><div class="name">Jordan Blake</div><div class="title">Solution Architect, MedFlow AI Program</div><div class="sigline">Signature / Date</div></div>
+    <div class="sobox"><div class="role">Reviewed By</div><div class="name">Priya Nandakumar</div><div class="title">Engineering Lead, Platform</div><div class="sigline">Signature / Date</div></div>
+    <div class="sobox"><div class="role">Approved By</div><div class="name">Sam Okafor</div><div class="title">VP Engineering</div><div class="sigline">Signature / Date</div></div>
+  </div>
+  </div>
+</section>
+
+<!-- =================== DELIVERABLE 07: RISK REGISTER =================== -->
+<section class="page" id="doc-risk" data-kw="architecture risk register automation bias hl7 mirth single point of failure phi exposure fda samd reclassification">
+  <div class="kicker">Deliverable 07</div>
+  <h1>Architecture Risk Register</h1>
+  <p class="lede">Ten risks, scored likelihood × impact, each with a named owner and a concrete mitigation — not a generic "monitor closely."</p>
+  <div class="doc-toolbar">
+    <button class="btn primary" onclick="downloadDocHTML('risk')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>Download HTML</button>
+    <button class="btn" onclick="printDoc('risk')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>Print / Save as PDF</button>
+    <button class="btn" onclick="downloadCSV('risk')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 3h18v18H3zM3 9h18M9 21V9"/></svg>Download CSV</button>
+  </div>
+
+  <div id="printable-risk" class="doc-printable">
+  <div class="doc-control-strip">
+    <div><span class="lbl">Document</span><span class="val">Architecture Risk Register</span></div>
+    <div><span class="lbl">Version</span><span class="val">1.0</span></div>
+    <div><span class="lbl">Owner</span><span class="val">Solution Architecture — MedFlow AI</span></div>
+    <div><span class="lbl">Status</span><span class="val"><span class="badge approved">Approved</span></span></div>
+    <div><span class="lbl">Date</span><span class="val">2026-08-07</span></div>
+  </div>
+
+  <div class="callout info">
+    <div class="cotitle">Scoring methodology</div>
+    <p>Likelihood and Impact each scored 1–5; Score = Likelihood × Impact. Bands: 1–4 Low, 5–9 Medium, 10–14 High, 15–25 Critical.</p>
+  </div>
+
+  <div class="grid cols2">
+    <div>
+      <h2>Severity Distribution</h2>
+      <div class="svgwrap">
+      <svg viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(140,130)">
+          <circle r="90" fill="none" stroke="var(--border)" stroke-width="34"/>
+          <circle r="90" fill="none" stroke="var(--cherry)" stroke-width="34" stroke-dasharray="56.5 565.5" stroke-dashoffset="0" transform="rotate(-90)"/>
+          <circle r="90" fill="none" stroke="var(--amber)" stroke-width="34" stroke-dasharray="169.6 565.5" stroke-dashoffset="-56.5" transform="rotate(-90)"/>
+          <circle r="90" fill="none" stroke="var(--berry)" stroke-width="34" stroke-dasharray="339.3 565.5" stroke-dashoffset="-226.1" transform="rotate(-90)"/>
+          <text text-anchor="middle" y="-4" class="chart-value" style="font-size:22px">10</text>
+          <text text-anchor="middle" y="16" class="chart-label" style="font-size:10px;fill:var(--muted)">total risks</text>
+        </g>
+      </svg>
+      </div>
+      <div class="diagram-legend"><span><i style="background:var(--cherry)"></i>Critical (1)</span><span><i style="background:var(--amber)"></i>High (3)</span><span><i style="background:var(--berry)"></i>Medium (6)</span></div>
+    </div>
+    <div>
+      <h2>Top Risk</h2>
+      <div class="callout key">
+        <div class="cotitle">R-01 · Critical (15) · Automation Bias</div>
+        <p>A triage nurse over-trusts the AI acuity recommendation and stops applying independent clinical judgment. This is the single highest-severity risk in the register precisely because MedFlow AI's entire regulatory posture (ADR-002) depends on the nurse's acknowledgment being a genuine clinical check, not a rubber stamp.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2>Full Register</h2>
+  <div id="riskTableMount"></div>
+
+  <div class="signoff">
+    <div class="sobox"><div class="role">Prepared By</div><div class="name">Jordan Blake</div><div class="title">Solution Architect, MedFlow AI Program</div><div class="sigline">Signature / Date</div></div>
+    <div class="sobox"><div class="role">Reviewed By</div><div class="name">Marcus Webb</div><div class="title">Security &amp; Compliance Lead</div><div class="sigline">Signature / Date</div></div>
+    <div class="sobox"><div class="role">Approved By</div><div class="name">Dr. Elena Ruiz</div><div class="title">Chief Medical Information Officer</div><div class="sigline">Signature / Date</div></div>
+  </div>
+  </div>
+</section>
+
+<!-- =================== DELIVERABLE 08: ONE PAGE =================== -->
+<section class="page" id="doc-onepage" data-kw="one page architecture package summary sign off approval">
+  <div class="kicker">Deliverable 08</div>
+  <h1>Architecture Package — One-Page Sign-off Summary</h1>
+  <p class="lede">The single page a steering committee actually reads before approving the program to proceed.</p>
+  <div class="doc-toolbar">
+    <button class="btn primary" onclick="downloadDocHTML('onepage')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>Download HTML</button>
+    <button class="btn" onclick="printDoc('onepage')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>Print / Save as PDF</button>
+  </div>
+
+  <div id="printable-onepage" class="doc-printable">
+  <div class="doc-control-strip">
+    <div><span class="lbl">Document</span><span class="val">One-Page Sign-off Package</span></div>
+    <div><span class="lbl">Version</span><span class="val">1.0</span></div>
+    <div><span class="lbl">Owner</span><span class="val">Solution Architecture — MedFlow AI</span></div>
+    <div><span class="lbl">Status</span><span class="val"><span class="badge approved">Ready for Sign-off</span></span></div>
+    <div><span class="lbl">Date</span><span class="val">2026-08-07</span></div>
+  </div>
+
+  <h2>MedFlow AI — Intelligent Patient Intake, Triage &amp; Care-Team Routing</h2>
+  <p><strong>Meridian Health Network</strong> · Event-driven microservices on Azure · Clinical decision support (not autonomous) · GA scope: English/Spanish intake, hybrid rules+ML triage recommendation, 12-facility care-team routing.</p>
+
+  <div class="kpirow">
+    <div class="kpitile"><div class="kv">99.95%</div><div class="kl">Critical-path uptime</div></div>
+    <div class="kpitile"><div class="kv">&lt;3.0s</div><div class="kl">p95 triage score latency</div></div>
+    <div class="kpitile"><div class="kv">800</div><div class="kl">Peak concurrent sessions</div></div>
+    <div class="kpitile"><div class="kv">6</div><div class="kl">ADRs accepted</div></div>
+    <div class="kpitile"><div class="kv">17</div><div class="kl">Measurable NFRs</div></div>
+    <div class="kpitile"><div class="kv">10</div><div class="kl">Risks tracked, 1 Critical</div></div>
+  </div>
+
+  <div class="grid cols2">
+    <div class="card accent-berry">
+      <h4>Architecture at a glance</h4>
+      <ul class="small">
+        <li>Event-driven microservices, Azure-hosted, hybrid HL7 interface engine (ADR-001, ADR-004)</li>
+        <li>Hybrid rules + ML triage scoring — recommendation only, nurse-acknowledged (ADR-002)</li>
+        <li>HL7v2/FHIR integration via Mirth Connect, no direct EHR database access (ADR-003)</li>
+        <li>Azure Event Hubs backbone, selected 4.25/5 weighted over three alternatives (ADR-005)</li>
+        <li>Azure OpenAI licensed, proprietary orchestration/safety layer built in-house (ADR-006)</li>
+      </ul>
+    </div>
+    <div class="card accent-cherry">
+      <h4>What the committee is being asked to accept</h4>
+      <ul class="small">
+        <li>Top risk: automation bias (R-01, Critical) — mitigated by mandatory nurse acknowledgment UX and quarterly training</li>
+        <li>Operational dependency on Azure OpenAI Service availability and pricing (R-03, R-09)</li>
+        <li>Hybrid network dependency on ExpressRoute connectivity for the HL7 Interface Engine (R-02, ADR-004 consequence)</li>
+        <li>Regulatory boundary must be actively maintained release-over-release, not a one-time check (NFR-COMP-02)</li>
+      </ul>
+    </div>
+  </div>
+
+  <h4>Document index</h4>
+  <p class="small">Full detail in: <a href="#doc-sad">01 Solution Architecture Document</a> · <a href="#doc-c4">02 C4 Diagrams</a> · <a href="#doc-adr">03 ADRs</a> · <a href="#doc-nfr">04 NFR Specification</a> · <a href="#doc-tradeoff">05 Trade-off Matrix</a> · <a href="#doc-sequence">06 Sequence &amp; Data-Flow</a> · <a href="#doc-risk">07 Risk Register</a></p>
+
+  <div class="signoff">
+    <div class="sobox"><div class="role">Prepared By</div><div class="name">Jordan Blake</div><div class="title">Solution Architect, MedFlow AI Program</div><div class="sigline">Signature / Date</div></div>
+    <div class="sobox"><div class="role">Reviewed By</div><div class="name">Priya Nandakumar · Marcus Webb</div><div class="title">Engineering Lead, Platform · Security &amp; Compliance Lead</div><div class="sigline">Signature / Date</div></div>
+    <div class="sobox"><div class="role">Approved By</div><div class="name">Dr. Elena Ruiz · Sam Okafor</div><div class="title">Chief Medical Information Officer · VP Engineering</div><div class="sigline">Signature / Date</div></div>
+  </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<footer class="pagefoot">
+  Colaberry Enterprise AI Leadership Accelerator — Solution Architect Field Guide · Internal training artifact · Not for external distribution.
+</footer>
+
+<!-- =================== ASK ASSISTANT WIDGET =================== -->
+<button id="askFab"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>Ask the Guide</button>
+<div id="askPanel">
+  <div class="askhead"><div><div class="t">Ask the Field Guide</div><div class="s">Answers sourced from this guide · fully offline</div></div><button class="askclose" id="askClose">✕</button></div>
+  <div id="askLog"></div>
+  <div class="ask-suggest" id="askSuggest"></div>
+  <form id="askForm"><input id="askInput" type="text" placeholder="Ask about C4, ADRs, latency targets, risks…" autocomplete="off"><button type="submit" id="askSend"><svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button></form>
+</div>
+
+<script id="deepdive-metadata" type="application/json">
+{
+  "guide_type": "Solution Architect Field Guide",
+  "curriculum_type": "deep_dive",
+  "week": 2,
+  "discipline": "Solution Architect",
+  "student_id": "paulsane@yahoo.com",
+  "project_id": "medflow-ai-meridian-health",
+  "repository": "AI-Project",
+  "generated_by": "Claude Code",
+  "generated_date": "2026-08-07",
+  "version": "1.0.0",
+  "build_number": "1"
+}
+</script>
+
+<script>
+(function(){
+'use strict';
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ================= DATA ================= */
+var NFR_DATA = [
+  {id:'NFR-PERF-01', category:'Performance', requirement:'Patient intake conversational turn response time', target:'p95 under 2.0s, p99 under 3.5s end-to-end (client to BFF round trip)', verification:'Load test (k6) against staging; synthetic monitoring in production', priority:'Must'},
+  {id:'NFR-PERF-02', category:'Performance', requirement:'Triage acuity score availability to nurse console after intake completion', target:'p95 under 3.0s from intake-complete event to score rendered', verification:'Event-bus trace timestamps (correlation ID) sampled in production', priority:'Must'},
+  {id:'NFR-AVAIL-01', category:'Availability', requirement:'Nurse Triage Console + Triage Scoring Service (critical path)', target:'99.95% monthly uptime (21.6 min/month unplanned, maximum)', verification:'Uptime monitor (Azure Monitor availability tests), monthly SLA report', priority:'Must'},
+  {id:'NFR-AVAIL-02', category:'Availability', requirement:'Patient Intake BFF (has manual fallback to paper intake)', target:'99.9% monthly uptime (43.2 min/month unplanned, maximum)', verification:'Uptime monitor, monthly SLA report', priority:'Must'},
+  {id:'NFR-SCALE-01', category:'Scalability', requirement:'Concurrent active intake sessions across 12 facilities', target:'Sustain 150 concurrent steady-state; burst to 800 during flu-season peak (Nov-Feb) with autoscale within 90s', priority:'Must', verification:'Load test at 5x average observed 2025 peak; autoscale rule validation'},
+  {id:'NFR-SCALE-02', category:'Scalability', requirement:'Event bus throughput for routing events', target:'2,000 events/sec sustained, 6,000 events/sec burst, zero message loss', verification:'Throughput test against Event Hubs staging namespace', priority:'Should'},
+  {id:'NFR-SEC-01', category:'Security', requirement:'PHI encryption at rest', target:'AES-256 for every PHI-bearing datastore (Postgres, blob, cache)', verification:'Azure Policy compliance scan; annual penetration test', priority:'Must'},
+  {id:'NFR-SEC-02', category:'Security', requirement:'PHI encryption in transit', target:'TLS 1.2 minimum on every internal and external hop, no plaintext HL7 on the wire', verification:'TLS scan (testssl.sh) in CI; network capture audit', priority:'Must'},
+  {id:'NFR-SEC-03', category:'Security', requirement:'Authentication for clinical users', target:'Okta SSO plus MFA for all nurse/clinician access; 15-minute idle session timeout', verification:'Okta configuration review; authentication-path penetration test', priority:'Must'},
+  {id:'NFR-COMP-01', category:'Compliance', requirement:'HIPAA / HITECH audit trail', target:'100% of PHI read/write events logged with actor, timestamp, patient reference, and action; 7-year retention', verification:'Audit log completeness sample audit, quarterly', priority:'Must'},
+  {id:'NFR-COMP-02', category:'Compliance', requirement:'Clinical decision-support boundary (avoid FDA SaMD reclassification)', target:'The system never renders an autonomous diagnosis or treatment directive without clinician review; every AI-influenced recommendation is labeled decision support and requires clinician acknowledgment before it affects the chart', verification:'UX audit plus Clinical Informatics Committee sign-off per release; FDA CDS-exemption checklist', priority:'Must'},
+  {id:'NFR-REL-01', category:'Reliability / DR', requirement:'Recovery Point Objective for triage and routing data', target:'RPO of 5 minutes or less', verification:'Quarterly DR drill; geo-redundant backup validation', priority:'Must'},
+  {id:'NFR-REL-02', category:'Reliability / DR', requirement:'Recovery Time Objective for the critical path', target:'RTO of 30 minutes or less', verification:'Quarterly DR drill; documented failover runbook execution', priority:'Must'},
+  {id:'NFR-USAB-01', category:'Usability / Accessibility', requirement:'Nurse console conformance', target:'WCAG 2.1 AA across the Nurse Triage Console', verification:'Automated axe-core scan in CI plus manual audit before each release', priority:'Should'},
+  {id:'NFR-USAB-02', category:'Usability / Accessibility', requirement:'Patient intake language support', target:'English and Spanish at GA; three additional languages by Phase 2', verification:'Localization QA test matrix', priority:'Should'},
+  {id:'NFR-MAINT-01', category:'Maintainability', requirement:'Deployment independence for non-scoring services', target:'Independently deployable services; 15-minute build-to-staging pipeline or less', verification:'CI/CD pipeline metrics dashboard', priority:'Should'},
+  {id:'NFR-OBS-01', category:'Observability', requirement:'Distributed tracing across intake, triage, and routing', target:'100% of critical-path requests carry a correlation ID traceable end-to-end; 30-day trace retention', verification:'Trace-sampling audit; correlation-ID coverage report', priority:'Must'}
+];
+
+var RISK_DATA = [
+  {id:'R-01', risk:'Triage nurse over-trusts the AI acuity recommendation (automation bias) and stops applying independent clinical judgment.', likelihood:3, impact:5, mitigation:'Mandatory confidence-and-rationale display; console cannot submit routing without an explicit acknowledgment field; quarterly automation-bias training; shadow-mode validation before go-live.', owner:'Clinical Informatics Lead'},
+  {id:'R-02', risk:'The HL7v2 interface engine (Mirth) becomes a single point of failure for EHR write-back.', likelihood:3, impact:4, mitigation:'Active-active Mirth cluster; dead-letter queue with replay; synthetic HL7 heartbeat monitor.', owner:'Integration Engineering'},
+  {id:'R-03', risk:'PHI exposure via third-party Azure OpenAI Service prompt or telemetry logging.', likelihood:2, impact:5, mitigation:'Enterprise commitment with no data-retention/training-use clause; contractual BAA; prompt-redaction layer strips identifiers before every LLM call.', owner:'Security &amp; Compliance'},
+  {id:'R-04', risk:'Event Hubs partition hot-spotting during flu-season peak causing routing delays.', likelihood:3, impact:3, mitigation:'Partition key of facility_id plus shard; autoscale throughput units; load test at 5x observed peak.', owner:'Platform Engineering'},
+  {id:'R-05', risk:'FDA reclassifies triage scoring as SaMD if feature scope creeps toward autonomous recommendations.', likelihood:2, impact:5, mitigation:'Every feature request reviewed against the CDS-exemption criteria before build; ADR-002 boundary enforced in code review checklist.', owner:'Product &amp; Regulatory Counsel'},
+  {id:'R-06', risk:'MeridianChart HL7 feed schema drift breaks parsing silently.', likelihood:3, impact:3, mitigation:'Contract tests against the HL7 schema in CI; alerting on parse-failure rate above 0.1%.', owner:'Integration Engineering'},
+  {id:'R-07', risk:'Multi-language intake mistranslation causes a symptom-capture error.', likelihood:2, impact:4, mitigation:'Clinically reviewed translation glossary; back-translation QA; low-confidence translations escalate to a human interpreter.', owner:'Clinical Content Team'},
+  {id:'R-08', risk:'Azure region outage impacts both primary and DR path if the DR region is misconfigured.', likelihood:1, impact:5, mitigation:'DR region in a separate Azure paired region; quarterly failover drill; infrastructure-as-code parity check.', owner:'Platform Engineering'},
+  {id:'R-09', risk:'Vendor lock-in to Azure OpenAI Service limits future model-portfolio flexibility.', likelihood:3, impact:2, mitigation:'Orchestration layer abstracts the model provider behind an internal interface (ADR-006); evaluate a model-agnostic gateway in Phase 2.', owner:'Architecture'},
+  {id:'R-10', risk:'True production concurrency is unknown until the first live flu season (peak load-testing gap).', likelihood:3, impact:3, mitigation:'Synthetic load test at 5x the 2025 observed peak pre-launch; staged facility-by-facility rollout; real-time autoscale monitoring with paging.', owner:'SRE'}
+];
+RISK_DATA.forEach(function(r){ r.score = r.likelihood * r.impact; });
+
+var TRADEOFF = {
+  criteria: [
+    {name:'Compliance / Data Residency', weight:25},
+    {name:'Operational Overhead', weight:20},
+    {name:'Latency / Throughput Fit', weight:20},
+    {name:'Cost at Projected Volume', weight:15},
+    {name:'Team Familiarity', weight:10},
+    {name:'Vendor Lock-in Risk', weight:10}
+  ],
+  options: [
+    {name:'Azure Event Hubs', scores:[5,5,4,4,3,3]},
+    {name:'RabbitMQ (self-host)', scores:[4,2,3,5,4,5]},
+    {name:'Confluent Cloud', scores:[3,5,5,2,2,3]},
+    {name:'AWS SQS/SNS', scores:[2,4,3,3,2,2]}
+  ]
+};
+function computeTotal(o){ var t=0; TRADEOFF.criteria.forEach(function(c,i){ t += o.scores[i]*c.weight/100; }); return t; }
+function severityBand(score){ return score>=15?'critical':score>=10?'high':score>=5?'medium':'low'; }
+function severityLabel(band){ return band.charAt(0).toUpperCase()+band.slice(1); }
+
+/* ================= TABLE RENDERING ================= */
+function renderNFRTable(){
+  var rows = NFR_DATA.map(function(r){
+    return '<tr><td class="mono">'+esc(r.id)+'</td><td>'+esc(r.category)+'</td><td>'+esc(r.requirement)+'</td><td>'+esc(r.target)+'</td><td>'+esc(r.verification)+'</td><td><span class="badge '+(r.priority==='Must'?'must':'should')+'">'+esc(r.priority)+'</span></td></tr>';
+  }).join('');
+  var el = document.getElementById('nfrTableMount');
+  if(el) el.innerHTML = '<table class="datatable"><tr><th>ID</th><th>Category</th><th>Requirement</th><th>Measurable Target</th><th>Verification</th><th>Priority</th></tr>'+rows+'</table>';
+}
+function renderRiskTable(){
+  var rows = RISK_DATA.map(function(r){
+    var band = severityBand(r.score);
+    return '<tr><td class="mono">'+esc(r.id)+'</td><td>'+r.risk+'</td><td class="mono">'+r.likelihood+'</td><td class="mono">'+r.impact+'</td><td class="mono">'+r.score+'</td><td><span class="badge '+band+'">'+severityLabel(band)+'</span></td><td>'+r.mitigation+'</td><td>'+esc(r.owner)+'</td></tr>';
+  }).join('');
+  var el = document.getElementById('riskTableMount');
+  if(el) el.innerHTML = '<table class="datatable"><tr><th>ID</th><th>Risk</th><th>L</th><th>I</th><th>Score</th><th>Severity</th><th>Mitigation</th><th>Owner</th></tr>'+rows+'</table>';
+}
+function renderTradeoffTable(){
+  var head = '<tr><th>Criterion (Weight)</th>'+TRADEOFF.options.map(function(o){return '<th>'+esc(o.name)+'</th>';}).join('')+'</tr>';
+  var body = TRADEOFF.criteria.map(function(c,ci){
+    return '<tr><td><strong>'+esc(c.name)+'</strong> <span class="muted mono">('+c.weight+'%)</span></td>'+TRADEOFF.options.map(function(o){return '<td class="mono">'+o.scores[ci]+' / 5</td>';}).join('')+'</tr>';
+  }).join('');
+  var totalRow = '<tr style="font-weight:700"><td>Weighted Total</td>'+TRADEOFF.options.map(function(o){return '<td class="mono">'+computeTotal(o).toFixed(2)+' / 5.00</td>';}).join('')+'</tr>';
+  var el = document.getElementById('tradeoffTableMount');
+  if(el) el.innerHTML = '<table class="datatable">'+head+body+totalRow+'</table>';
+}
+renderNFRTable(); renderRiskTable(); renderTradeoffTable();
+
+/* ================= CSV EXPORT ================= */
+function toCSVCell(s){ s = String(s); if(/[",\n]/.test(s)){ s = '"'+s.replace(/"/g,'""')+'"'; } return s; }
+function rowsToCSV(headers, rows){ return [headers.map(toCSVCell).join(',')].concat(rows.map(function(r){ return r.map(toCSVCell).join(','); })).join('\r\n'); }
+function triggerDownload(filename, content, mime){
+  var blob = new Blob([content], {type: mime || 'text/plain;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+window.downloadCSV = function(key){
+  var headers, rows, filename;
+  var stripTags = function(s){ return String(s).replace(/<[^>]+>/g,''); };
+  if(key==='nfr'){
+    headers = ['ID','Category','Requirement','Measurable Target','Verification Method','Priority'];
+    rows = NFR_DATA.map(function(r){ return [r.id,r.category,r.requirement,r.target,r.verification,r.priority]; });
+    filename = 'MedFlowAI_NFR_Specification.csv';
+  } else if(key==='risk'){
+    headers = ['ID','Risk','Likelihood','Impact','Score','Severity','Mitigation','Owner'];
+    rows = RISK_DATA.map(function(r){ return [r.id, stripTags(r.risk), r.likelihood, r.impact, r.score, severityLabel(severityBand(r.score)), stripTags(r.mitigation), r.owner]; });
+    filename = 'MedFlowAI_Risk_Register.csv';
+  } else if(key==='tradeoff'){
+    headers = ['Criterion','Weight %'].concat(TRADEOFF.options.map(function(o){return o.name;}));
+    rows = TRADEOFF.criteria.map(function(c,ci){ return [c.name, c.weight].concat(TRADEOFF.options.map(function(o){ return o.scores[ci]; })); });
+    rows.push(['Weighted Total',''].concat(TRADEOFF.options.map(function(o){ return computeTotal(o).toFixed(2); })));
+    filename = 'MedFlowAI_Tradeoff_Matrix.csv';
+  } else { return; }
+  triggerDownload(filename, rowsToCSV(headers, rows), 'text/csv;charset=utf-8');
+};
+
+/* ================= STANDALONE DOCUMENT BUILD (Download HTML / Print-PDF) ================= */
+var DOCS = {
+  sad:      {title:'Solution Architecture Document', file:'MedFlowAI_Solution_Architecture_Document', bodyId:'printable-sad'},
+  c4:       {title:'C4 Diagrams: Context, Container &amp; Component', file:'MedFlowAI_C4_Diagrams', bodyId:'printable-c4'},
+  adr:      {title:'Architecture Decision Records', file:'MedFlowAI_Architecture_Decision_Records', bodyId:'printable-adr'},
+  nfr:      {title:'Non-Functional Requirements Specification', file:'MedFlowAI_NFR_Specification', bodyId:'printable-nfr'},
+  tradeoff: {title:'Technology Selection &amp; Trade-off Matrix', file:'MedFlowAI_Tradeoff_Matrix', bodyId:'printable-tradeoff'},
+  sequence: {title:'Sequence, Data-Flow &amp; Entity Diagrams', file:'MedFlowAI_Sequence_DataFlow_Diagrams', bodyId:'printable-sequence'},
+  risk:     {title:'Architecture Risk Register', file:'MedFlowAI_Risk_Register', bodyId:'printable-risk'},
+  onepage:  {title:'Architecture Package: One-Page Sign-off Summary', file:'MedFlowAI_OnePage_Signoff', bodyId:'printable-onepage'}
+};
+
+function docStyles(){
+  return [
+    'body{font-family:Roboto,system-ui,Arial,sans-serif;color:#1A1A1A;background:#fff;margin:0;line-height:1.6;}',
+    '.docwrap{max-width:900px;margin:0 auto;padding:40px 48px 80px;}',
+    '.cover{text-align:center;padding:70px 40px;border-bottom:6px solid #FB2832;page-break-after:always;}',
+    '.cover img{height:48px;margin-bottom:32px;}',
+    '.cover h1{font-size:1.9rem;color:#367895;margin:0 0 10px;}',
+    '.cover .sub{color:#6B6B6B;font-size:1.02rem;margin-bottom:34px;}',
+    '.cover .org{font-weight:700;color:#1A1A1A;font-size:1.08rem;}',
+    'h1,h2,h3,h4{font-family:Roboto,sans-serif;color:#367895;}',
+    'h2{border-top:1px solid #E4E4E3;padding-top:14px;margin-top:32px;}',
+    'a{color:#367895;}',
+    'table{width:100%;border-collapse:collapse;margin:1em 0;font-size:.85rem;}',
+    'table th{background:#367895;color:#fff;text-align:left;padding:8px 10px;font-size:.72rem;text-transform:uppercase;}',
+    'table td{padding:8px 10px;border-bottom:1px solid #E4E4E3;vertical-align:top;}',
+    '.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.66rem;font-weight:700;}',
+    '.badge.must,.badge.critical{background:rgba(251,40,50,.13);color:#FB2832;}',
+    '.badge.should,.badge.medium{background:rgba(54,120,149,.13);color:#367895;}',
+    '.badge.high{background:rgba(232,146,12,.16);color:#E8920C;}',
+    '.badge.low,.badge.approved{background:rgba(91,166,60,.15);color:#5BA63C;}',
+    '.callout{border-radius:8px;padding:12px 16px;margin:1em 0;border:1px solid #E4E4E3;border-left-width:5px;}',
+    '.callout.info{border-left-color:#367895;} .callout.warn{border-left-color:#E8920C;} .callout.key{border-left-color:#FB2832;} .callout.success{border-left-color:#5BA63C;}',
+    '.cotitle{font-weight:700;font-size:.76rem;text-transform:uppercase;margin-bottom:.3em;}',
+    '.doc-control-strip{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid #E4E4E3;border-radius:8px;overflow:hidden;margin:16px 0 26px;font-size:.72rem;}',
+    '.doc-control-strip div{padding:9px 12px;border-right:1px solid #E4E4E3;}',
+    '.doc-control-strip div:last-child{border-right:none;}',
+    '.doc-control-strip .lbl{display:block;text-transform:uppercase;color:#6B6B6B;font-size:.6rem;margin-bottom:2px;}',
+    '.doc-control-strip .val{font-weight:700;}',
+    '.signoff{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:2.4em;}',
+    '.sobox{border:1px solid #E4E4E3;border-radius:8px;padding:14px;}',
+    '.sobox .role{font-size:.66rem;text-transform:uppercase;color:#367895;font-weight:700;margin-bottom:8px;}',
+    '.sobox .name{font-weight:700;} .sobox .title{color:#6B6B6B;font-size:.8rem;}',
+    '.sobox .sigline{margin-top:20px;border-top:1px solid #E4E4E3;padding-top:6px;font-size:.7rem;color:#6B6B6B;}',
+    '.card{border:1px solid #E4E4E3;border-radius:8px;padding:14px 16px;}',
+    '.grid{display:grid;gap:14px;} .grid.cols2{grid-template-columns:1fr 1fr;}',
+    '.kpirow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:1em 0;}',
+    '.kpitile{border:1px solid #E4E4E3;border-top:3px solid #367895;border-radius:8px;padding:10px 12px;}',
+    '.kpitile .kv{font-family:"Roboto Mono",monospace;font-weight:700;font-size:1.15rem;color:#FB2832;}',
+    '.kpitile .kl{font-size:.64rem;color:#6B6B6B;text-transform:uppercase;}',
+    '.svgwrap{border:1px solid #E4E4E3;border-radius:8px;padding:12px;margin:1em 0;} svg{max-width:100%;height:auto;}',
+    '.diagram-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.72rem;color:#6B6B6B;margin-top:8px;justify-content:center;}',
+    '.diagram-legend i{width:11px;height:11px;border-radius:2px;display:inline-block;margin-right:4px;}',
+    '.svg-caption{text-align:center;font-size:.74rem;color:#6B6B6B;margin-top:6px;}',
+    '.adr{border:1px solid #E4E4E3;border-radius:8px;padding:16px 18px;margin:1.2em 0;}',
+    '.adrhead{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}',
+    '.docfoot{margin-top:50px;padding-top:14px;border-top:1px solid #E4E4E3;color:#6B6B6B;font-size:.7rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;}',
+    '.mono{font-family:"Roboto Mono",monospace;}',
+    '@page{margin:0.6in;}',
+    '@media(max-width:700px){.grid.cols2,.kpirow,.doc-control-strip,.signoff{grid-template-columns:1fr;}}'
+  ].join('\n');
+}
+
+function buildStandaloneDoc(key){
+  var meta = DOCS[key];
+  var bodyEl = document.getElementById(meta.bodyId);
+  if(!bodyEl) return '';
+  var bodyHTML = bodyEl.innerHTML;
+  var logoSrc = document.querySelector('header.topbar img.logo').getAttribute('src');
+  var now = '2026-08-07';
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+meta.title.replace(/&amp;/g,'&')+' - MedFlow AI</title><style>'+docStyles()+'</style></head><body>'+
+    '<div class="cover"><img src="'+logoSrc+'" alt="Colaberry">'+
+    '<h1>'+meta.title+'</h1>'+
+    '<div class="sub">MedFlow AI &mdash; Intelligent Patient Intake, Triage &amp; Care-Team Routing</div>'+
+    '<div class="org">Meridian Health Network</div>'+
+    '<div class="doc-control-strip" style="margin-top:38px;text-align:left;">'+
+      '<div><span class="lbl">Version</span><span class="val">1.0</span></div>'+
+      '<div><span class="lbl">Owner</span><span class="val">Solution Architecture</span></div>'+
+      '<div><span class="lbl">Status</span><span class="val">Approved</span></div>'+
+      '<div><span class="lbl">Date</span><span class="val">'+now+'</span></div>'+
+      '<div><span class="lbl">Classification</span><span class="val">Internal - Confidential</span></div>'+
+    '</div></div>'+
+    '<div class="docwrap">'+bodyHTML+
+    '<div class="docfoot"><span>Colaberry Enterprise AI Leadership Accelerator - Solution Architect Field Guide</span><span>Generated '+now+' - Internal training artifact, not for external distribution</span></div>'+
+    '</div></body></html>';
+}
+window.downloadDocHTML = function(key){
+  var html = buildStandaloneDoc(key);
+  if(html) triggerDownload(DOCS[key].file+'.html', html, 'text/html;charset=utf-8');
+};
+window.printDoc = function(key){
+  var html = buildStandaloneDoc(key);
+  if(!html) return;
+  var win = window.open('', '_blank');
+  if(!win){ alert('Please allow pop-ups for this site to print the document.'); return; }
+  win.document.open(); win.document.write(html); win.document.close();
+  win.onload = function(){ setTimeout(function(){ win.focus(); win.print(); }, 350); };
+};
+
+/* ================= NAV ACTIVE STATE + MOBILE TOGGLE ================= */
+var sections = document.querySelectorAll('section.page');
+var navLinks = document.querySelectorAll('nav.sidebar a');
+function setActive(id){
+  navLinks.forEach(function(a){ a.classList.toggle('active', a.getAttribute('href')==='#'+id); });
+}
+if('IntersectionObserver' in window){
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if(e.isIntersecting){ setActive(e.target.id); } });
+  }, {rootMargin:'-15% 0px -70% 0px', threshold:0});
+  sections.forEach(function(s){ obs.observe(s); });
+}
+var navToggle = document.getElementById('navToggle');
+if(navToggle){ navToggle.addEventListener('click', function(){ document.getElementById('sidebar').classList.toggle('open'); }); }
+
+/* ================= THEME TOGGLE ================= */
+try{ var savedTheme = localStorage.getItem('sa-fg-theme'); if(savedTheme){ document.documentElement.setAttribute('data-theme', savedTheme); } }catch(e){}
+document.getElementById('themeToggle').addEventListener('click', function(){
+  var cur = document.documentElement.getAttribute('data-theme');
+  var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  var isDark = cur ? cur==='dark' : prefersDark;
+  var next = isDark ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try{ localStorage.setItem('sa-fg-theme', next); }catch(e){}
+});
+
+/* ================= SEARCH ================= */
+var searchInput = document.getElementById('globalSearch');
+var resultsBox = document.getElementById('searchResultsBox');
+var searchIndex = [];
+sections.forEach(function(sec){
+  var h1 = sec.querySelector('h1');
+  var kicker = sec.querySelector('.kicker');
+  searchIndex.push({ id: sec.id, title: h1 ? h1.textContent : sec.id, group: kicker ? kicker.textContent : '', kw: (sec.getAttribute('data-kw')||'') + ' ' + (h1?h1.textContent:'') });
+});
+function flashSection(id){
+  var el = document.getElementById(id);
+  if(el){ el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+}
+function filterSidebar(q){
+  navLinks.forEach(function(a){
+    if(!q){ a.classList.remove('hidden-by-search'); return; }
+    var hay = (a.textContent+' '+(a.getAttribute('data-kw')||'')).toLowerCase();
+    var terms = q.split(/\s+/);
+    var match = terms.every(function(t){ return hay.indexOf(t)!==-1; });
+    a.classList.toggle('hidden-by-search', !match);
+  });
+}
+function runSearch(raw){
+  var q = raw.trim().toLowerCase();
+  if(!q){ resultsBox.style.display='none'; filterSidebar(''); return; }
+  var terms = q.split(/\s+/);
+  var scored = searchIndex.map(function(item){
+    var hay = (item.title+' '+item.kw).toLowerCase();
+    var score = 0;
+    terms.forEach(function(t){ if(hay.indexOf(t)!==-1) score++; });
+    return {item:item, score:score};
+  }).filter(function(x){ return x.score>0; }).sort(function(a,b){ return b.score-a.score; });
+  if(scored.length===0){
+    resultsBox.innerHTML = '<a href="#" style="color:var(--muted)">No matches in the guide. Try Ask the Guide instead.</a>';
+  } else {
+    resultsBox.innerHTML = scored.slice(0,10).map(function(x){
+      return '<a href="#'+x.item.id+'" data-target="'+x.item.id+'"><span class="grp">'+esc(x.item.group)+'</span><br>'+esc(x.item.title)+'</a>';
+    }).join('');
+  }
+  resultsBox.style.display = 'block';
+  filterSidebar(q);
+}
+searchInput.addEventListener('input', function(){ runSearch(searchInput.value); });
+searchInput.addEventListener('focus', function(){ if(searchInput.value.trim()) resultsBox.style.display='block'; });
+resultsBox.addEventListener('click', function(e){
+  var a = e.target.closest('a[data-target]');
+  if(a){ setTimeout(function(){ resultsBox.style.display='none'; searchInput.value=''; filterSidebar(''); flashSection(a.getAttribute('data-target')); }, 0); }
+});
+document.addEventListener('click', function(e){ if(!e.target.closest('.search-wrap')){ resultsBox.style.display='none'; } });
+searchInput.addEventListener('keydown', function(e){
+  if(e.key==='Enter'){ var first = resultsBox.querySelector('a[data-target]'); if(first){ window.location.hash = '#'+first.getAttribute('data-target'); resultsBox.style.display='none'; searchInput.value=''; filterSidebar(''); flashSection(first.getAttribute('data-target')); } }
+  if(e.key==='Escape'){ resultsBox.style.display='none'; searchInput.blur(); }
+});
+
+/* ================= ASK THE GUIDE (offline Q&A) ================= */
+var KB = [
+  {kw:['solution','architecture','why','exist','purpose','role'], q:'why does solution architecture exist', a:'Solution architecture exists because business requirements never state the non-functional properties on their own, such as performance, availability, and security. Left unstated, those properties get decided by accident. Naming them on purpose, in advance, is the whole point of the discipline.', href:'#why-sa'},
+  {kw:['quality','attribute','nfr','non','functional','requirement'], q:'what is a quality attribute', a:'A quality attribute is a measurable property of how well a system does something, not what it does. Every quality attribute in this guide has a number and a verification method attached, not just an adjective.', href:'#quality-attributes'},
+  {kw:['c4','model','context','container','component','levels','diagram'], q:'what is the c4 model', a:'The C4 model has four levels of detail: Context, Container, Component, and Code, each answering a more detailed question for a more technical audience. MedFlow AI uses the first three, all in Deliverable 02.', href:'#c4-model-primer'},
+  {kw:['adr','architecture','decision','record','template'], q:'what is an adr', a:'An Architecture Decision Record captures one significant decision: the context that forced it, the decision itself, the alternatives that were seriously considered and rejected, and the consequences, both gains and costs.', href:'#adr-primer'},
+  {kw:['trade','off','tradeoff','weighted','scoring','matrix'], q:'what is a trade off matrix', a:'A trade-off matrix scores real candidate options against criteria that are weighted before any scoring happens, and states what the losing options would have cost, not just why the winner won.', href:'#tradeoff-primer'},
+  {kw:['fitness','function','governance','automated','check'], q:'what is a fitness function', a:'A fitness function is an automated, objective check in CI that a specific architectural characteristic still holds, the same way a unit test protects a function behavior over time.', href:'#fitness-functions'},
+  {kw:['build','vs','buy','make','licens'], q:'build versus buy', a:'Default to buy. Build only when the capability is core to your differentiation or no vendor meets a hard compliance or data-residency constraint. MedFlow AI buys the underlying LLM capability and builds a proprietary orchestration and safety layer around it, per ADR-006.', href:'#build-vs-buy'},
+  {kw:['monolith','microservices','event','driven','style','architecture'], q:'why event driven microservices', a:'MedFlow AI uses event-driven microservices because three quality attributes require it: differentiated availability tiers between services, multiple independent consumers of the same domain event, and independent deployability across teams. See ADR-001.', href:'#doc-adr'},
+  {kw:['medflow','initiative','what','is','platform'], q:'what is medflow ai', a:'MedFlow AI is a clinical decision-support platform for Meridian Health Network. It handles conversational patient intake, produces a triage acuity recommendation for the nurse to review, and routes acknowledged cases to the correct care team.', href:'#case-study'},
+  {kw:['meridian','health','network','facilities','how','many','hospital'], q:'how many facilities does meridian have', a:'Meridian Health Network operates 12 facilities across the metro region: 3 emergency departments and 9 urgent-care or primary-care clinics, with roughly 450,000 annual patient visits.', href:'#case-study'},
+  {kw:['hybrid','rules','ml','autonomous','decision','pure'], q:'why hybrid rules and ml', a:'MedFlow AI uses a hybrid rules-plus-ML ensemble rather than pure ML so the system stays a clinical decision-support tool. Rules may only escalate the acuity a nurse sees, never downgrade it, and the nurse must acknowledge every recommendation. Full reasoning is in ADR-002.', href:'#doc-adr'},
+  {kw:['azure','cloud','aws','on','premise','why','host'], q:'why azure', a:'MedFlow AI runs on Azure because Meridian already holds an enterprise agreement covering Azure consumption plus a contracted, HIPAA-eligible Azure OpenAI Service commitment. AWS and full on-premise were both evaluated and rejected in ADR-004.', href:'#doc-adr'},
+  {kw:['rto','rpo','recovery','disaster','point','time','objective'], q:'what is the rto and rpo', a:'The critical path targets a Recovery Point Objective of 5 minutes or less and a Recovery Time Objective of 30 minutes or less, verified with a quarterly disaster recovery drill.', href:'#doc-nfr'},
+  {kw:['latency','p95','triage','score','response','time','fast'], q:'what is the latency target', a:'p95 intake response time must be under 2.0 seconds, and p95 triage score delivery to the nurse console must be under 3.0 seconds from intake completion.', href:'#doc-nfr'},
+  {kw:['availability','uptime','sla'], q:'what is the availability target', a:'The Nurse Triage Console and Triage Scoring Service target 99.95% monthly uptime. The Patient Intake BFF targets 99.9%, because it has a manual paper-intake fallback.', href:'#doc-nfr'},
+  {kw:['event','bus','backbone','kafka','hubs','chosen','messaging'], q:'what event backbone was chosen', a:'Azure Event Hubs was selected as the event backbone, scoring 4.25 out of 5 on a weighted trade-off matrix against Confluent Cloud (3.55), self-hosted RabbitMQ (3.65), and AWS SQS/SNS (2.75). Full detail is in Deliverable 05 and ADR-005.', href:'#doc-tradeoff'},
+  {kw:['top','risk','biggest','automation','bias','critical'], q:'what is the top risk', a:'The top risk in the register is R-01, automation bias: a triage nurse over-trusting the AI recommendation without applying independent clinical judgment. It is the only Critical-severity risk in the register.', href:'#doc-risk'},
+  {kw:['bff','backend','frontend','two'], q:'what does bff mean', a:'BFF stands for Backend-for-Frontend, a backend tailored to one client experience. MedFlow AI has two: a Patient Intake BFF and a Nurse Triage Console BFF, because the two user groups need different data shapes and different availability guarantees.', href:'#patterns'},
+  {kw:['hl7','mirth','fhir','interface','engine','direct','database'], q:'why an hl7 interface engine', a:'MedFlow AI integrates with MeridianChart through a Mirth Connect HL7 interface engine instead of a direct database connection, so the integration stays vendor-upgrade-safe. See ADR-003.', href:'#doc-adr'},
+  {kw:['openai','down','unavailable','fallback','circuit','breaker','outage'], q:'what happens if azure openai is down', a:'A circuit breaker trips after 3 consecutive failures, and the Patient Intake BFF falls back to a structured multiple-choice intake form. Free-text NLP becomes unavailable, but the patient can still complete intake and reach a triage nurse.', href:'#doc-sad'},
+  {kw:['phi','protected','health','information','deidentify','identif'], q:'how is phi protected before the llm call', a:'Patient-identifying fields are stripped before any call to Azure OpenAI. The response is re-associated using a session-scoped token map that never leaves Meridian private network, so PHI never reaches the LLM in identifiable form.', href:'#doc-sequence'},
+  {kw:['sign','off','approve','approval','chain','who'], q:'who signs off on this', a:'Each deliverable is prepared by the Solution Architect, reviewed by Engineering and Security leads, and approved by the CMIO and VP Engineering. The full chain is on the One-Page Sign-off Package, Deliverable 08.', href:'#doc-onepage'},
+  {kw:['wcag','accessibility','conformance'], q:'what is the accessibility target', a:'The Nurse Triage Console targets WCAG 2.1 AA conformance, verified by automated axe-core scans in CI plus a manual audit before each release.', href:'#doc-nfr'},
+  {kw:['samd','fda','medical','device','regulatory','boundary'], q:'what is the fda samd boundary', a:'MedFlow AI is architected to remain a clinical decision-support tool, never an autonomous decision-maker, specifically to avoid FDA Software-as-a-Medical-Device reclassification. Every AI-influenced recommendation requires explicit clinician acknowledgment before it affects the chart.', href:'#quality-attributes'},
+  {kw:['review','lens','checklist','evaluate','approve','ai','generated'], q:'how do i review an ai generated design', a:'Run the eight-point Architect Review Lens: measurable NFRs, a justified architecture style, ADRs with rejected alternatives, trade-offs with stated costs, designed failure paths, no silent governance boundary crossings, diagram clarity, and right-sized complexity.', href:'#review-lens'}
+];
+function askGuide(question){
+  var tokens = question.toLowerCase().replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(function(t){ return t.length>2; });
+  if(tokens.length===0) return null;
+  var best=null, bestScore=0;
+  KB.forEach(function(entry){
+    var hay = (entry.kw.join(' ')+' '+entry.q).toLowerCase();
+    var score = 0;
+    tokens.forEach(function(t){ if(hay.indexOf(t)!==-1) score++; });
+    if(score>bestScore){ bestScore=score; best=entry; }
+  });
+  return bestScore>0 ? best : null;
+}
+var askLog = document.getElementById('askLog');
+function addMsg(role, html){
+  var div = document.createElement('div');
+  div.className = 'askmsg '+role;
+  div.innerHTML = html;
+  askLog.appendChild(div);
+  askLog.scrollTop = askLog.scrollHeight;
+}
+addMsg('bot', 'Ask about any concept or MedFlow AI document in this guide, for example: "what is the p95 triage latency target" or "why hybrid rules and ML, not pure ML".');
+var suggestions = ['What is the C4 model?','Why hybrid rules plus ML?','What event backbone was chosen?','What is the top risk?','What does BFF mean?','What is the RTO and RPO?'];
+var suggestBox = document.getElementById('askSuggest');
+suggestions.forEach(function(s){
+  var b = document.createElement('button');
+  b.type='button'; b.textContent = s;
+  b.addEventListener('click', function(){
+    document.getElementById('askInput').value = s;
+    document.getElementById('askForm').dispatchEvent(new Event('submit', {cancelable:true}));
+  });
+  suggestBox.appendChild(b);
+});
+document.getElementById('askForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var input = document.getElementById('askInput');
+  var q = input.value.trim();
+  if(!q) return;
+  addMsg('user', esc(q));
+  input.value = '';
+  var hit = askGuide(q);
+  setTimeout(function(){
+    if(hit){
+      addMsg('bot', esc(hit.a) + (hit.href ? '<br><a href="'+hit.href+'">View in guide &rarr;</a>' : ''));
+    } else {
+      addMsg('bot', 'That is not covered in this guide yet. Try asking about quality attributes, the C4 model, a specific ADR, NFR targets, the trade-off matrix, or a risk from the register.');
+    }
+  }, 260);
+});
+document.getElementById('askLog').addEventListener('click', function(e){
+  var a = e.target.closest('a[href^="#"]');
+  if(a){ document.getElementById('askPanel').classList.remove('open'); flashSection(a.getAttribute('href').slice(1)); }
+});
+document.getElementById('askFab').addEventListener('click', function(){ document.getElementById('askPanel').classList.add('open'); document.getElementById('askInput').focus(); });
+document.getElementById('askClose').addEventListener('click', function(){ document.getElementById('askPanel').classList.remove('open'); });
+
+})();
+</script>
+
+</body>
+</html>

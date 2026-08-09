@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boutique Travel Concierge — Command Center</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div id="scroll-progress"></div>
+<div id="topnav-root"></div>
+
+<main class="container" style="padding-top:20px;padding-bottom:40px;">
+  <h1 id="cc-title"></h1>
+  <p class="page-desc" id="cc-oneliner"></p>
+
+  <div class="tile-grid" id="tile-grid"></div>
+
+  <div id="ask-container"></div>
+</main>
+
+<button id="back-to-top" title="Back to top">&uarr;</button>
+
+<script src="assets/blueprint.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  Site.init("index", { isCommandCenter: true });
+
+  document.getElementById("cc-title").textContent = BLUEPRINT.meta.title + " — Command Center";
+  document.getElementById("cc-oneliner").textContent = BLUEPRINT.meta.oneLiner;
+
+  var previews = {
+    summary: Site.svg.paragraph(),
+    components: Site.svg.layers(BLUEPRINT.components.length),
+    architecture: Site.svg.nodeGraph(),
+    dataflow: Site.svg.flowRibbon(BLUEPRINT.sequences),
+    buildorder: Site.svg.phaseBars(BLUEPRINT.buildOrder.phases),
+    techstack: Site.svg.fitDots(BLUEPRINT.techStack),
+    assumptions: Site.svg.fork()
+  };
+
+  var grid = document.getElementById("tile-grid");
+  grid.innerHTML = SECTIONS.map(function (s) {
+    return '<a class="tile" href="' + s.file + '">' +
+      previews[s.id] +
+      '<div class="tile-title">' + Site.escapeHtml(s.title) + '</div>' +
+      '<div class="tile-desc">' + Site.escapeHtml(s.desc) + '</div>' +
+      '<div class="tile-count">' + Site.escapeHtml(s.countFn()) + '</div>' +
+      '</a>';
+  }).join("");
+
+  Site.renderAskPanel("ask-container", "Whole blueprint", function () { return BLUEPRINT; });
+</script>
+</body>
+</html>

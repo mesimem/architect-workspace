@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Summary — Boutique Travel Concierge</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div id="scroll-progress"></div>
+<div id="topnav-root"></div>
+<div id="breadcrumb-root"></div>
+
+<main class="container" style="padding-bottom:20px;">
+  <h1>Summary</h1>
+  <p class="page-desc">The idea in one paragraph, and the one-line description it boils down to.</p>
+
+  <div class="card searchable">
+    <h2 style="margin-top:0;">The idea</h2>
+    <p id="idea-text"></p>
+  </div>
+
+  <div class="card searchable">
+    <h2 style="margin-top:0;">One-line description</h2>
+    <p id="oneliner-text" style="font-size:1.05rem;"></p>
+  </div>
+
+  <div class="card searchable">
+    <h2 style="margin-top:0;">The day-one non-negotiable</h2>
+    <p id="dayone-text" style="font-size:1.05rem;color:var(--accent);font-weight:600;"></p>
+    <div class="diagram-card" data-title="What the idea maps to">
+      <div id="illustration-holder"></div>
+    </div>
+  </div>
+
+  <div id="foot-nav-root"></div>
+  <div id="ask-container"></div>
+</main>
+
+<button id="back-to-top" title="Back to top">&uarr;</button>
+
+<script src="assets/blueprint.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  Site.init("summary", {});
+  document.getElementById("idea-text").textContent = BLUEPRINT.meta.idea;
+  document.getElementById("oneliner-text").textContent = BLUEPRINT.meta.oneLiner;
+  document.getElementById("dayone-text").textContent = BLUEPRINT.meta.dayOne;
+  document.getElementById("illustration-holder").innerHTML = Site.svg.paragraph(600, 120);
+  Site.wireExpandable();
+  Site.renderAskPanel("ask-container", "Summary", function () { return { meta: BLUEPRINT.meta }; });
+</script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build Order — Boutique Travel Concierge</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div id="scroll-progress"></div>
+<div id="topnav-root"></div>
+<div id="breadcrumb-root"></div>
+
+<main class="container" style="padding-bottom:20px;">
+  <h1>Build Order</h1>
+  <p class="page-desc">Four phases, sequenced so the day-one requirement gets proven first. <span id="bo-note"></span></p>
+
+  <div class="card diagram-card" data-title="Build order (Gantt)">
+    <div class="mermaid" id="gantt-diagram"></div>
+    <div class="diagram-interpretation">Phase 1 is marked critical: everything else in the system can wait, but a booking that might double-charge a client can't ship.</div>
+  </div>
+
+  <div class="card diagram-card" data-title="Phases by relative size">
+    <div id="bars-holder"></div>
+    <div class="diagram-interpretation">Bar length is relative effort (weeks), not a fixed calendar commitment.</div>
+  </div>
+
+  <div id="phase-rows"></div>
+
+  <div id="foot-nav-root"></div>
+  <div id="ask-container"></div>
+</main>
+
+<button id="back-to-top" title="Back to top">&uarr;</button>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="assets/blueprint.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  document.getElementById("bo-note").textContent = BLUEPRINT.buildOrder.note;
+  document.getElementById("gantt-diagram").textContent = BLUEPRINT.buildOrder.ganttMermaid;
+  document.getElementById("bars-holder").innerHTML = Site.svg.phaseBars(BLUEPRINT.buildOrder.phases, 640, 110);
+
+  document.getElementById("phase-rows").innerHTML = BLUEPRINT.buildOrder.phases.map(function (p) {
+    return '<div class="card searchable" id="' + Site.slugify(p.name) + '">' +
+      '<h2 style="margin-top:0;">Phase ' + p.n + ': ' + Site.escapeHtml(p.name) +
+      (p.critical ? ' <span class="pill red">make-or-break</span>' : '<span class="pill slate">' + p.weeks + 'w</span>') + '</h2>' +
+      '<p><strong>Builds:</strong> ' + Site.escapeHtml(p.components.join(", ")) + '</p>' +
+      '<p><strong>Proves:</strong> ' + Site.escapeHtml(p.proves) + '</p>' +
+      '</div>';
+  }).join("");
+
+  Site.init("buildorder", { hasMermaid: true });
+  Site.renderAskPanel("ask-container", "Build Order", function () { return { buildOrder: BLUEPRINT.buildOrder }; });
+</script>
+</body>
+</html>

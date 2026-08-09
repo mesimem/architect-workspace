@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assumptions & Scope — Boutique Travel Concierge</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div id="scroll-progress"></div>
+<div id="topnav-root"></div>
+<div id="breadcrumb-root"></div>
+
+<main class="container" style="padding-bottom:20px;">
+  <h1>Assumptions &amp; Scope</h1>
+  <p class="page-desc">What we assumed, its impact, what's honestly not covered, and the one question that would most change the design.</p>
+
+  <div class="card">
+    <h2 style="margin-top:0;">Assumptions</h2>
+    <div id="assumption-rows"></div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0;">What this design does not cover</h2>
+    <div id="notcovered-rows"></div>
+  </div>
+
+  <div class="card diagram-card" data-title="The open question" id="open-question">
+    <h2 style="margin-top:0;">Open question that would most change the design</h2>
+    <p id="open-q-text" style="font-weight:600;"></p>
+    <div id="fork-holder"></div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;">
+      <div style="flex:1;min-width:220px;"><span class="pill green" id="branch-a-label"></span><p id="branch-a-detail"></p></div>
+      <div style="flex:1;min-width:220px;"><span class="pill red" id="branch-b-label"></span><p id="branch-b-detail"></p></div>
+    </div>
+  </div>
+
+  <div id="foot-nav-root"></div>
+  <div id="ask-container"></div>
+</main>
+
+<button id="back-to-top" title="Back to top">&uarr;</button>
+
+<script src="assets/blueprint.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  Site.init("assumptions", {});
+
+  document.getElementById("assumption-rows").innerHTML = BLUEPRINT.assumptions.map(function (a, i) {
+    return '<div class="card searchable" id="assumption-' + i + '" style="box-shadow:none;">' +
+      '<p><strong>Assumption:</strong> ' + Site.escapeHtml(a.text) + '</p>' +
+      '<p style="color:var(--muted);"><strong>Impact:</strong> ' + Site.escapeHtml(a.impact) + '</p></div>';
+  }).join("");
+
+  document.getElementById("notcovered-rows").innerHTML = BLUEPRINT.notCovered.map(function (n, i) {
+    return '<p class="searchable" id="notcovered-' + i + '">&#8226; ' + Site.escapeHtml(n) + '</p>';
+  }).join("");
+
+  document.getElementById("open-q-text").textContent = BLUEPRINT.openQuestion.question;
+  document.getElementById("fork-holder").innerHTML = Site.svg.fork(640, 100);
+  document.getElementById("branch-a-label").textContent = BLUEPRINT.openQuestion.branchA.label;
+  document.getElementById("branch-a-detail").textContent = BLUEPRINT.openQuestion.branchA.detail;
+  document.getElementById("branch-b-label").textContent = BLUEPRINT.openQuestion.branchB.label;
+  document.getElementById("branch-b-detail").textContent = BLUEPRINT.openQuestion.branchB.detail;
+
+  Site.wireExpandable();
+  Site.renderAskPanel("ask-container", "Assumptions & Scope", function () { return { assumptions: BLUEPRINT.assumptions, notCovered: BLUEPRINT.notCovered, openQuestion: BLUEPRINT.openQuestion }; });
+</script>
+</body>
+</html>

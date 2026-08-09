@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orders Dashboard — Incident Brief</title>
+<style>
+  :root { color-scheme: light dark; }
+  .viz-root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --plane:          #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --border:         rgba(11,11,11,0.10);
+    --good:           #0ca30c;
+    --warning:        #fab219;
+    --serious:        #ec835a;
+    --critical:       #d03b3b;
+    --series-1:       #2a78d6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --plane:          #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --gridline:       #2c2c2a;
+      --border:         rgba(255,255,255,0.10);
+      --good:           #0ca30c;
+      --warning:        #fab219;
+      --serious:        #ec835a;
+      --critical:       #e66767;
+      --series-1:       #3987e5;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --plane:          #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:       #2c2c2a;
+    --border:         rgba(255,255,255,0.10);
+    --good:           #0ca30c;
+    --warning:        #fab219;
+    --serious:        #ec835a;
+    --critical:       #e66767;
+    --series-1:       #3987e5;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .viz-root {
+    background: var(--plane);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 32px 20px 64px;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+
+  .masthead { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 4px; }
+  h1 { font-size: 24px; margin: 0; font-weight: 650; }
+  .meta { font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
+  .meta code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--text-muted); }
+
+  .decision-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .decision-badge {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    background: var(--critical);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: 0.02em;
+  }
+  .decision-badge svg { width: 20px; height: 20px; flex: none; }
+  .decision-text h2 { margin: 0 0 4px; font-size: 16px; font-weight: 650; }
+  .decision-text p { margin: 0; font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-tile {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .stat-label { font-size: 12px; color: var(--text-muted); margin: 0 0 6px; }
+  .stat-value { font-size: 28px; font-weight: 650; margin: 0; font-variant-numeric: proportional-nums; }
+  .stat-sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+  .stat-value.flag { color: var(--critical); }
+
+  .panel {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px 24px;
+    margin-bottom: 20px;
+  }
+  .panel h3 { font-size: 15px; margin: 0 0 14px; font-weight: 650; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 0 10px 8px;
+    border-bottom: 1px solid var(--gridline);
+  }
+  tbody td { padding: 10px 10px; border-bottom: 1px solid var(--gridline); vertical-align: top; color: var(--text-secondary); }
+  tbody tr:last-child td { border-bottom: none; }
+  td.check-name { color: var(--text-primary); font-weight: 550; white-space: nowrap; }
+
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px 3px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 650;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .status-chip svg { width: 12px; height: 12px; flex: none; }
+  .status-chip.pass { color: var(--good); border-color: var(--good); background: color-mix(in srgb, var(--good) 12%, transparent); }
+  .status-chip.warn { color: #8a6400; border-color: var(--warning); background: color-mix(in srgb, var(--warning) 20%, transparent); }
+  .status-chip.fail { color: var(--critical); border-color: var(--critical); background: color-mix(in srgb, var(--critical) 12%, transparent); }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .status-chip.warn { color: var(--warning); }
+  }
+  :root[data-theme="dark"] .status-chip.warn { color: var(--warning); }
+
+  .cause-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px; }
+  .cause-item { display: flex; gap: 14px; }
+  .cause-rank {
+    flex: none; width: 26px; height: 26px; border-radius: 999px;
+    background: var(--gridline); color: var(--text-primary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .cause-body p { margin: 0 0 4px; font-size: 13.5px; color: var(--text-secondary); line-height: 1.5; }
+  .cause-body .cause-title { color: var(--text-primary); font-weight: 600; font-size: 14px; }
+  .confidence { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); }
+
+  .action-panel { border-color: var(--series-1); }
+  .action-panel h3 { display: flex; align-items: center; gap: 8px; }
+  .action-panel p { font-size: 14px; line-height: 1.6; color: var(--text-secondary); margin: 0; }
+
+  .unknowns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .unknown-chip {
+    font-size: 12px; color: var(--text-muted);
+    border: 1px dashed var(--gridline); border-radius: 6px; padding: 4px 10px;
+  }
+
+  .footer-links { font-size: 12.5px; color: var(--text-muted); margin-top: 28px; text-align: center; }
+  .footer-links code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  @media (max-width: 720px) {
+    .stat-row { grid-template-columns: repeat(2, 1fr); }
+    .decision-card { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <div class="wrap">
+
+    <div class="masthead">
+      <div>
+        <p class="eyebrow">Orders Dashboard · Scheduled Publish</p>
+        <h1>Data Safety Incident Brief</h1>
+        <p class="meta">2026-08-03 &nbsp;·&nbsp; Job <code>orders_nightly_load</code> &nbsp;·&nbsp; Correlation <code>f3a9c2e1…8e001</code></p>
+      </div>
+    </div>
+
+    <div class="decision-card">
+      <div class="decision-badge">
+        <svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="white" stroke-width="1.6"/><path d="M6 6l8 8M14 6l-8 8" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg>
+        BLOCK
+      </div>
+      <div class="decision-text">
+        <h2>Publish blocked — dataset fails the quality contract</h2>
+        <p>4 of 8 contract checks failed (key uniqueness, required field, numeric validity, freshness). Root cause traced to an unmapped upstream region value that also failed the nightly ETL load. See detail below.</p>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-tile">
+        <p class="stat-label">Rows extracted</p>
+        <p class="stat-value">143</p>
+        <p class="stat-sub">crm_export_2026-08-03.csv</p>
+      </div>
+      <div class="stat-tile">
+        <p class="stat-label">Rows loaded</p>
+        <p class="stat-value">139</p>
+        <p class="stat-sub">4 quarantined to DLQ</p>
+      </div>
+      <div class="stat-tile">
+        <p class="stat-label">DLQ threshold breach</p>
+        <p class="stat-value flag">4 &gt; 0</p>
+        <p class="stat-sub">Zero-tolerance threshold</p>
+      </div>
+      <div class="stat-tile">
+        <p class="stat-label">Quality checks failed</p>
+        <p class="stat-value flag">4 / 8</p>
+        <p class="stat-sub">orders.csv vs. contract</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Data quality checks — skill-lab/orders.csv</h3>
+      <table>
+        <thead>
+          <tr><th>Check</th><th>Evidence</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="check-name">Schema</td>
+            <td>All 8 expected columns present and correctly typed.</td>
+            <td><span class="status-chip pass"><svg viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>PASS</span></td>
+          </tr>
+          <tr>
+            <td class="check-name">Freshness (&lt;24h)</td>
+            <td>ORD-1007 load_timestamp ~71h old, mixed into an otherwise fresh file.</td>
+            <td><span class="status-chip fail"><svg viewBox="0 0 20 20" fill="none"><path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>FAIL</span></td>
+          </tr>
+          <tr>
+            <td class="check-name">Expected volume (≥10)</td>
+            <td>12 rows present.</td>
+            <td><span class="status-chip pass"><svg viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>PASS</span></td>
+          </tr>
+          <tr>
+            <td class="check-name">Key uniqueness (order_id)</td>
+            <td>ORD-1004 appears twice with conflicting qty/revenue/date.</td>
+            <td><span class="status-chip fail"><svg viewBox="0 0 20 20" fill="none"><path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>FAIL</span></td>
+          </tr>
+          <tr>
+            <td class="check-name">Full-row duplicates</td>
+            <td>No fully identical rows found.</td>
+            <td><span class="status-chip pass"><svg viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>PASS</span></td>
+          </tr>
+          <tr>
+            <td class="check-name">Required fields (region)</td>
+            <td>ORD-1005 has a blank region.</td>
+            <td><span class="status-chip fail"><svg viewBox="0 0 20 20" fill="none"><path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>FAIL</span></td>
+          </tr>
+          <tr>
+            <td class="check-name">Nulls (all columns)</td>
+            <td>region: 1/12 blank (8.3%); all other columns clean.</td>
+            <td><span class="status-chip warn"><svg viewBox="0 0 20 20" fill="none"><path d="M10 6v5M10 14h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>WARN</span></td>
+          </tr>
+          <tr>
+            <td class="check-name">Numeric rules (revenue &gt; 0)</td>
+            <td>ORD-1006 revenue = -$75.00.</td>
+            <td><span class="status-chip fail"><svg viewBox="0 0 20 20" fill="none"><path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>FAIL</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h3>Pipeline root cause — ranked</h3>
+      <ul class="cause-list">
+        <li class="cause-item">
+          <div class="cause-rank">1</div>
+          <div class="cause-body">
+            <p class="cause-title">Upstream CRM export emitted a new region value ("Central") absent from the region lookup table</p>
+            <p>Identical MappingError on all 3 retry attempts; lookup table unchanged since 2026-06-11; prior 5 runs never saw a region outside North/South/East/West.</p>
+            <span class="confidence">Strongly supported</span>
+          </div>
+        </li>
+        <li class="cause-item">
+          <div class="cause-rank">2</div>
+          <div class="cause-body">
+            <p class="cause-title">Failure is deterministic, not transient — retries could not have succeeded</p>
+            <p>Retry log shows <code>identical_error_each_attempt: true</code>; no timeout/connection/rate-limit signatures anywhere in the log.</p>
+            <span class="confidence">Strongly supported</span>
+          </div>
+        </li>
+        <li class="cause-item">
+          <div class="cause-rank">3</div>
+          <div class="cause-body">
+            <p class="cause-title">Cross-team communication gap on the source-schema change</p>
+            <p>Run metadata notes no change notice was received from the Sales Systems team (owner of the CRM export) for the 2026-08-03 file.</p>
+            <span class="confidence">Plausible</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="panel action-panel">
+      <h3>Recommended next business action</h3>
+      <p>Hold the dashboard publish. Route this brief and the full triage report to the Data Platform on-call owner to (1) confirm the correct mapping for region value "Central" and update <code>region_code_map</code>, and (2) resolve the four dataset-level issues — the duplicate/conflicting ORD-1004 record, missing region on ORD-1005, negative revenue on ORD-1006, and stale row ORD-1007 — before the next publish attempt.</p>
+      <div class="unknowns">
+        <span class="unknown-chip">Financial impact: not calculated</span>
+        <span class="unknown-chip">Assigned owner: not confirmed beyond Data Platform on-call</span>
+        <span class="unknown-chip">Resolution ETA: not provided</span>
+      </div>
+    </div>
+
+    <p class="footer-links">Full detail: <code>data-quality-report.md</code> · <code>etl-triage-report.md</code> · <code>executive-dashboard-brief.md</code></p>
+
+  </div>
+</div>
+</body>
+</html>

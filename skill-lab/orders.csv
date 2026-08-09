@@ -1,0 +1,13 @@
+order_id,customer_name,region,product,quantity,revenue,order_date,load_timestamp
+ORD-1001,Grantham Retail Co,West,Widget A,12,245.50,2026-08-01,2026-08-03T08:15:00Z
+ORD-1002,Bluepeak Industries,East,Widget B,8,189.00,2026-08-01,2026-08-03T07:50:00Z
+ORD-1003,Coastal Supply LLC,South,Widget C,3,99.99,2026-08-02,2026-08-02T22:10:00Z
+ORD-1004,Northgate Traders,North,Widget A,20,450.00,2026-08-02,2026-08-03T06:30:00Z
+ORD-1005,Redline Logistics,,Widget D,15,310.25,2026-08-02,2026-08-03T09:00:00Z
+ORD-1006,Silverline Foods,West,Widget B,5,-75.00,2026-08-02,2026-08-03T05:45:00Z
+ORD-1007,Harbor Point Inc,East,Widget C,10,520.00,2026-07-30,2026-07-31T10:00:00Z
+ORD-1008,Cedar Grove Mkt,South,Widget A,6,150.75,2026-08-02,2026-08-03T04:20:00Z
+ORD-1009,Union Square Goods,North,Widget D,11,275.00,2026-08-02,2026-08-02T23:55:00Z
+ORD-1010,Prairie Wholesale,West,Widget B,4,88.50,2026-08-03,2026-08-03T08:40:00Z
+ORD-1004,Northgate Traders,North,Widget A,21,460.00,2026-08-03,2026-08-03T09:20:00Z
+ORD-1011,Fairview Distributors,East,Widget C,9,132.20,2026-08-03,2026-08-03T09:10:00Z

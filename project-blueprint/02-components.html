@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Components — Boutique Travel Concierge</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div id="scroll-progress"></div>
+<div id="topnav-root"></div>
+<div id="breadcrumb-root"></div>
+
+<main class="container" style="padding-bottom:20px;">
+  <h1>Components</h1>
+  <p class="page-desc">What each piece is, in plain English, and the words in the idea that required it.</p>
+
+  <div class="card diagram-card" data-title="Components grouped">
+    <div id="layers-holder"></div>
+    <div class="diagram-interpretation">Nine boxes, one job each — a frontend, four backend services, one database, and three external systems. Nothing here the idea didn't ask for.</div>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead><tr><th>Component</th><th>What it does</th><th>Why the idea needed it</th></tr></thead>
+      <tbody id="comp-rows"></tbody>
+    </table>
+  </div>
+
+  <div class="card" id="not-components-card">
+    <h2 style="margin-top:0;">Deliberately not a component</h2>
+    <div id="not-comp-rows"></div>
+  </div>
+
+  <div id="foot-nav-root"></div>
+  <div id="ask-container"></div>
+</main>
+
+<button id="back-to-top" title="Back to top">&uarr;</button>
+
+<script src="assets/blueprint.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  Site.init("components", {});
+  document.getElementById("layers-holder").innerHTML = Site.svg.layers(BLUEPRINT.components.length, 640, 130);
+
+  document.getElementById("comp-rows").innerHTML = BLUEPRINT.components.map(function (c) {
+    return '<tr class="searchable" id="' + Site.slugify(c.name) + '">' +
+      '<td><strong>' + Site.escapeHtml(c.name) + '</strong><br><span class="pill slate">' + Site.escapeHtml(c.kind) + '</span></td>' +
+      '<td>' + Site.escapeHtml(c.sentence) + '</td>' +
+      '<td>' + Site.escapeHtml(c.requiredBy) + '</td>' +
+      '</tr>';
+  }).join("");
+
+  document.getElementById("not-comp-rows").innerHTML = BLUEPRINT.notComponents.map(function (n) {
+    return '<p class="searchable"><strong>' + Site.escapeHtml(n.thing) + ':</strong> ' + Site.escapeHtml(n.reason) + '</p>';
+  }).join("");
+
+  Site.wireExpandable();
+  Site.renderAskPanel("ask-container", "Components", function () { return { components: BLUEPRINT.components, notComponents: BLUEPRINT.notComponents }; });
+</script>
+</body>
+</html>

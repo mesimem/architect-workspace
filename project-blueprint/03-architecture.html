@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architecture — Boutique Travel Concierge</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div id="scroll-progress"></div>
+<div id="topnav-root"></div>
+<div id="breadcrumb-root"></div>
+
+<main class="container" style="padding-bottom:20px;">
+  <h1>Architecture</h1>
+  <p class="page-desc">How the components connect and what crosses each arrow.</p>
+
+  <div class="card diagram-card" data-title="Architecture diagram">
+    <div class="mermaid" id="arch-diagram"></div>
+    <div class="diagram-interpretation" id="arch-interpretation"></div>
+  </div>
+
+  <div id="foot-nav-root"></div>
+  <div id="ask-container"></div>
+</main>
+
+<button id="back-to-top" title="Back to top">&uarr;</button>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="assets/blueprint.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  document.getElementById("arch-diagram").textContent = BLUEPRINT.diagram.mermaid;
+  document.getElementById("arch-interpretation").textContent = BLUEPRINT.diagram.interpretation;
+  Site.init("architecture", { hasMermaid: true });
+  Site.renderAskPanel("ask-container", "Architecture", function () { return { diagram: BLUEPRINT.diagram, components: BLUEPRINT.components }; });
+</script>
+</body>
+</html>

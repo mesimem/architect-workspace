@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tech Stack — Boutique Travel Concierge</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div id="scroll-progress"></div>
+<div id="topnav-root"></div>
+<div id="breadcrumb-root"></div>
+
+<main class="container" style="padding-bottom:20px;">
+  <h1>Tech Stack</h1>
+  <p class="page-desc">Recommended technology per component, with an honest fit rating.</p>
+
+  <div class="card diagram-card" data-title="Fit at a glance">
+    <div id="dots-holder"></div>
+    <div class="diagram-interpretation" id="dots-interpretation"></div>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead><tr><th>Component</th><th>Recommended tech</th><th>Fit</th><th>Why</th></tr></thead>
+      <tbody id="tech-rows"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0;">Fit key</h2>
+    <div id="fit-key-rows"></div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0;">Notes</h2>
+    <div id="tech-notes"></div>
+  </div>
+
+  <div id="foot-nav-root"></div>
+  <div id="ask-container"></div>
+</main>
+
+<button id="back-to-top" title="Back to top">&uarr;</button>
+
+<script src="assets/blueprint.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  Site.init("techstack", {});
+  document.getElementById("dots-holder").innerHTML = Site.svg.fitDots(BLUEPRINT.techStack, 640, 90);
+  var greens = BLUEPRINT.techStack.filter(function(t){return t.fit==='green';}).length;
+  var reds = BLUEPRINT.techStack.filter(function(t){return t.fit==='red';}).length;
+  document.getElementById("dots-interpretation").textContent = greens + " of " + BLUEPRINT.techStack.length + " picks are a clean fit day one; " + reds + " needs a process fix, not a technology swap (see Notes below).";
+
+  document.getElementById("tech-rows").innerHTML = BLUEPRINT.techStack.map(function (t) {
+    return '<tr class="searchable" id="' + Site.slugify(t.component) + '">' +
+      '<td><strong>' + Site.escapeHtml(t.component) + '</strong></td>' +
+      '<td>' + Site.escapeHtml(t.tech) + '</td>' +
+      '<td><span class="pill ' + t.fit + '">' + t.fit + '</span></td>' +
+      '<td>' + Site.escapeHtml(t.why) + '<div style="margin-top:6px;color:var(--muted);font-size:0.82rem;">Try asking: “' + Site.escapeHtml(t.prompt) + '”</div></td>' +
+      '</tr>';
+  }).join("");
+
+  document.getElementById("fit-key-rows").innerHTML = BLUEPRINT.fitKey.map(function (f) {
+    return '<p><span class="pill ' + f.fit + '">' + f.fit + '</span> <strong>' + Site.escapeHtml(f.label) + '</strong> — ' + Site.escapeHtml(f.detail) + '</p>';
+  }).join("");
+
+  document.getElementById("tech-notes").innerHTML = BLUEPRINT.techNotes.map(function (n) {
+    return '<p class="searchable">' + Site.escapeHtml(n) + '</p>';
+  }).join("");
+
+  Site.wireExpandable();
+  Site.renderAskPanel("ask-container", "Tech Stack", function () { return { techStack: BLUEPRINT.techStack, fitKey: BLUEPRINT.fitKey, techNotes: BLUEPRINT.techNotes }; });
+</script>
+</body>
+</html>

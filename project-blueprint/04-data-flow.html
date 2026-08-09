@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Flow — Boutique Travel Concierge</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div id="scroll-progress"></div>
+<div id="topnav-root"></div>
+<div id="breadcrumb-root"></div>
+
+<main class="container" style="padding-bottom:20px;">
+  <h1>Data Flow</h1>
+  <p class="page-desc">Three journeys through the system, each traced step by step.</p>
+
+  <div class="card diagram-card" data-title="The three flows as a ribbon">
+    <div id="ribbon-holder"></div>
+    <div class="diagram-interpretation">Each numbered stop below is one of the three flows — booking, marketing, bookkeeping — expanded into its own sequence diagram.</div>
+  </div>
+
+  <div id="sequence-holder"></div>
+
+  <div id="foot-nav-root"></div>
+  <div id="ask-container"></div>
+</main>
+
+<button id="back-to-top" title="Back to top">&uarr;</button>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="assets/blueprint.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  document.getElementById("ribbon-holder").innerHTML = Site.svg.flowRibbon(BLUEPRINT.sequences, 640, 100);
+
+  document.getElementById("sequence-holder").innerHTML = BLUEPRINT.sequences.map(function (s, i) {
+    return '<div class="card diagram-card searchable" data-title="' + Site.escapeHtml(s.title) + '" id="' + Site.slugify(s.id) + '">' +
+      '<h2 style="margin-top:0;">' + (i + 1) + '. ' + Site.escapeHtml(s.title) + '</h2>' +
+      '<div class="mermaid">' + Site.escapeHtml(s.mermaid) + '</div>' +
+      '<div class="diagram-interpretation">' + Site.escapeHtml(s.interpretation) + '</div>' +
+      '</div>';
+  }).join("");
+
+  // Un-escape mermaid source (it was placed via escapeHtml above for XSS-safety on insertion, mermaid reads element.textContent so re-set via textContent instead)
+  document.querySelectorAll("#sequence-holder .mermaid").forEach(function (el, i) {
+    el.textContent = BLUEPRINT.sequences[i].mermaid;
+  });
+
+  Site.init("dataflow", { hasMermaid: true });
+  Site.renderAskPanel("ask-container", "Data Flow", function () { return { sequences: BLUEPRINT.sequences }; });
+</script>
+</body>
+</html>
