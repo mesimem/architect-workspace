@@ -1,0 +1,289 @@
+/* ============================================================
+   Command Center — shared styles
+   ============================================================ */
+
+:root {
+  /* ---- BRAND COLORS — change here only ----------------------
+     No brand palette has been chosen for this project yet.
+     These are neutral placeholders. Swap the five values below
+     when the agency's brand colors are decided; nothing else
+     in this file (or any page) needs to change.
+  ------------------------------------------------------------- */
+  --brand-primary: #1c3d5a;   /* deep navy   — nav, primary actions   */
+  --brand-accent:  #2f7a63;   /* muted teal  — links, highlights      */
+  --brand-warn:    #b5892b;   /* amber       — "should" priority, warn */
+  --brand-danger:  #a8412f;   /* rust red    — missing guardrail, down */
+  --brand-grey:    #8a8f98;   /* unknown/unmonitored status dot        */
+  /* ------------------------------------------------------------ */
+
+  --bg: #f3f5f7;
+  --surface: #ffffff;
+  --border: #e1e4e9;
+  --text: #1f2530;
+  --text-muted: #5b6270;
+  --text-faint: #8a8f98;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgba(20, 24, 33, .06), 0 1px 1px rgba(20,24,33,.04);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+a { color: var(--brand-accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---- Top nav ------------------------------------------------ */
+
+#topnav-root { border-bottom: 1px solid var(--border); background: var(--surface); }
+
+.topnav {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  height: 56px;
+}
+
+.topnav .brand {
+  font-weight: 700;
+  color: var(--brand-primary);
+  white-space: nowrap;
+  margin-right: 6px;
+}
+
+.topnav .tabs {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+  overflow-x: auto;
+}
+
+.topnav .tab {
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.topnav .tab:hover { background: var(--bg); text-decoration: none; }
+.topnav .tab.active { background: var(--brand-primary); color: #fff; }
+.topnav .tab.disabled {
+  color: var(--text-faint);
+  cursor: default;
+  pointer-events: none;
+}
+.topnav .tab.disabled::after {
+  content: "soon";
+  font-size: 9px;
+  margin-left: 5px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+/* ---- Mode toggle (Sample / Real) ----------------------------- */
+
+.mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.mode-toggle button {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.mode-toggle button.active.mode-real {
+  background: var(--brand-primary);
+  color: #fff;
+  border-color: var(--brand-primary);
+}
+
+.mode-toggle button.active.mode-sample {
+  background: var(--brand-warn);
+  color: #fff;
+  border-color: var(--brand-warn);
+}
+
+.sample-banner {
+  display: none;
+  background: var(--brand-warn);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-align: center;
+  padding: 6px 0;
+}
+
+body.mode-sample .sample-banner { display: block; }
+
+.sample-tag {
+  display: none;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--brand-warn);
+  padding: 2px 7px;
+  border-radius: 4px;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+
+body.mode-sample .sample-tag { display: inline-block; }
+
+/* ---- Page chrome --------------------------------------------- */
+
+.page-header { padding: 28px 0 6px; }
+.page-header h1 { margin: 0 0 4px; font-size: 26px; color: var(--brand-primary); }
+.page-desc { margin: 0 0 18px; color: var(--text-muted); max-width: 74ch; }
+
+.section { margin: 26px 0; }
+.section h2 {
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--text-muted);
+  margin: 0 0 12px;
+}
+
+/* ---- Cards / tiles --------------------------------------------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 14px;
+}
+
+.tile {
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+  color: var(--text);
+}
+
+.tile:hover { text-decoration: none; border-color: var(--brand-accent); }
+.tile.current { border-color: var(--brand-primary); background: #eef3f7; }
+
+.tile .tile-title { font-weight: 700; margin-bottom: 4px; }
+.tile .tile-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+.tile .tile-meta { font-size: 12px; color: var(--text-faint); }
+
+.tile.disabled { opacity: .6; cursor: default; }
+.tile.disabled:hover { border-color: var(--border); text-decoration: none; }
+
+/* ---- Stat row --------------------------------------------------- */
+
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px 18px;
+}
+/* stat-* classes are reused outside .stat (e.g. plain .card tiles), so
+   they're styled standalone rather than scoped to a .stat ancestor. */
+.stat-value { font-size: 26px; font-weight: 700; color: var(--brand-primary); line-height: 1.1; }
+.stat-label { font-size: 11px; font-weight: 600; letter-spacing: .03em; color: var(--text-muted); margin-top: 4px; }
+.stat-sub { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+.stat .stat-label { margin-top: 0; }
+
+/* ---- Status dot --------------------------------------------------- */
+
+.status-line { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+.dot-unknown { background: var(--brand-grey); }
+.dot-up { background: var(--brand-accent); }
+.dot-down { background: var(--brand-danger); }
+.status-label { color: var(--text-muted); }
+.status-checked { color: var(--text-faint); font-size: 11px; }
+
+/* ---- Empty state --------------------------------------------------- */
+
+.empty-state {
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 26px 22px;
+  color: var(--text-muted);
+  background: var(--surface);
+}
+.empty-state strong { color: var(--text); }
+
+/* ---- Priority / category chips ------------------------------------- */
+
+.chip {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  background: var(--bg);
+}
+.chip-must { color: #fff; background: var(--brand-primary); border-color: var(--brand-primary); }
+.chip-should { color: #fff; background: var(--brand-warn); border-color: var(--brand-warn); }
+.chip-safe { color: #fff; background: var(--brand-danger); border-color: var(--brand-danger); }
+
+/* ---- Progress bar --------------------------------------------------- */
+
+.progress-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  overflow: hidden;
+}
+.progress-fill { height: 100%; background: var(--brand-accent); }
+
+footer.site-footer {
+  border-top: 1px solid var(--border);
+  margin-top: 40px;
+  padding: 18px 0 40px;
+  color: var(--text-faint);
+  font-size: 12px;
+}

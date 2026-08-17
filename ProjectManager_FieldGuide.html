@@ -1,0 +1,1586 @@
+<title>Project Manager Field Guide — ClaimsIQ | Colaberry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cherry:#FB2832; --berry:#367895; --leaf:#5BA63C; --amber:#E8920C;
+    --text:#1A1A1A; --muted:#6B6B6B; --border:#E4E4E3; --surface:#FFFFFF; --surface-alt:#F8F8F7;
+    --font-body:'Roboto',system-ui,Arial,sans-serif;
+    --font-mono:'Roboto Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+    --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+    --radius:8px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --cherry:#FF5960; --berry:#5EA9C4; --leaf:#8AC759; --amber:#E8920C;
+      --text:#F2F2F2; --muted:#A8A8A8; --border:#2A2A2A; --surface:#0F0F0F; --surface-alt:#161616;
+      --shadow:0 1px 3px rgba(0,0,0,.5),0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  html[data-theme="dark"]{
+    --cherry:#FF5960; --berry:#5EA9C4; --leaf:#8AC759; --amber:#E8920C;
+    --text:#F2F2F2; --muted:#A8A8A8; --border:#2A2A2A; --surface:#0F0F0F; --surface-alt:#161616;
+    --shadow:0 1px 3px rgba(0,0,0,.5),0 1px 2px rgba(0,0,0,.4);
+  }
+  html[data-theme="light"]{
+    --cherry:#FB2832; --berry:#367895; --leaf:#5BA63C; --amber:#E8920C;
+    --text:#1A1A1A; --muted:#6B6B6B; --border:#E4E4E3; --surface:#FFFFFF; --surface-alt:#F8F8F7;
+    --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--surface);color:var(--text);}
+  body{font-family:var(--font-body);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:var(--font-body);color:var(--berry);font-weight:700;margin:0 0 .5em;line-height:1.25;}
+  html[data-theme="dark"] h1,html[data-theme="dark"] h2,html[data-theme="dark"] h3,html[data-theme="dark"] h4{color:var(--berry);}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) h1,:root:not([data-theme="light"]) h2,:root:not([data-theme="light"]) h3,:root:not([data-theme="light"]) h4{color:var(--berry);}}
+  p{margin:0 0 1em;}
+  a{color:var(--berry);}
+  code,.mono{font-family:var(--font-mono);}
+  ::selection{background:var(--cherry);color:#fff;}
+  img{max-width:100%;display:block;}
+  button{font-family:var(--font-body);cursor:pointer;}
+  .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+
+  /* ---------- Topbar ---------- */
+  .topbar{position:fixed;top:0;left:0;right:0;height:64px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:0 18px;z-index:100;box-shadow:var(--shadow);}
+  .topbar .brand{display:flex;align-items:center;gap:10px;min-width:0;flex-shrink:0;}
+  .topbar .brand img{height:34px;width:auto;}
+  .topbar .brand .titles{display:flex;flex-direction:column;line-height:1.15;}
+  .topbar .brand .titles strong{font-size:14px;color:var(--text);font-weight:700;}
+  .topbar .brand .titles span{font-size:11px;color:var(--muted);font-family:var(--font-mono);}
+  .navtoggle{display:none;background:none;border:1px solid var(--border);border-radius:6px;width:36px;height:36px;color:var(--text);font-size:18px;}
+  .searchwrap{position:relative;flex:1;max-width:560px;margin:0 auto;}
+  .searchwrap input{width:100%;padding:10px 14px 10px 38px;border-radius:20px;border:1px solid var(--border);background:var(--surface-alt);color:var(--text);font-size:14px;font-family:var(--font-body);outline:none;transition:border-color .15s;}
+  .searchwrap input:focus{border-color:var(--berry);}
+  .searchwrap .sicon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;font-size:14px;}
+  .searchresults{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);max-height:420px;overflow-y:auto;display:none;z-index:200;}
+  .searchresults.open{display:block;}
+  .searchresults .sr-item{display:block;padding:10px 14px;border-bottom:1px solid var(--border);text-decoration:none;color:var(--text);}
+  .searchresults .sr-item:last-child{border-bottom:none;}
+  .searchresults .sr-item:hover,.searchresults .sr-item.active{background:var(--surface-alt);}
+  .searchresults .sr-item .sr-title{font-weight:700;font-size:13.5px;color:var(--berry);}
+  .searchresults .sr-item .sr-snip{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .searchresults .sr-empty{padding:16px;color:var(--muted);font-size:13px;text-align:center;}
+  .topbar-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+  .iconbtn{background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12.5px;color:var(--text);display:flex;align-items:center;gap:6px;font-weight:500;}
+  .iconbtn:hover{border-color:var(--berry);}
+  .askbtn{background:var(--cherry);color:#fff;border:none;border-radius:20px;padding:9px 16px;font-size:13px;font-weight:700;letter-spacing:.2px;}
+  .askbtn:hover{filter:brightness(1.08);}
+
+  /* ---------- Layout ---------- */
+  .layout{display:flex;padding-top:64px;min-height:100vh;}
+  .sidenav{position:fixed;top:64px;bottom:0;left:0;width:278px;background:var(--surface-alt);border-right:1px solid var(--border);overflow-y:auto;padding:18px 0 60px;}
+  .sidenav .navgroup{margin-bottom:6px;}
+  .sidenav .navgroup-title{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;padding:14px 20px 6px;font-family:var(--font-mono);}
+  .sidenav a{display:block;padding:7px 20px;color:var(--text);text-decoration:none;font-size:13.5px;border-left:3px solid transparent;}
+  .sidenav a.sub{padding-left:34px;font-size:12.8px;color:var(--muted);}
+  .sidenav a:hover{background:var(--surface);color:var(--berry);}
+  .sidenav a.active{border-left-color:var(--cherry);color:var(--berry);font-weight:700;background:var(--surface);}
+  .sidenav .doc-num{display:inline-block;font-family:var(--font-mono);font-size:11px;color:var(--muted);width:18px;}
+  main{margin-left:278px;flex:1;max-width:1040px;padding:36px 44px 120px;min-width:0;}
+
+  /* ---------- Content blocks ---------- */
+  section.topic{scroll-margin-top:80px;margin-bottom:56px;}
+  section.topic.flash{animation:flashbg 1.6s ease;}
+  @keyframes flashbg{0%{background:rgba(251,40,50,.12);}100%{background:transparent;}}
+  .eyebrow{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--cherry);font-weight:700;margin-bottom:6px;}
+  .lede{font-size:16.5px;color:var(--muted);max-width:760px;}
+  hr.rule{border:none;border-top:1px solid var(--border);margin:40px 0;}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  @media(max-width:820px){.grid-2,.grid-3{grid-template-columns:1fr;}}
+
+  .callout{border-left:4px solid var(--berry);background:var(--surface-alt);border-radius:0 8px 8px 0;padding:14px 18px;margin:16px 0;font-size:14px;}
+  .callout .co-title{font-weight:700;font-family:var(--font-mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+  .callout.info{border-color:var(--berry);}
+  .callout.info .co-title{color:var(--berry);}
+  .callout.warn{border-color:var(--amber);}
+  .callout.warn .co-title{color:var(--amber);}
+  .callout.success{border-color:var(--leaf);}
+  .callout.success .co-title{color:var(--leaf);}
+  .callout.key{border-color:var(--cherry);}
+  .callout.key .co-title{color:var(--cherry);}
+
+  table.doc-table{width:100%;border-collapse:collapse;font-size:13.2px;margin:14px 0;}
+  table.doc-table caption{caption-side:top;text-align:left;font-weight:700;color:var(--berry);margin-bottom:6px;font-size:13.5px;}
+  table.doc-table th{background:var(--berry);color:#fff;text-align:left;padding:9px 11px;font-weight:700;font-size:11.8px;text-transform:uppercase;letter-spacing:.03em;position:sticky;top:0;}
+  table.doc-table td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;}
+  table.doc-table tr:nth-child(even) td{background:var(--surface-alt);}
+  table.doc-table tbody tr:hover td{background:rgba(54,120,149,.08);}
+  .tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px;}
+  .tablewrap table.doc-table{margin:0;}
+  .tablewrap table.doc-table th:first-child,.tablewrap table.doc-table td:first-child{padding-left:14px;}
+
+  .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;font-family:var(--font-mono);letter-spacing:.02em;color:#fff;white-space:nowrap;}
+  .badge-green{background:var(--leaf);}
+  .badge-amber{background:var(--amber);}
+  .badge-red{background:var(--cherry);}
+  .badge-grey{background:var(--muted);}
+  .badge-berry{background:var(--berry);}
+  .pill-critical{display:inline-block;padding:2px 8px;border-radius:4px;background:var(--cherry);color:#fff;font-size:10.5px;font-weight:700;font-family:var(--font-mono);}
+
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0;}
+  @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+  .kpi-tile{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--berry);border-radius:8px;padding:14px 16px;box-shadow:var(--shadow);}
+  .kpi-tile.t-green{border-left-color:var(--leaf);}
+  .kpi-tile.t-amber{border-left-color:var(--amber);}
+  .kpi-tile.t-red{border-left-color:var(--cherry);}
+  .kpi-tile .kpi-label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-family:var(--font-mono);margin-bottom:4px;}
+  .kpi-tile .kpi-value{font-size:26px;font-weight:900;color:var(--text);}
+  .kpi-tile .kpi-value small{font-size:13px;font-weight:500;color:var(--muted);}
+  .kpi-tile .kpi-sub{font-size:11.5px;color:var(--muted);margin-top:2px;}
+
+  .raci-cell{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;font-weight:700;font-size:12px;font-family:var(--font-mono);color:#fff;}
+  .raci-A{background:var(--cherry);}
+  .raci-R{background:var(--berry);}
+  .raci-C{background:var(--leaf);}
+  .raci-I{background:var(--muted);opacity:.75;}
+  .raci-legend{display:flex;gap:18px;flex-wrap:wrap;margin:10px 0 16px;font-size:12.5px;}
+  .raci-legend .lg-item{display:flex;align-items:center;gap:6px;}
+
+  .doc-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 20px;}
+  .doc-toolbar button{background:var(--surface-alt);border:1px solid var(--border);border-radius:7px;padding:8px 14px;font-size:12.5px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;}
+  .doc-toolbar button.primary{background:var(--cherry);color:#fff;border-color:var(--cherry);}
+  .doc-toolbar button:hover{filter:brightness(1.06);}
+  .doc-toolbar button svg{width:14px;height:14px;}
+
+  .doc-frame{border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:var(--shadow);margin:12px 0 26px;}
+  .doc-frame .df-header{background:linear-gradient(135deg,var(--berry),#274f61);color:#fff;padding:26px 28px;display:flex;align-items:center;gap:18px;}
+  html[data-theme="dark"] .doc-frame .df-header{background:linear-gradient(135deg,#1c3844,#122631);}
+  @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .doc-frame .df-header{background:linear-gradient(135deg,#1c3844,#122631);}}
+  .doc-frame .df-header img{height:32px;filter:brightness(0) invert(1);opacity:.95;}
+  .doc-frame .df-header .df-titles strong{display:block;font-size:19px;}
+  .doc-frame .df-header .df-titles span{display:block;font-size:12px;opacity:.85;font-family:var(--font-mono);margin-top:2px;}
+  .doc-control-strip{display:flex;gap:0;background:var(--surface-alt);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+  .doc-control-strip .dcs-item{padding:10px 20px;border-right:1px solid var(--border);font-size:11.5px;flex:1;min-width:120px;}
+  .doc-control-strip .dcs-item .dcs-label{text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-family:var(--font-mono);font-size:10px;display:block;margin-bottom:2px;}
+  .doc-control-strip .dcs-item .dcs-val{font-weight:700;color:var(--text);}
+  .doc-body{padding:26px 30px;}
+  .signoff{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-top:26px;}
+  .signoff .so-col{padding:16px 18px;border-right:1px solid var(--border);}
+  .signoff .so-col:last-child{border-right:none;}
+  .signoff .so-role{font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--berry);font-weight:700;margin-bottom:10px;}
+  .signoff .so-line{border-bottom:1px solid var(--border);height:34px;margin-bottom:4px;}
+  .signoff .so-cap{font-size:10.5px;color:var(--muted);}
+  .doc-footer-strip{background:var(--surface-alt);border-top:1px solid var(--border);padding:12px 30px;font-size:10.8px;color:var(--muted);display:flex;justify-content:space-between;}
+
+  /* SVG chart helpers */
+  .chart-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin:14px 0;}
+  .chart-box .chart-title{font-weight:700;color:var(--berry);font-size:13.5px;margin-bottom:6px;}
+  .chart-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11.8px;margin-top:8px;}
+  .chart-legend .lg{display:flex;align-items:center;gap:6px;}
+  .lg .sw{width:12px;height:12px;border-radius:3px;display:inline-block;}
+  svg text{font-family:var(--font-mono);}
+
+  /* Ask assistant */
+  .ask-fab{position:fixed;bottom:24px;right:24px;z-index:150;}
+  .ask-panel{position:fixed;bottom:24px;right:24px;width:380px;max-width:90vw;height:480px;max-height:75vh;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.25);display:none;flex-direction:column;z-index:160;overflow:hidden;}
+  .ask-panel.open{display:flex;}
+  .ask-head{background:var(--cherry);color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;}
+  .ask-head strong{font-size:14px;}
+  .ask-head span{font-size:11px;opacity:.85;display:block;font-family:var(--font-mono);}
+  .ask-close{background:rgba(255,255,255,.2);border:none;color:#fff;width:26px;height:26px;border-radius:50%;font-size:14px;line-height:1;}
+  .ask-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px;background:var(--surface-alt);}
+  .ask-msg{max-width:88%;padding:10px 13px;border-radius:12px;font-size:13px;line-height:1.5;}
+  .ask-msg.user{align-self:flex-end;background:var(--berry);color:#fff;border-bottom-right-radius:3px;}
+  .ask-msg.bot{align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:3px;}
+  .ask-msg.bot .src{display:inline-block;margin-top:8px;font-size:11px;color:var(--berry);text-decoration:none;font-weight:700;border-top:1px solid var(--border);padding-top:6px;}
+  .ask-suggest{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 12px;}
+  .ask-suggest button{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:5px 10px;font-size:11px;color:var(--berry);}
+  .ask-input-row{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border);background:var(--surface);}
+  .ask-input-row input{flex:1;border:1px solid var(--border);border-radius:20px;padding:9px 14px;font-size:13px;background:var(--surface-alt);color:var(--text);outline:none;}
+  .ask-input-row input:focus{border-color:var(--cherry);}
+  .ask-input-row button{background:var(--cherry);color:#fff;border:none;border-radius:20px;padding:0 16px;font-weight:700;font-size:13px;}
+
+  /* Footer */
+  footer.site-footer{margin-left:278px;border-top:1px solid var(--border);padding:26px 44px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+
+  .toc-inline{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;}
+  .toc-inline a{background:var(--surface-alt);border:1px solid var(--border);border-radius:20px;padding:6px 13px;font-size:12px;text-decoration:none;color:var(--text);}
+  .toc-inline a:hover{border-color:var(--cherry);color:var(--cherry);}
+
+  .glossary dt{font-weight:700;color:var(--berry);font-family:var(--font-mono);margin-top:12px;}
+  .glossary dd{margin-left:0;color:var(--text);}
+
+  @media(max-width:980px){
+    .sidenav{transform:translateX(-100%);transition:transform .2s;box-shadow:0 0 0 9999px rgba(0,0,0,0);z-index:120;}
+    body.nav-open .sidenav{transform:translateX(0);box-shadow:2px 0 20px rgba(0,0,0,.3);}
+    main,footer.site-footer{margin-left:0;}
+    .navtoggle{display:block;}
+    .kpi-grid{grid-template-columns:1fr 1fr;}
+  }
+  @media print{
+    .topbar,.sidenav,.ask-fab,.ask-panel,.doc-toolbar,footer.site-footer{display:none !important;}
+    main{margin-left:0;padding-top:10px;}
+    body{padding-top:0;}
+  }
+</style>
+
+<div id="app">
+<header class="topbar">
+  <button class="navtoggle" id="navToggle" aria-label="Toggle navigation">&#9776;</button>
+  <div class="brand">
+    <img id="logoTop" src="" alt="Colaberry">
+    <div class="titles"><strong>Project Manager Field Guide</strong><span>Enterprise AI Leadership Accelerator</span></div>
+  </div>
+  <div class="searchwrap">
+    <span class="sicon">&#9906;</span>
+    <input type="text" id="searchInput" placeholder="Search the guide — try &quot;critical path&quot;, &quot;RAID&quot;, &quot;budget&quot;..." autocomplete="off">
+    <div class="searchresults" id="searchResults"></div>
+  </div>
+  <div class="topbar-actions">
+    <button class="iconbtn" id="themeToggle" title="Toggle light/dark">&#9788; Theme</button>
+    <button class="askbtn" id="askOpenBtn">Ask the Guide</button>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="sidenav" id="sideNav">
+    <div class="navgroup">
+      <div class="navgroup-title">Start Here</div>
+      <a href="#overview" data-nav>Overview &amp; How to Use</a>
+      <a href="#project-brief" data-nav>The Example: ClaimsIQ</a>
+      <a href="#dashboard" data-nav>Executive Dashboard</a>
+    </div>
+    <div class="navgroup">
+      <div class="navgroup-title">The 20% to Know</div>
+      <a href="#fundamentals" data-nav>Why PM Exists</a>
+      <a href="#f-triangle" class="sub" data-nav>Scope / Schedule / Cost</a>
+      <a href="#f-wbs" class="sub" data-nav>Work Breakdown Structure</a>
+      <a href="#f-critical-path" class="sub" data-nav>Critical Path</a>
+      <a href="#f-gates" class="sub" data-nav>Milestones &amp; Gates</a>
+      <a href="#f-raid" class="sub" data-nav>RAID</a>
+      <a href="#f-raci" class="sub" data-nav>RACI</a>
+      <a href="#f-methods" class="sub" data-nav>Agile / Waterfall / Hybrid</a>
+      <a href="#f-velocity" class="sub" data-nav>Velocity &amp; Burndown</a>
+      <a href="#f-reporting" class="sub" data-nav>Status Reporting</a>
+      <a href="#f-goodbad" class="sub" data-nav>Good vs. Bad Plans</a>
+      <a href="#f-kpis" class="sub" data-nav>KPIs</a>
+      <a href="#f-lens" class="sub" data-nav>The Architect's Review Lens</a>
+    </div>
+    <div class="navgroup">
+      <div class="navgroup-title">Project Documents</div>
+      <a href="#doc-charter" data-nav><span class="doc-num">01</span> Project Charter</a>
+      <a href="#doc-wbs" data-nav><span class="doc-num">02</span> Work Breakdown Structure</a>
+      <a href="#doc-timeline" data-nav><span class="doc-num">03</span> Milestone Timeline / Gantt</a>
+      <a href="#doc-raid" data-nav><span class="doc-num">04</span> RAID Log</a>
+      <a href="#doc-raci" data-nav><span class="doc-num">05</span> RACI Matrix</a>
+      <a href="#doc-sprint" data-nav><span class="doc-num">06</span> Sprint Plan</a>
+      <a href="#doc-status" data-nav><span class="doc-num">07</span> Status Report</a>
+      <a href="#doc-budget" data-nav><span class="doc-num">08</span> Budget / Burn</a>
+    </div>
+    <div class="navgroup">
+      <div class="navgroup-title">Reference</div>
+      <a href="#glossary" data-nav>Glossary</a>
+    </div>
+  </nav>
+
+  <main id="content">
+
+    <section class="topic" id="overview" data-searchable data-title="Overview &amp; How to Use This Guide">
+      <div class="eyebrow">Field Guide</div>
+      <h1>Project Management for the AI Solution Architect</h1>
+      <p class="lede">You will not run projects day-to-day. You will <strong>direct, evaluate, and approve</strong> AI-generated project plans — charters, schedules, risk logs, budgets — before they reach a sponsor or a delivery team. This guide teaches the roughly 20% of project management discipline that gives you the judgment to do that well, then shows every document in that 20% built out in full for one concrete initiative so you can see what "good" looks like.</p>
+      <div class="callout info">
+        <div class="co-title">How this guide is built</div>
+        Section one below teaches the concepts. Section two applies every concept to a single running example — an AI claims-intake copilot at a mid-size insurer — with real documents you can open, search, print to PDF, or export to CSV. Use the search box or the <strong>Ask the Guide</strong> assistant (bottom right) at any time; both work fully offline and only answer from this document's own content.
+      </div>
+      <div class="toc-inline">
+        <a href="#project-brief">Jump to the example scenario</a>
+        <a href="#dashboard">Jump to the live dashboard</a>
+        <a href="#doc-charter">Jump straight to the documents</a>
+      </div>
+    </section>
+
+    <section class="topic" id="project-brief" data-searchable data-title="The Example: ClaimsIQ at Meridian Mutual Insurance">
+      <div class="eyebrow">Worked Example — Insurance</div>
+      <h2>ClaimsIQ: AI-Powered FNOL Intake &amp; Triage Copilot</h2>
+      <p class="lede">Every document in this guide is written for one real-feeling initiative. Read this brief once — it is the context every downstream artifact assumes.</p>
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin-top:0">The organization</h3>
+          <p><strong>Meridian Mutual Insurance Group</strong> is a regional property &amp; casualty insurer writing auto and homeowners policies across 12 states, processing roughly 4,200 First Notice of Loss (FNOL) claims per month through a phone intake center and a web self-service portal.</p>
+          <h3>The problem</h3>
+          <p>FNOL intake takes an average of <strong>22 minutes</strong> per claim, severity triage is inconsistent between intake staff, and <strong>14% of claims are mis-routed</strong> to the wrong adjuster queue, driving SLA breaches and roughly <strong>$2.1M/year</strong> in adjuster overtime.</p>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">The initiative</h3>
+          <p><strong>ClaimsIQ</strong> is an AI copilot embedded in the intake workflow that transcribes and structures FNOL calls and web submissions, extracts key entities (policy number, loss date, location, injury flag), scores severity/complexity, and recommends a routing queue and advisory reserve range — with a licensed adjuster confirming or overriding every recommendation. No claim decision is ever fully automated; this is a regulatory constraint in every state Meridian writes in, not a design preference.</p>
+        </div>
+      </div>
+      <table class="doc-table">
+        <caption>Quick facts</caption>
+        <tr><th style="width:220px">Sponsor</th><td>Denise Okafor, VP Claims Operations — budget authority to $1.5M</td></tr>
+        <tr><th>Project Manager</th><td>Priya Raman</td></tr>
+        <tr><th>AI Solution Architect</th><td>You — reviews and approves every AI-generated plan below</td></tr>
+        <tr><th>Duration</th><td>20 weeks — hybrid delivery model (see <a href="#f-methods">Agile / Waterfall / Hybrid</a>)</td></tr>
+        <tr><th>Budget</th><td>$1,200,000 total authorized</td></tr>
+        <tr><th>Target outcomes</th><td>Handle time 22 → ≤12 min · Misrouting 14% → &lt;5% · Extraction accuracy ≥90% · 100% adjuster-in-the-loop</td></tr>
+      </table>
+      <div class="callout key">
+        <div class="co-title">Why this example was chosen</div>
+        Insurance claims intake has everything an architect needs to practice on: a hard regulatory constraint (no automated adverse decisions), a mixed team (data science + integration + compliance + operations), a legacy system-of-record integration (Guidewire ClaimCenter), and a genuine hybrid delivery need — compliance gates cannot be "agile," but model development benefits enormously from sprints.
+      </div>
+    </section>
+
+    <section class="topic" id="dashboard" data-searchable data-title="Executive Dashboard — ClaimsIQ Live Status">
+      <div class="eyebrow">Live View</div>
+      <h2>Executive Dashboard</h2>
+      <p class="lede">The numbers below are pulled from the same data that backs the Status Report (Document 07) and Budget/Burn (Document 08). This is the view a steering committee sees in ninety seconds.</p>
+      <div id="kpiDashboard"></div>
+      <div class="grid-2">
+        <div id="chartDashDonut" class="chart-box"></div>
+        <div id="chartDashBudget" class="chart-box"></div>
+      </div>
+    </section>
+
+    <!-- ============ FUNDAMENTALS ============ -->
+    <section class="topic" id="fundamentals" data-searchable data-title="Why Project Management Exists">
+      <div class="eyebrow">Discipline</div>
+      <h2>Why Project Management Exists</h2>
+      <p>An AI model can generate a schedule, a risk log, and a budget in seconds. It cannot tell you whether that schedule is <em>honest</em>, whether that risk log is <em>complete</em>, or whether that budget has <em>room to fail safely</em>. That judgment is what project management discipline gives you. It exists because unmanaged work drifts: scope creeps quietly, risks go unnamed until they become issues, and "on track" status reports paper over problems until they surface at the worst possible moment — usually right before go-live. The discipline below is not process for its own sake; each piece maps directly to a failure mode it prevents.</p>
+    </section>
+
+    <section class="topic" id="f-triangle" data-searchable data-title="The Scope / Schedule / Cost Triangle">
+      <h3>The Scope / Schedule / Cost Triangle</h3>
+      <p>Every project is constrained by three variables that trade against each other: <strong>scope</strong> (what gets built), <strong>schedule</strong> (when it ships), and <strong>cost</strong> (what it consumes). Quality sits in the middle — it degrades when any leg is stretched without adjusting the others. You cannot add scope for free; you either extend the schedule, add cost, or cut quality. When you review an AI-generated plan, the first question is always: <em>which leg of the triangle is fixed, and does the plan actually respect that?</em></p>
+      <div class="callout warn">
+        <div class="co-title">Review lens</div>
+        For ClaimsIQ, <strong>cost is the fixed constraint</strong> ($1.2M authorized, escalation required above $1.5M). Schedule has limited flex (20 weeks, tied to a competitive response deadline). Scope is the release valve — the Phase 2 items (Spanish-language intake, commercial lines) were deliberately cut from Phase 1 scope specifically so cost and schedule could hold. A plan that quietly protects schedule by expanding budget without saying so is a plan that has broken the stated constraint.
+      </div>
+    </section>
+
+    <section class="topic" id="f-wbs" data-searchable data-title="Work Breakdown Structure (WBS)">
+      <h3>Work Breakdown Structure (WBS)</h3>
+      <p>A WBS decomposes the total scope of a project into progressively smaller, ownable pieces of work, until each piece is small enough to estimate, assign, and track to completion. The defining test of a good WBS: <strong>its lowest-level work packages sum to exactly 100% of scope</strong> — nothing implied, nothing double-counted. It answers "what has to get built," not "in what order" (that is the schedule's job) or "who does it" (that is the RACI's job).</p>
+      <div class="callout info">
+        <div class="co-title">Review lens</div>
+        When an AI tool hands you a WBS, add up the percentages. If they sum to 94% or 108%, the plan is hiding either forgotten scope or double-counted work — do not accept it until it reconciles to 100%. See the full ClaimsIQ WBS in <a href="#doc-wbs">Document 02</a>.
+      </div>
+    </section>
+
+    <section class="topic" id="f-critical-path" data-searchable data-title="Critical Path">
+      <h3>Critical Path</h3>
+      <p>The critical path is the longest sequence of dependent tasks from start to finish — it determines the earliest possible completion date. Tasks on the critical path have <strong>zero float</strong> (zero slack): if any one of them slips by a day, the entire project slips by a day. Tasks off the critical path have float and can absorb some delay without moving the finish line. Naming the critical path is not optional decoration on a Gantt chart — it tells you exactly where to spend your risk-management attention and where you can safely tolerate a slip.</p>
+      <div class="callout key">
+        <div class="co-title">Review lens</div>
+        A plan that has not identified its critical path has not actually been scheduled — it is a list of dates with no logic behind them. See the critical path marked in cherry red in <a href="#doc-timeline">Document 03</a>.
+      </div>
+    </section>
+
+    <section class="topic" id="f-gates" data-searchable data-title="Milestones and Gates">
+      <h3>Milestones &amp; Gates</h3>
+      <p>A <strong>milestone</strong> marks a significant point in time — it has no duration and consumes no effort by itself. A <strong>gate</strong> is a milestone with teeth: an explicit go/no-go decision with named <strong>exit criteria</strong> that must be met before work is authorized to continue. Gates are where governance actually happens. A gate without written exit criteria is not a gate — it is a date on a calendar that people call a gate.</p>
+      <div class="callout warn">
+        <div class="co-title">Review lens</div>
+        ClaimsIQ has three real gates: Compliance &amp; Data Governance (Week 3), Model Accuracy (Week 15, ≥90% extraction accuracy required), and Go/No-Go for production (Week 18). Each has explicit exit criteria in <a href="#doc-timeline">Document 03</a>. If a plan calls something a "gate" with no measurable exit criteria attached, push back before approving it.
+      </div>
+    </section>
+
+    <section class="topic" id="f-raid" data-searchable data-title="RAID: Risks, Assumptions, Issues, Dependencies">
+      <h3>RAID: Risks, Assumptions, Issues, Dependencies</h3>
+      <p>RAID is the discipline of naming what could go wrong, what you're taking on faith, what has already gone wrong, and what you're waiting on from someone else — before those things ambush the schedule.</p>
+      <div class="grid-2">
+        <div class="card"><strong style="color:var(--berry)">Risk</strong><p style="margin:6px 0 0">A future event that <em>may</em> happen and would hurt the project if it did. Scored by likelihood × impact.</p></div>
+        <div class="card"><strong style="color:var(--berry)">Assumption</strong><p style="margin:6px 0 0">Something believed true without proof, used to allow planning to proceed. Must be validated or it silently becomes a risk.</p></div>
+        <div class="card"><strong style="color:var(--berry)">Issue</strong><p style="margin:6px 0 0">A risk that already happened. It is real, present-tense, and needs a resolution owner now, not a mitigation plan.</p></div>
+        <div class="card"><strong style="color:var(--berry)">Dependency</strong><p style="margin:6px 0 0">Work this project needs from an outside party (a vendor, another team) that it does not control directly.</p></div>
+      </div>
+      <div class="callout info" style="margin-top:16px">
+        <div class="co-title">Review lens</div>
+        <strong>Every RAID row must have exactly one named owner and a date</strong> — a risk owned by "the team" is a risk owned by no one. See the full ClaimsIQ RAID log in <a href="#doc-raid">Document 04</a>, including how a real vendor-integration risk (Guidewire sandbox delay) is being actively managed, not just logged and forgotten.
+      </div>
+    </section>
+
+    <section class="topic" id="f-raci" data-searchable data-title="RACI Matrix">
+      <h3>RACI Matrix</h3>
+      <p>A RACI matrix maps every key activity against every role and assigns one of four relationships: <strong>Responsible</strong> (does the work), <strong>Accountable</strong> (owns the outcome and answers for it — there can be only one), <strong>Consulted</strong> (gives input beforehand, two-way conversation), and <strong>Informed</strong> (told afterward, one-way notice). The single hardest rule, and the one most plans get wrong: <strong>exactly one Accountable person per activity, never zero, never two.</strong> Two accountable people is the same as zero — when something breaks, everyone can point at someone else.</p>
+      <div class="callout key">
+        <div class="co-title">Review lens</div>
+        Scan a RACI column-by-column, not just row-by-row: if one person is "R" on eleven of thirteen activities, that is a bus-factor risk, not an efficient plan. The full ClaimsIQ RACI grid is in <a href="#doc-raci">Document 05</a>.
+      </div>
+    </section>
+
+    <section class="topic" id="f-methods" data-searchable data-title="Agile vs. Waterfall vs. Hybrid">
+      <h3>Agile vs. Waterfall vs. Hybrid</h3>
+      <p><strong>Waterfall</strong> sequences work into distinct phases (requirements → design → build → test → deploy), each completed before the next begins. It suits work with fixed, well-understood requirements and hard compliance gates, where re-work is expensive and sequencing is genuinely linear. <strong>Agile</strong> delivers work in short, fixed-length iterations (sprints), re-planning and re-prioritizing every cycle based on what was actually learned. It suits work with evolving requirements, where the fastest way to find the right answer is to build something small, show it, and adjust. <strong>Hybrid</strong> uses waterfall's phase gates for the parts of a project that are genuinely sequential and non-negotiable (legal review, data governance approval, production cutover) and agile sprints for the parts that benefit from iteration (model development, UI design) — inside the same overall plan.</p>
+      <div class="callout success">
+        <div class="co-title">Review lens</div>
+        ClaimsIQ is deliberately hybrid: Phase 0 (Discovery &amp; Compliance) and Phase 6 (Go-Live) run waterfall because regulatory sign-off cannot be iterated on, while AI model development runs seven two-week sprints because "what accuracy can this model actually hit" is something you discover by building, not by planning upfront. A plan that forces model development into a single waterfall phase with one estimate is a plan that has not accounted for how ML actually gets built.
+      </div>
+    </section>
+
+    <section class="topic" id="f-velocity" data-searchable data-title="Velocity and Burndown">
+      <h3>Velocity &amp; Burndown</h3>
+      <p><strong>Velocity</strong> is the amount of work (usually measured in story points) a team reliably completes per sprint, calculated from actual history — never from aspiration. It is used to forecast how much future work a team can commit to, typically averaged over the last 3 sprints to smooth noise. A <strong>burndown chart</strong> plots remaining work against time within a single sprint: an "ideal" line drawn straight from the starting total to zero, against the "actual" line the team is really tracking. A burndown that sits stubbornly above the ideal line for the first half of a sprint and then drops sharply at the end is a classic warning sign — it usually means work wasn't actually being completed incrementally, it was being marked done in a batch near the deadline.</p>
+      <div class="callout info">
+        <div class="co-title">Review lens</div>
+        See ClaimsIQ's actual Sprint 3 burndown in <a href="#doc-status">Document 07</a> — a realistic pattern with a mid-sprint lag that the team recovered from, not a suspiciously perfect straight line.
+      </div>
+    </section>
+
+    <section class="topic" id="f-reporting" data-searchable data-title="Status Reporting and RAG">
+      <h3>Status Reporting &amp; RAG</h3>
+      <p>Status reports exist to surface problems while they are still cheap to fix. The standard shorthand is <strong>RAG</strong> — Red, Amber, Green — applied at both the overall project level and per workstream. <strong>Green</strong> means on track against baseline, no escalation needed. <strong>Amber</strong> means at risk — a specific, named issue is affecting schedule, cost, or scope and is being actively mitigated, but has not yet caused a miss. <strong>Red</strong> means off track — a baseline has already been missed or will be, and escalation is required. A good status report always answers four things: what changed since last time, what's the honest RAG (not the hopeful one), what decisions does the sponsor need to make right now, and what's the plan to recover anything that's Amber or Red.</p>
+      <div class="callout warn">
+        <div class="co-title">Review lens</div>
+        The most common failure mode an architect must catch: a status report that stays Green while the underlying metrics (SPI, CPI, defect counts) are clearly trending the wrong way. Green should be earned by the numbers, not asserted by the narrative. See <a href="#doc-status">Document 07</a> for a report that is honestly Amber and says why.
+      </div>
+    </section>
+
+    <section class="topic" id="f-goodbad" data-searchable data-title="Good Plans vs. Bad Plans">
+      <h3>Good vs. Bad Plans</h3>
+      <div class="grid-2">
+        <div class="card" style="border-left:4px solid var(--leaf)">
+          <h3 style="margin-top:0;color:var(--leaf)">Good plan</h3>
+          <ul style="margin:0;padding-left:18px">
+            <li>WBS sums to exactly 100% of scope</li>
+            <li>Estimates carry a stated buffer or range, never a bare single point</li>
+            <li>Critical path is named and explicitly protected</li>
+            <li>Every RAID and RACI row has exactly one owner</li>
+            <li>Gates have written, measurable exit criteria</li>
+            <li>The fixed constraint of the triangle is stated out loud</li>
+            <li>Status is Green only when the metrics support it</li>
+          </ul>
+        </div>
+        <div class="card" style="border-left:4px solid var(--cherry)">
+          <h3 style="margin-top:0;color:var(--cherry)">Bad plan</h3>
+          <ul style="margin:0;padding-left:18px">
+            <li>Percentages that don't reconcile, or scope with no owner</li>
+            <li>Single-point estimates with no acknowledged uncertainty</li>
+            <li>No stated critical path — every task looks equally urgent</li>
+            <li>Risks owned by "the team" or left blank</li>
+            <li>Gates that are just dates with no pass/fail test</li>
+            <li>All three triangle legs implicitly treated as fixed</li>
+            <li>Status stays Green until the week it turns Red</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="topic" id="f-kpis" data-searchable data-title="KPIs Project Managers and Architects Track">
+      <h3>KPIs Worth Tracking</h3>
+      <table class="doc-table">
+        <tr><th style="width:220px">KPI</th><th>What it tells you</th></tr>
+        <tr><td class="mono">SPI — Schedule Performance Index</td><td>Earned value ÷ planned value. Above 1.0 = ahead of schedule; below 1.0 = behind.</td></tr>
+        <tr><td class="mono">CPI — Cost Performance Index</td><td>Earned value ÷ actual cost. Above 1.0 = under budget for work delivered; below 1.0 = over budget.</td></tr>
+        <tr><td class="mono">Milestone hit rate</td><td>% of milestones met on their original baseline date, not the re-planned one.</td></tr>
+        <tr><td class="mono">Open high-severity risk count</td><td>Trending down over time is healthy; flat or rising near a gate is a warning sign.</td></tr>
+        <tr><td class="mono">Velocity trend</td><td>Stable or improving velocity signals a healthy team; sharp swings signal estimation or scope problems.</td></tr>
+        <tr><td class="mono">Defect / rework rate</td><td>Work that has to be redone is schedule and cost the plan didn't account for.</td></tr>
+      </table>
+    </section>
+
+    <section class="topic" id="f-lens" data-searchable data-title="The Architect's Review Lens">
+      <h3>The Architect's Review Lens</h3>
+      <p>When an AI system hands you a project plan, you are not there to re-derive it from scratch — you are there to stress-test it fast. Run every plan through this checklist before you approve it:</p>
+      <ol>
+        <li><strong>Does the WBS sum to 100%?</strong> If not, scope is missing or double-counted.</li>
+        <li><strong>Is the fixed constraint of the triangle stated, and does the rest of the plan respect it?</strong></li>
+        <li><strong>Is the critical path named, and is it the thing getting the most risk-management attention?</strong></li>
+        <li><strong>Does every RAID and RACI row have exactly one owner and a date?</strong></li>
+        <li><strong>Do gates have written exit criteria, not just a date?</strong></li>
+        <li><strong>Do estimates carry a range or buffer, not a suspiciously round single number?</strong></li>
+        <li><strong>Does the status RAG match what the underlying metrics (SPI/CPI/defects) actually say?</strong></li>
+        <li><strong>Is there a named recovery plan for anything Amber or Red — not just an acknowledgment?</strong></li>
+      </ol>
+      <p>This checklist is the 20% that generalizes across every AI-generated plan you will ever review, regardless of industry. Everything from here forward is that checklist applied to one concrete project, end to end.</p>
+    </section>
+
+    <hr class="rule">
+
+    <!-- ============ DOCUMENTS ============ -->
+    <div id="docsRoot"></div>
+
+    <section class="topic" id="glossary" data-searchable data-title="Glossary">
+      <h2>Glossary</h2>
+      <dl class="glossary" id="glossaryList"></dl>
+    </section>
+
+  </main>
+</div>
+
+<button class="ask-fab" id="askFab" style="display:none"></button>
+<div class="ask-panel" id="askPanel">
+  <div class="ask-head">
+    <div><strong>Ask the Guide</strong><span>Offline · answers only from this document</span></div>
+    <button class="ask-close" id="askClose">&times;</button>
+  </div>
+  <div class="ask-body" id="askBody">
+    <div class="ask-msg bot">Ask me anything about project management fundamentals or the ClaimsIQ documents — e.g. "what is the critical path" or "who is accountable for go/no-go". I only answer from the content in this guide.</div>
+  </div>
+  <div class="ask-suggest" id="askSuggest"></div>
+  <div class="ask-input-row">
+    <input type="text" id="askInput" placeholder="Ask a question..." autocomplete="off">
+    <button id="askSend">Send</button>
+  </div>
+</div>
+
+</div>
+
+<footer class="site-footer">
+  <span>&copy; 2026 Colaberry, Inc. — Internal training material for the Enterprise AI Leadership Accelerator.</span>
+  <span>ClaimsIQ is a fictional composite example built for instructional purposes.</span>
+</footer>
+
+<script type="application/json" id="deepdive-metadata">
+{
+  "guide_type": "Project Manager Field Guide",
+  "curriculum_type": "deep_dive",
+  "week": 3,
+  "discipline": "Project Manager",
+  "student_id": "CB-ACCEL-2026-0142",
+  "project_id": "claimsiq-fnol-copilot",
+  "repository": "AI-Project",
+  "generated_by": "Claude Code",
+  "generated_date": "2026-08-13",
+  "version": "1.0.0",
+  "build_number": "20260813.1"
+}
+</script>
+
+<script>
+(function(){
+"use strict";
+
+/* =========================================================================
+   LOGO (base64, official Colaberry logo)
+   ========================================================================= */
+var LOGO_B64 = "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";
+var LOGO_SRC = "data:image/png;base64," + LOGO_B64;
+
+/* =========================================================================
+   PROJECT DATA MODEL — ClaimsIQ @ Meridian Mutual Insurance Group
+   ========================================================================= */
+var PROJECT = {
+  company: "Meridian Mutual Insurance Group",
+  project: "ClaimsIQ — AI-Powered FNOL Intake & Triage Copilot",
+  sponsor: "Denise Okafor, VP Claims Operations",
+  pm: "Priya Raman, Senior Project Manager",
+  architect: "AI Solution Architect (Accelerator Learner)",
+  version: "1.0",
+  today: "2026-08-13",
+  statusDate: "2026-08-07 (End of Week 9 of 20)"
+};
+
+var WBS = [
+  {id:"1.0", name:"Project Management & Governance", pct:8, hrs:768, owner:"Priya Raman", parent:true},
+  {id:"1.1", name:"Charter, Scope & Governance Setup", pct:2.0, hrs:192, owner:"Priya Raman", deliverable:"Approved Project Charter"},
+  {id:"1.2", name:"Schedule, Budget Baseline & RAID/RACI Setup", pct:3.0, hrs:288, owner:"Priya Raman", deliverable:"Baselined schedule, RAID log, RACI matrix"},
+  {id:"1.3", name:"Status Reporting & Steering Committee Mgmt", pct:3.0, hrs:288, owner:"Priya Raman", deliverable:"10 bi-weekly status reports"},
+
+  {id:"2.0", name:"Discovery, Compliance & Data Readiness", pct:12, hrs:1152, owner:"Grace Lin / Dr. Aisha Bello", parent:true},
+  {id:"2.1", name:"Regulatory & Compliance Review", pct:3.3, hrs:320, owner:"Grace Lin", deliverable:"Compliance sign-off memo (Gate 1)"},
+  {id:"2.2", name:"Historical Claims Data Extraction & Labeling", pct:5.3, hrs:512, owner:"Dr. Aisha Bello", deliverable:"Labeled training corpus (50K claims)"},
+  {id:"2.3", name:"Data Governance, PII Redaction & Access Controls", pct:3.3, hrs:320, owner:"Grace Lin", deliverable:"Data governance approval"},
+
+  {id:"3.0", name:"AI Model Development", pct:22, hrs:2112, owner:"Dr. Aisha Bello", parent:true},
+  {id:"3.1", name:"Severity / Complexity Triage Model", pct:8.0, hrs:768, owner:"Sam Nakamura", deliverable:"Triage model v1 (Sprint 2)"},
+  {id:"3.2", name:"Entity Extraction (NLU) Model", pct:7.3, hrs:704, owner:"Elena Vogel", deliverable:"Entity extraction model v1"},
+  {id:"3.3", name:"Reserve-Range Recommendation Logic (advisory)", pct:4.0, hrs:384, owner:"Sam Nakamura", deliverable:"Reserve advisory module"},
+  {id:"3.4", name:"Model Validation, Bias & Accuracy Testing", pct:2.7, hrs:256, owner:"Dr. Aisha Bello", deliverable:"Model validation report (Gate 2)"},
+
+  {id:"4.0", name:"Guidewire ClaimCenter Integration", pct:18, hrs:1728, owner:"Tom Reyes", parent:true},
+  {id:"4.1", name:"Integration Architecture & API Design", pct:4.0, hrs:384, owner:"Tom Reyes", deliverable:"Integration design document"},
+  {id:"4.2", name:"Sandbox Connection & FNOL Event Wiring", pct:6.0, hrs:576, owner:"Tom Reyes", deliverable:"Sandbox connected (Milestone M5)"},
+  {id:"4.3", name:"Production Integration Build & Hardening", pct:6.0, hrs:576, owner:"Tom Reyes", deliverable:"Production-ready integration"},
+  {id:"4.4", name:"Integration Regression & Failover Testing", pct:2.0, hrs:192, owner:"Devon Park", deliverable:"Integration test report"},
+
+  {id:"5.0", name:"Adjuster Review UI & Workflow", pct:14, hrs:1344, owner:"Marcus Feld", parent:true},
+  {id:"5.1", name:"UX Research & Adjuster Workflow Design", pct:2.7, hrs:256, owner:"Marcus Feld", deliverable:"UX design specification"},
+  {id:"5.2", name:"Review UI Build (confirm / override severity & entities)", pct:6.7, hrs:640, owner:"Elena Vogel", deliverable:"Review UI Beta (Milestone M6)"},
+  {id:"5.3", name:"Audit Trail & Override Logging", pct:2.7, hrs:256, owner:"Sam Nakamura", deliverable:"Audit log module"},
+  {id:"5.4", name:"Usability Testing with Adjusters", pct:2.0, hrs:192, owner:"Devon Park", deliverable:"Usability test report"},
+
+  {id:"6.0", name:"Testing & Quality Assurance", pct:12, hrs:1152, owner:"Devon Park", parent:true},
+  {id:"6.1", name:"Model Accuracy & Regression Test Suite", pct:4.0, hrs:384, owner:"Devon Park", deliverable:"Automated test suite"},
+  {id:"6.2", name:"End-to-End Integration Testing", pct:3.3, hrs:320, owner:"Devon Park", deliverable:"E2E test results"},
+  {id:"6.3", name:"UAT Planning & Execution", pct:4.7, hrs:448, owner:"Devon Park", deliverable:"UAT sign-off (Milestone M8)"},
+
+  {id:"7.0", name:"Training & Change Management", pct:8, hrs:768, owner:"Wanda Ihejirika", parent:true},
+  {id:"7.1", name:"Adjuster Training Curriculum & Materials", pct:3.3, hrs:320, owner:"Wanda Ihejirika", deliverable:"Training curriculum"},
+  {id:"7.2", name:"Training Delivery (all claims staff)", pct:3.3, hrs:320, owner:"Wanda Ihejirika", deliverable:"100% of staff trained"},
+  {id:"7.3", name:"Change Communications & Adoption Tracking", pct:1.4, hrs:128, owner:"Wanda Ihejirika", deliverable:"Adoption dashboard"},
+
+  {id:"8.0", name:"Deployment, Pilot & Hypercare", pct:6, hrs:576, owner:"Priya Raman / Tom Reyes", parent:true},
+  {id:"8.1", name:"Pilot Rollout (10% volume, 2 regions)", pct:2.0, hrs:192, owner:"Tom Reyes", deliverable:"Pilot live (Milestone M9)"},
+  {id:"8.2", name:"Full Production Cutover", pct:2.0, hrs:192, owner:"Tom Reyes", deliverable:"Go-live (Milestone M10)"},
+  {id:"8.3", name:"Hypercare Support (2 weeks post go-live)", pct:2.0, hrs:192, owner:"Priya Raman", deliverable:"Hypercare exit report"}
+];
+
+var MILESTONES = [
+  {id:"M0", label:"Charter Approved & Kickoff", week:1, date:"2026-06-08", critical:true, rag:"green", status:"Complete"},
+  {id:"M1", label:"Compliance & Data Governance Gate (Gate 1)", week:3, date:"2026-06-26", critical:true, rag:"green", status:"Complete", exit:"Compliance memo signed by Grace Lin & Legal; data governance access controls approved"},
+  {id:"M2", label:"Historical Claims Data Pipeline Ready", week:5, date:"2026-07-10", critical:true, rag:"green", status:"Complete", exit:"50K labeled claims corpus validated; PII redaction at <0.5% false-negative rate"},
+  {id:"M3", label:"Severity Triage Model v1 Complete", week:7, date:"2026-07-24", critical:true, rag:"amber", status:"Complete (below target)", exit:"Model accuracy ≥88% on holdout set — landed at 84%, carried forward as Issue I1"},
+  {id:"M4", label:"Entity Extraction Model v1 Complete", week:9, date:"2026-08-07", critical:false, rag:"green", status:"Complete", exit:"Entity extraction model deployed to dev; injury-flag F1 tracked as risk R2"},
+  {id:"M5", label:"Guidewire Integration Sandbox Connected", week:11, date:"2026-08-21", critical:true, rag:"amber", status:"In progress", exit:"Sandbox authenticates and receives a live FNOL test event end-to-end"},
+  {id:"M6", label:"Adjuster Review UI Beta", week:13, date:"2026-09-04", critical:false, rag:"green", status:"Not started", exit:"5 adjusters complete a guided walkthrough with no blocking usability defects"},
+  {id:"M7", label:"Model Accuracy Gate — Gate 2", week:15, date:"2026-09-18", critical:true, rag:"amber", status:"Not started", exit:"Entity extraction ≥90% accuracy AND severity triage ≥88% accuracy, both on holdout set"},
+  {id:"M8", label:"UAT Complete & Sign-off", week:18, date:"2026-10-09", critical:true, rag:"green", status:"Not started", exit:"Zero open P1 defects; Product Owner and QA Lead sign UAT exit form"},
+  {id:"M9", label:"Pilot Go-Live (10% claim volume, 2 regions)", week:19, date:"2026-10-16", critical:true, rag:"green", status:"Not started", exit:"Pilot live with rollback plan tested and on standby"},
+  {id:"M10", label:"Full Production Go-Live & Hypercare Start", week:20, date:"2026-10-23", critical:true, rag:"green", status:"Not started", exit:"100% claim volume routed through ClaimsIQ; hypercare bridge staffed"}
+];
+
+var WORKSTREAMS = [
+  {name:"1.0 PM & Governance", start:1, end:20, critical:false},
+  {name:"2.0 Discovery, Compliance & Data", start:1, end:5, critical:true},
+  {name:"3.0 AI Model Development", start:4, end:15, critical:true},
+  {name:"4.0 Guidewire Integration", start:6, end:17, critical:true},
+  {name:"5.0 Adjuster Review UI", start:8, end:13, critical:false},
+  {name:"6.0 Testing & QA / UAT", start:12, end:18, critical:true},
+  {name:"7.0 Training & Change Mgmt", start:14, end:19, critical:false},
+  {name:"8.0 Deployment, Pilot & Hypercare", start:18, end:20, critical:true}
+];
+
+var RAID = [
+  {id:"R1", type:"Risk", desc:"Guidewire vendor sandbox API delivery slipping 4+ days; rate limits may further delay integration testing.", impact:"High", likelihood:"Medium", owner:"Tom Reyes", raised:"2026-07-20", review:"2026-08-21", status:"Open", rag:"amber", response:"Escalated to Guidewire TAM; requested dedicated sandbox throughput tier; parallel dev against mocked FNOL payloads."},
+  {id:"R2", type:"Risk", desc:"Entity extraction accuracy plateauing below 90% target, specifically on injury-flag detection.", impact:"High", likelihood:"Medium", owner:"Dr. Aisha Bello", raised:"2026-08-05", review:"2026-08-21", status:"Open", rag:"amber", response:"Augmenting training set with 5,000 additional labeled injury-claim transcripts (Sprint 4, item CI-401); evaluating ensemble approach."},
+  {id:"R3", type:"Risk", desc:"State DOI could classify the severity score as an automated adverse decision, requiring additional consumer disclosure.", impact:"High", likelihood:"Low", owner:"Grace Lin", raised:"2026-06-15", review:"2026-09-01", status:"Open", rag:"green", response:"Legal opinion obtained confirming advisory-only design meets current guidance; monitoring active rulemaking in 2 states."},
+  {id:"R4", type:"Risk", desc:"Adjuster adoption resistance — fear that AI triage will be used to justify headcount reduction.", impact:"Medium", likelihood:"Medium", owner:"Wanda Ihejirika", raised:"2026-06-20", review:"ongoing", status:"Open", rag:"green", response:"Positioned explicitly as a co-pilot, not a replacement; union/staff briefings held; adjusters included in UI design sessions."},
+  {id:"A1", type:"Assumption", desc:"Genesys IVR call transcripts will be available via existing API with under 2 seconds of latency.", impact:"Medium", likelihood:"—", owner:"Tom Reyes", raised:"2026-06-10", review:"2026-08-21", status:"Validating", rag:"amber", response:"Load-testing scheduled alongside Guidewire sandbox connection in Sprint 4."},
+  {id:"A2", type:"Assumption", desc:"The 50,000-claim historical corpus is representative of the current claim mix across all 12 states.", impact:"High", likelihood:"—", owner:"Dr. Aisha Bello", raised:"2026-06-12", review:"2026-07-10", status:"Confirmed", rag:"green", response:"Validated: state-level distribution within 3 points of live book of business."},
+  {id:"A3", type:"Assumption", desc:"Licensed adjusters remain the final decision-maker for every severity and reserve output — no claim decision is ever fully automated.", impact:"High", likelihood:"—", owner:"Grace Lin", raised:"2026-06-08", review:"Locked — regulatory constraint", status:"Confirmed", rag:"green", response:"Confirmed as a hard design constraint, not a negotiable assumption; enforced at the UI layer (Document 05, activity RACI)."},
+  {id:"I1", type:"Issue", desc:"Sprint 2 severity model accuracy landed at 84% vs. an 88% sprint target.", impact:"Medium", likelihood:"—", owner:"Sam Nakamura", raised:"2026-07-24", review:"2026-08-21", status:"Open", rag:"amber", response:"Added a feature-engineering pass on claim-narrative embeddings; re-test scheduled for Sprint 4."},
+  {id:"I2", type:"Issue", desc:"PII redaction pipeline flagged a 3% false-negative rate in the QA sample (SSNs not fully masked in narrative text).", impact:"High", likelihood:"—", owner:"Grace Lin", raised:"2026-07-15", review:"2026-07-29", status:"Closed", rag:"green", response:"Added a secondary regex + NER redaction pass; re-validated at 0.2% false-negative rate. Closed 2026-07-29."},
+  {id:"D1", type:"Dependency", desc:"Guidewire ClaimCenter sandbox environment provisioning is vendor-owned and outside project control.", impact:"High", likelihood:"—", owner:"Tom Reyes (tracking) / Guidewire (delivering)", raised:"2026-06-08", review:"2026-08-10", status:"Open", rag:"amber", response:"Vendor confirmed delivery for 2026-08-14 — a 4-day slip against plan; tracked jointly with Risk R1."},
+  {id:"D2", type:"Dependency", desc:"State DOI liaison compliance sign-off required before Gate 1 can close.", impact:"High", likelihood:"—", owner:"Grace Lin", raised:"2026-06-08", review:"2026-06-26", status:"Closed", rag:"green", response:"Sign-off received 2026-06-24, two days ahead of the gate."}
+];
+
+var RACI_ROLES = ["Sponsor","PM","AI Architect","Product Owner","Data Sci. Lead","Integration Eng.","Compliance Lead","QA Lead","Change Mgmt Lead"];
+var RACI_ROWS = [
+  {activity:"Charter Approval", cells:["A","R","C","I","I","I","C","I","I"]},
+  {activity:"Schedule & Budget Baseline", cells:["C","A","C","I","I","I","I","I","I"]},
+  {activity:"AI Architecture & Model Design Review", cells:["I","C","A","I","R","C","I","I","I"]},
+  {activity:"Compliance & Regulatory Review (Gate 1)", cells:["C","I","C","I","I","I","A","I","I"]},
+  {activity:"Data Governance Approval", cells:["I","I","C","I","R","I","A","I","I"]},
+  {activity:"Model Training & Tuning", cells:["I","I","C","I","A","I","I","I","I"]},
+  {activity:"Model Validation & Accuracy Gate (Gate 2)", cells:["I","I","A","I","C","I","C","R","I"]},
+  {activity:"Guidewire Integration Build", cells:["I","I","C","I","I","A","I","I","I"]},
+  {activity:"Adjuster Review UI Design & Build", cells:["I","I","C","A","I","R","I","C","I"]},
+  {activity:"UAT Execution", cells:["I","C","I","C","I","I","I","A","I"]},
+  {activity:"Go / No-Go Decision (Gate 3)", cells:["A","R","C","I","I","I","C","C","I"]},
+  {activity:"Production Deployment", cells:["I","A","C","I","I","R","I","I","I"]},
+  {activity:"Training Delivery & Adoption", cells:["I","I","I","C","I","I","I","I","A"]}
+];
+
+var SPRINT = {
+  number: 4, weeks: "10–11", dates: "2026-08-10 to 2026-08-21",
+  goal: "Close the entity-extraction accuracy gap (injury-flag detection) to ≥90% and establish a stable Guidewire sandbox connection with an end-to-end FNOL event flow.",
+  velocityHistory: [38,44,40],
+  capacity: [
+    {name:"Sam Nakamura", role:"ML Engineer", hrs:60},
+    {name:"Elena Vogel", role:"ML/NLP Engineer", hrs:60},
+    {name:"Tom Reyes", role:"Integration Engineer", hrs:70},
+    {name:"Devon Park", role:"QA Lead", hrs:40},
+    {name:"Dr. Aisha Bello", role:"Data Science Lead (40% alloc.)", hrs:24}
+  ],
+  backlog: [
+    {id:"CI-401", story:"Augment injury-flag training set with 5,000 labeled transcripts", pts:8, pri:"P1", who:"Elena Vogel", ac:"Corpus reaches 55K labeled examples; class balance within 5%", status:"Committed"},
+    {id:"CI-402", story:"Retrain entity extraction model v2 on augmented corpus", pts:5, pri:"P1", who:"Sam Nakamura", ac:"Injury-flag F1 ≥ 0.90 on holdout set", status:"Committed"},
+    {id:"CI-403", story:"Guidewire sandbox OAuth + FNOL event subscription", pts:8, pri:"P1", who:"Tom Reyes", ac:"Sandbox authenticates; receives a test FNOL event end-to-end", status:"Committed"},
+    {id:"CI-404", story:"Map ClaimsIQ entity schema to Guidewire ClaimCenter data model", pts:5, pri:"P2", who:"Tom Reyes", ac:"Field mapping document approved by AI Architect", status:"Committed"},
+    {id:"CI-405", story:"Automated regression suite for entity extraction (CI pipeline)", pts:5, pri:"P2", who:"Devon Park", ac:"Suite runs on every model commit; under 10 min runtime", status:"Committed"},
+    {id:"CI-406", story:"Bias / fairness check across the 12-state claim mix", pts:5, pri:"P1", who:"Dr. Aisha Bello", ac:"No state shows more than 3pt accuracy deviation from the mean", status:"Committed"},
+    {id:"CI-407", story:"Reserve-range advisory logic v0.1 (range only, no PII surfaced)", pts:3, pri:"P3", who:"Sam Nakamura", ac:"Returns an advisory range for 3 test claim types", status:"Stretch"},
+    {id:"CI-408", story:"Sprint demo & stakeholder review preparation", pts:3, pri:"P2", who:"Priya Raman", ac:"Demo script and live sandbox walkthrough ready", status:"Committed"}
+  ],
+  dod: [
+    "Code reviewed and merged to main",
+    "Unit tests ≥85% coverage on new modules",
+    "Model changes validated against the holdout set with results logged to the model registry",
+    "Integration changes tested end-to-end in the Guidewire sandbox",
+    "Documentation updated (schema, API, or runbook as applicable)",
+    "AI Architect sign-off obtained on any schema or contract change",
+    "No P1 defects open against the changed component"
+  ],
+  risk: "Guidewire sandbox delivery slip (RAID D1/R1) threatens CI-403 and CI-404. Mitigation: Tom Reyes develops against mocked FNOL event payloads in parallel if the sandbox is not live by 2026-08-14."
+};
+
+var BUDGET = [
+  {cat:"Labor & Staffing", planned:760000, actual:342000, committed:380000, eac:770000},
+  {cat:"Guidewire Integration & Licensing", planned:150000, actual:95000, committed:55000, eac:150000},
+  {cat:"Cloud / AI Infrastructure (Azure OpenAI, vector DB, compute)", planned:110000, actual:48000, committed:50000, eac:112000},
+  {cat:"Training & Change Management", planned:55000, actual:8000, committed:47000, eac:55000},
+  {cat:"Vendor / Compliance & QA Advisory", planned:45000, actual:5000, committed:40000, eac:45000},
+  {cat:"Contingency Reserve (10%)", planned:80000, actual:0, committed:35000, eac:80000}
+];
+var BUDGET_WEEKLY_PLANNED = [40000,85000,135000,190000,250000,310000,380000,440000,520000,590000,660000,730000,800000,860000,920000,970000,1010000,1060000,1120000,1200000];
+var BUDGET_WEEKLY_ACTUAL  = [35000,72000,120000,165000,215000,270000,330000,410000,498000];
+
+var SPRINT3_BURNDOWN = {
+  committed: 40,
+  ideal:  [40,36,32,28,24,20,16,12,8,4,0],
+  actual: [40,38,34,31,27,24,21,15,8,3,0]
+};
+
+var STATUS = {
+  overallRag:"amber",
+  spi:0.96, cpi:1.04,
+  entityAccuracy:87, entityAccuracyTarget:90,
+  handleTimeReductionPct:31, handleTimeReductionTarget:45,
+  openHighRisks:2,
+  budgetSpentPct: Math.round(498000/1200000*100),
+  workstreams:[
+    {name:"1.0 PM & Governance", rag:"green"},
+    {name:"2.0 Discovery, Compliance & Data", rag:"green"},
+    {name:"3.0 AI Model Development", rag:"amber"},
+    {name:"4.0 Guidewire Integration", rag:"amber"},
+    {name:"5.0 Adjuster Review UI", rag:"green"},
+    {name:"6.0 Testing & QA / UAT", rag:"green"},
+    {name:"7.0 Training & Change Mgmt", rag:"green"},
+    {name:"8.0 Deployment, Pilot & Hypercare", rag:"green"}
+  ],
+  accomplishments:[
+    "Entity extraction model v1 delivered on schedule (Milestone M4 met, 2026-08-07)",
+    "PII redaction false-negative issue (I2) closed and re-validated at 0.2%",
+    "Sprint 3 completed at 40 story points, matching the trailing 3-sprint average velocity"
+  ],
+  nextPeriod:[
+    "Execute Sprint 4 (weeks 10–11): injury-flag accuracy uplift and Guidewire sandbox connection",
+    "Close Assumption A1 (IVR transcript latency) via load test",
+    "Begin UX research for the Adjuster Review UI (workstream 5.0)"
+  ],
+  decisions:[
+    "Approve a $35,000 contingency draw to add a contract NLP annotator, unblocking Risk R2 (injury-flag accuracy). Recommendation: approve.",
+    "Confirm pilot go-live scope (Milestone M9) remains 2 regions at 10% volume if the Guidewire slip (D1) extends past 2026-08-21. Recommendation: hold at 2 regions, reassess at Milestone M5."
+  ]
+};
+
+/* =========================================================================
+   ASK-THE-GUIDE Q&A DATABASE (offline, matched by keyword overlap)
+   ========================================================================= */
+var QA_DB = [
+  {kw:["project","management","exist","why","purpose"], a:"Project management exists because unmanaged work drifts — scope creeps, risks go unnamed until they become issues, and status reports paper over problems until they surface at the worst possible time. The discipline exists to surface problems while they are still cheap to fix.", sec:"fundamentals", title:"Why Project Management Exists"},
+  {kw:["triangle","scope","schedule","cost","constraint","tradeoff","iron"], a:"The scope/schedule/cost triangle: you can't change one leg without adjusting another. For ClaimsIQ, cost is the fixed constraint ($1.2M authorized); scope is the release valve (Phase 2 items were cut to protect cost and schedule).", sec:"f-triangle", title:"The Scope / Schedule / Cost Triangle"},
+  {kw:["wbs","work","breakdown","structure"], a:"A Work Breakdown Structure decomposes total project scope into ownable work packages. The defining test: the lowest-level packages must sum to exactly 100% of scope. ClaimsIQ's WBS has 8 top-level categories (PM/Governance 8%, Discovery/Compliance/Data 12%, AI Model Development 22%, Guidewire Integration 18%, Adjuster UI 14%, Testing/QA 12%, Training 8%, Deployment/Pilot/Hypercare 6%) summing to 100%.", sec:"doc-wbs", title:"Document 02 — Work Breakdown Structure"},
+  {kw:["critical","path"], a:"The critical path is the longest chain of dependent tasks with zero float — any slip on it delays the whole project. For ClaimsIQ the critical path runs Discovery → Data Pipeline → Severity Model → Guidewire Integration → Testing/UAT → Deployment (marked in cherry red in the Gantt chart, Document 03).", sec:"doc-timeline", title:"Document 03 — Milestone Timeline / Gantt"},
+  {kw:["milestone","gate","exit","criteria"], a:"A milestone marks a point in time; a gate is a milestone with a formal go/no-go decision and written exit criteria. ClaimsIQ has three real gates: Compliance & Data Governance (Week 3), Model Accuracy (Week 15, ≥90% extraction accuracy), and Go/No-Go for production (Week 18).", sec:"f-gates", title:"Milestones & Gates"},
+  {kw:["raid","risk","assumption","issue","dependency","log"], a:"RAID stands for Risks, Assumptions, Issues, and Dependencies. Every row needs exactly one named owner and a date. ClaimsIQ's top open risk is the Guidewire sandbox delivery slip (R1, owned by Tom Reyes) and the entity-extraction accuracy plateau (R2, owned by Dr. Aisha Bello).", sec:"doc-raid", title:"Document 04 — RAID Log"},
+  {kw:["raci","responsible","accountable","consulted","informed","matrix"], a:"RACI maps activities to roles: Responsible (does the work), Accountable (owns the outcome — exactly one per activity), Consulted (input beforehand), Informed (told afterward). On ClaimsIQ, the Sponsor (Denise Okafor) is Accountable for Charter Approval and the Go/No-Go decision; the AI Architect is Accountable for model design review and the accuracy gate.", sec:"doc-raci", title:"Document 05 — RACI Matrix"},
+  {kw:["agile","waterfall","hybrid","scrum","sprint","methodology"], a:"Waterfall sequences fixed phases end-to-end; Agile delivers in short iterative sprints; Hybrid mixes both. ClaimsIQ is hybrid: Discovery/Compliance and Go-Live run waterfall (regulatory gates can't be iterated on), while AI model development runs seven two-week agile sprints.", sec:"f-methods", title:"Agile vs. Waterfall vs. Hybrid"},
+  {kw:["velocity","burndown","sprint","points","story"], a:"Velocity is the story points a team reliably completes per sprint, based on history. ClaimsIQ's trailing velocity is 38, 44, 40 points (Sprints 1-3, average 40.7). Sprint 3's actual burndown lagged mid-sprint but recovered to finish exactly at 0 remaining points.", sec:"f-velocity", title:"Velocity & Burndown"},
+  {kw:["status","report","rag","red","amber","green","health"], a:"ClaimsIQ's overall status as of Week 9 is AMBER: schedule SPI 0.96, cost CPI 1.04, driven by the Sprint 2 model-accuracy miss and a Guidewire vendor delay. Two workstreams (AI Model Development, Guidewire Integration) are Amber; the rest are Green.", sec:"doc-status", title:"Document 07 — Status Report"},
+  {kw:["good","bad","plan","quality"], a:"A good plan has a WBS that sums to 100%, a named and protected critical path, exactly one owner per RAID/RACI row, gates with measurable exit criteria, and status that's Green only when the metrics support it. A bad plan has none of these.", sec:"f-goodbad", title:"Good vs. Bad Plans"},
+  {kw:["kpi","metric","spi","cpi","track"], a:"Key PM KPIs: SPI (schedule performance index), CPI (cost performance index), milestone hit rate, open high-severity risk count, velocity trend, and defect/rework rate. ClaimsIQ currently reports SPI 0.96 and CPI 1.04.", sec:"f-kpis", title:"KPIs Worth Tracking"},
+  {kw:["architect","review","lens","checklist","approve"], a:"The architect's review checklist: does the WBS sum to 100%? Is the fixed constraint stated and respected? Is the critical path named? Does every RAID/RACI row have one owner? Do gates have written exit criteria? Do estimates carry a buffer? Does RAG match the real metrics? Is there a named recovery plan for anything Amber or Red?", sec:"f-lens", title:"The Architect's Review Lens"},
+  {kw:["budget","cost","spend","burn","forecast","eac"], a:"ClaimsIQ's total authorized budget is $1,200,000. As of Week 9, actual spend is $498,000 (41.5%) against a $520,000 plan. Forecast at completion (EAC) is $1,212,000 — about 1% over budget, to be covered by the contingency reserve.", sec:"doc-budget", title:"Document 08 — Budget / Burn"},
+  {kw:["sponsor","who","denise","okafor"], a:"The project sponsor is Denise Okafor, VP of Claims Operations, with budget authority up to $1.5M. She is Accountable for the Charter and the final Go/No-Go decision.", sec:"doc-charter", title:"Document 01 — Project Charter"},
+  {kw:["project","manager","priya","raman"], a:"The Project Manager is Priya Raman, who is Responsible for the charter, schedule/budget baseline, and status reporting, and is Accountable for production deployment.", sec:"doc-charter", title:"Document 01 — Project Charter"},
+  {kw:["accountable","go","no-go","decision","production"], a:"The Sponsor, Denise Okafor, is Accountable for the Go/No-Go decision (Gate 3, Week 18). The PM, Compliance Lead, and QA Lead are Consulted; the AI Architect is Consulted on the technical readiness portion.", sec:"doc-raci", title:"Document 05 — RACI Matrix"},
+  {kw:["scope","in","out","boundary","included","excluded"], a:"In scope: personal-lines Auto and Homeowners FNOL intake (phone and web), Guidewire ClaimCenter integration, adjuster review UI, severity/complexity scoring, advisory reserve ranges, audit logging. Out of scope for Phase 1: commercial lines, claims adjudication/payment decisions, SIU fraud workflows, non-English intake, and mobile app changes.", sec:"doc-charter", title:"Document 01 — Project Charter"},
+  {kw:["success","criteria","target","goal","objective"], a:"Success criteria: reduce average FNOL handle time from 22 to ≤12 minutes; cut misrouted claims from 14% to under 5%; achieve ≥90% entity-extraction accuracy; keep 100% of severity/reserve recommendations reviewed by a licensed adjuster; go live within 20 weeks and $1.2M.", sec:"doc-charter", title:"Document 01 — Project Charter"},
+  {kw:["timeline","schedule","gantt","weeks","duration","how","long"], a:"ClaimsIQ runs 20 weeks: Phase 0 Discovery & Compliance (weeks 1-3, waterfall), seven two-week agile sprints for model/integration/UI build (weeks 4-17), UAT & Pilot (weeks 18-19), and full go-live plus hypercare (week 20).", sec:"doc-timeline", title:"Document 03 — Milestone Timeline / Gantt"},
+  {kw:["compliance","regulatory","doi","adjuster","loop","automated","decision"], a:"State insurance regulators (DOI) do not allow fully automated adverse claim decisions. ClaimsIQ is designed as advisory-only: a licensed adjuster must confirm or override every AI severity and reserve recommendation. This is a locked assumption (A3), not a design preference.", sec:"f-triangle", title:"Compliance Constraint"},
+  {kw:["guidewire","integration","vendor","sandbox"], a:"ClaimsIQ integrates with Guidewire ClaimCenter, the system of record for claims. The Guidewire sandbox delivery is a tracked dependency (D1) currently 4 days delayed, feeding into risk R1 on the critical path.", sec:"doc-raid", title:"Document 04 — RAID Log"},
+  {kw:["sprint","4","current","next","backlog"], a:"Sprint 4 (weeks 10-11, Aug 10-21) commits 39 points across 7 stories plus a 3-point stretch item, with the sprint goal of closing the injury-flag accuracy gap and connecting the Guidewire sandbox end-to-end.", sec:"doc-sprint", title:"Document 06 — Sprint Plan"},
+  {kw:["accuracy","model","entity","extraction","severity"], a:"Entity extraction accuracy is currently at 87% against a 90% target — tracked as open risk R2. Severity triage model accuracy landed at 84% in Sprint 2 against an 88% target — tracked as open issue I1. Both are being addressed in Sprint 4.", sec:"doc-status", title:"Document 07 — Status Report"},
+  {kw:["handle","time","reduction","efficiency"], a:"The target is to cut average FNOL handle time from 22 minutes to 12 minutes (a 45% reduction). Current pilot-environment testing shows a 31% reduction so far, still short of target.", sec:"doc-status", title:"Document 07 — Status Report"},
+  {kw:["team","roles","who","staff"], a:"Core team: Denise Okafor (Sponsor), Priya Raman (PM), the AI Solution Architect (you), Marcus Feld (Product Owner), Dr. Aisha Bello (Data Science Lead), Sam Nakamura and Elena Vogel (ML/NLP Engineers), Tom Reyes (Integration Engineer), Grace Lin (Compliance Lead), Devon Park (QA Lead), and Wanda Ihejirika (Change Management Lead).", sec:"doc-charter", title:"Document 01 — Project Charter"},
+  {kw:["download","export","pdf","csv","print"], a:"Every document in this guide has its own toolbar with buttons to download a styled standalone HTML copy, print/save as PDF, and — for the tabular documents (WBS, RAID, RACI, Budget) — export to CSV for Excel.", sec:"doc-charter", title:"Downloading Documents"},
+  {kw:["donut","rag","milestone","status","count"], a:"Of ClaimsIQ's 11 milestones, 8 are currently Green (on track), 3 are Amber (M3 Severity Model, M5 Guidewire Sandbox, M7 Accuracy Gate), and 0 are Red — risks are being actively managed before they turn Red.", sec:"dashboard", title:"Executive Dashboard"},
+  {kw:["glossary","define","definition","term","mean"], a:"Check the Glossary section at the bottom of this guide for short definitions of every PM term used, from Baseline to Velocity.", sec:"glossary", title:"Glossary"}
+];
+
+/* =========================================================================
+   RENDER HELPERS
+   ========================================================================= */
+function esc(s){ return String(s).replace(/[&<>]/g, function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];}); }
+function money(n){ return "$" + Math.round(n).toLocaleString("en-US"); }
+function ragBadge(rag){
+  var map = {green:["Green","badge-green"], amber:["Amber","badge-amber"], red:["Red","badge-red"], grey:["Planned","badge-grey"]};
+  var m = map[rag] || map.grey;
+  return '<span class="badge ' + m[1] + '">' + m[0] + '</span>';
+}
+
+function renderWBSTable(){
+  var rows = "";
+  WBS.forEach(function(w){
+    var style = w.parent ? ' style="background:var(--surface-alt);font-weight:700;"' : "";
+    rows += '<tr' + style + '><td class="mono">' + w.id + '</td><td>' + esc(w.name) + '</td>' +
+      '<td class="mono">' + w.pct + '%</td><td class="mono">' + w.hrs.toLocaleString() + '</td>' +
+      '<td>' + esc(w.owner) + '</td><td>' + (w.deliverable ? esc(w.deliverable) : "—") + '</td></tr>';
+  });
+  var totalPct = WBS.filter(function(w){return w.parent;}).reduce(function(a,w){return a+w.pct;},0);
+  return '<div class="tablewrap"><table class="doc-table"><thead><tr><th style="width:60px">WBS ID</th><th>Work Package</th><th style="width:70px">% of Scope</th><th style="width:90px">Effort (hrs)</th><th style="width:170px">Owner</th><th>Key Deliverable</th></tr></thead><tbody>' +
+    rows + '<tr style="background:var(--surface-alt);font-weight:700;border-top:2px solid var(--berry);"><td colspan="2">TOTAL (Level 1 categories)</td><td class="mono">' + totalPct + '%</td><td class="mono">9,600</td><td colspan="2">Reconciles to 100% of scope</td></tr></tbody></table></div>';
+}
+
+function renderWBSTree(){
+  var kids = WBS.filter(function(w){return w.parent;});
+  var w = 1180, h = 300, rootX = w/2, rootY = 34;
+  var n = kids.length, colW = w/n;
+  var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" style="min-width:960px" role="img" aria-label="WBS tree">';
+  svg += '<rect x="' + (rootX-140) + '" y="8" width="280" height="46" rx="8" fill="var(--berry)"></rect>';
+  svg += '<text x="' + rootX + '" y="28" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">ClaimsIQ Project Scope</text>';
+  svg += '<text x="' + rootX + '" y="44" text-anchor="middle" fill="#fff" font-size="11">100% of Authorized Work</text>';
+  kids.forEach(function(k,i){
+    var cx = colW*i + colW/2;
+    var boxY = 130, boxW = Math.min(colW-14,138), boxH = 96;
+    var bx = cx - boxW/2;
+    svg += '<line x1="' + rootX + '" y1="54" x2="' + rootX + '" y2="80" stroke="var(--border)" stroke-width="2"></line>';
+    svg += '<line x1="' + rootX + '" y1="80" x2="' + cx + '" y2="80" stroke="var(--border)" stroke-width="2"></line>';
+    svg += '<line x1="' + cx + '" y1="80" x2="' + cx + '" y2="' + boxY + '" stroke="var(--border)" stroke-width="2"></line>';
+    var fill = k.pct >= 18 ? 'var(--cherry)' : 'var(--berry)';
+    svg += '<rect x="' + bx + '" y="' + boxY + '" width="' + boxW + '" height="' + boxH + '" rx="7" fill="var(--surface)" stroke="' + fill + '" stroke-width="2"></rect>';
+    svg += '<text x="' + cx + '" y="' + (boxY+20) + '" text-anchor="middle" font-size="11" font-weight="700" fill="' + fill + '">' + k.id + '</text>';
+    var words = k.name.split(" "); var lines=[]; var cur="";
+    words.forEach(function(wd){ if((cur+" "+wd).trim().length>17){lines.push(cur.trim());cur=wd;} else {cur=(cur+" "+wd).trim();} });
+    if(cur) lines.push(cur.trim());
+    lines.slice(0,3).forEach(function(ln,li){
+      svg += '<text x="' + cx + '" y="' + (boxY+36+li*13) + '" text-anchor="middle" font-size="9.5" fill="var(--text)">' + esc(ln) + '</text>';
+    });
+    svg += '<text x="' + cx + '" y="' + (boxY+boxH-10) + '" text-anchor="middle" font-size="13" font-weight="900" fill="' + fill + '">' + k.pct + '%</text>';
+  });
+  svg += '</svg>';
+  return svg;
+}
+
+function renderGantt(){
+  var totalWeeks = 20, leftPad = 220, rightPad = 20, topPad = 34, rowH = 30;
+  var chartW = 900, chartH = topPad + WORKSTREAMS.length*rowH + 46;
+  var scale = (chartW-leftPad-rightPad)/totalWeeks;
+  var svg = '<svg viewBox="0 0 ' + (chartW) + ' ' + chartH + '" width="100%" style="min-width:900px" role="img" aria-label="Gantt chart">';
+  for(var wk=0; wk<=totalWeeks; wk+=1){
+    var x = leftPad + wk*scale;
+    var isMonth = (wk % 5 === 0);
+    svg += '<line x1="' + x + '" y1="' + topPad + '" x2="' + x + '" y2="' + (chartH-30) + '" stroke="var(--border)" stroke-width="' + (isMonth?1.2:0.6) + '"></line>';
+    if(wk % 2 === 0){ svg += '<text x="' + x + '" y="' + (chartH-14) + '" font-size="9" fill="var(--muted)" text-anchor="middle">W' + wk + '</text>'; }
+  }
+  WORKSTREAMS.forEach(function(ws,i){
+    var y = topPad + i*rowH;
+    svg += '<text x="6" y="' + (y+rowH/2+4) + '" font-size="10.5" fill="var(--text)">' + esc(ws.name) + '</text>';
+    var bx = leftPad + ws.start*scale, bw = (ws.end-ws.start)*scale;
+    var fill = ws.critical ? 'var(--cherry)' : 'var(--berry)';
+    svg += '<rect x="' + bx + '" y="' + (y+6) + '" width="' + bw + '" height="' + (rowH-14) + '" rx="4" fill="' + fill + '" opacity="0.88"></rect>';
+  });
+  MILESTONES.forEach(function(m){
+    var x = leftPad + m.week*scale;
+    var fill = m.critical ? 'var(--cherry)' : 'var(--berry)';
+    var y = topPad - 14;
+    svg += '<polygon points="' + x + ',' + (y-7) + ' ' + (x+7) + ',' + y + ' ' + x + ',' + (y+7) + ' ' + (x-7) + ',' + y + '" fill="' + fill + '" stroke="var(--surface)" stroke-width="1"><title>' + esc(m.id + ": " + m.label) + '</title></polygon>';
+  });
+  svg += '</svg>';
+  return svg;
+}
+
+function renderDependencyNetwork(){
+  var nodes = [
+    {id:"discover", label:"Discovery &\nCompliance", x:60, y:110},
+    {id:"data", label:"Data\nPipeline", x:230, y:110},
+    {id:"sev", label:"Severity\nModel", x:400, y:60},
+    {id:"ent", label:"Entity\nModel", x:400, y:160},
+    {id:"integ", label:"Guidewire\nIntegration", x:580, y:110},
+    {id:"ui", label:"Adjuster\nUI", x:580, y:210},
+    {id:"test", label:"Testing &\nUAT", x:760, y:110},
+    {id:"train", label:"Training", x:760, y:210},
+    {id:"golive", label:"Pilot &\nGo-Live", x:920, y:110}
+  ];
+  var edges = [["discover","data",1],["data","sev",1],["data","ent",0],["sev","integ",1],["ent","integ",0],["integ","test",1],["integ","ui",0],["ui","test",0],["test","golive",1],["train","golive",0],["ui","train",0]];
+  var byId = {}; nodes.forEach(function(n){byId[n.id]=n;});
+  var svg = '<svg viewBox="0 0 980 260" width="100%" style="min-width:820px" role="img" aria-label="Dependency network">';
+  edges.forEach(function(e){
+    var a=byId[e[0]], b=byId[e[1]];
+    var crit = e[2]===1;
+    svg += '<line x1="' + a.x + '" y1="' + a.y + '" x2="' + b.x + '" y2="' + b.y + '" stroke="' + (crit?'var(--cherry)':'var(--border)') + '" stroke-width="' + (crit?2.5:1.5) + '" marker-end="url(#arrow)"></line>';
+  });
+  svg += '<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="var(--muted)"></path></marker></defs>';
+  nodes.forEach(function(n){
+    svg += '<circle cx="' + n.x + '" cy="' + n.y + '" r="34" fill="var(--surface)" stroke="var(--berry)" stroke-width="2"></circle>';
+    var lines = n.label.split("\n");
+    lines.forEach(function(ln,li){
+      svg += '<text x="' + n.x + '" y="' + (n.y - (lines.length-1)*6 + li*12 + 4) + '" text-anchor="middle" font-size="9.5" fill="var(--text)">' + ln + '</text>';
+    });
+  });
+  svg += '</svg>';
+  return svg;
+}
+
+function renderRACIGrid(){
+  var head = '<th style="min-width:230px">Activity</th>' + RACI_ROLES.map(function(r){return '<th style="text-align:center">'+esc(r)+'</th>';}).join("");
+  var rows = RACI_ROWS.map(function(row){
+    var cells = row.cells.map(function(c){ return '<td style="text-align:center"><span class="raci-cell raci-' + c + '">' + c + '</span></td>'; }).join("");
+    return '<tr><td>' + esc(row.activity) + '</td>' + cells + '</tr>';
+  }).join("");
+  return '<div class="raci-legend">' +
+    '<span class="lg-item"><span class="raci-cell raci-A" style="width:20px;height:20px;font-size:10px">A</span> Accountable — one per row</span>' +
+    '<span class="lg-item"><span class="raci-cell raci-R" style="width:20px;height:20px;font-size:10px">R</span> Responsible</span>' +
+    '<span class="lg-item"><span class="raci-cell raci-C" style="width:20px;height:20px;font-size:10px">C</span> Consulted</span>' +
+    '<span class="lg-item"><span class="raci-cell raci-I" style="width:20px;height:20px;font-size:10px">I</span> Informed</span></div>' +
+    '<div class="tablewrap"><table class="doc-table"><thead><tr>' + head + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+
+function renderRAIDTable(){
+  var rows = RAID.map(function(r){
+    return '<tr><td class="mono">' + r.id + '</td><td>' + esc(r.type) + '</td><td>' + esc(r.desc) + '</td>' +
+      '<td>' + esc(r.impact) + (r.likelihood!=="—" ? " / " + esc(r.likelihood) : "") + '</td>' +
+      '<td>' + esc(r.owner) + '</td><td class="mono">' + r.raised + '</td><td class="mono">' + r.review + '</td>' +
+      '<td>' + ragBadge(r.rag) + ' ' + esc(r.status) + '</td><td>' + esc(r.response) + '</td></tr>';
+  }).join("");
+  return '<div class="tablewrap"><table class="doc-table"><thead><tr><th>ID</th><th>Type</th><th style="min-width:260px">Description</th><th>Impact/Likelihood</th><th>Owner</th><th>Raised</th><th>Review</th><th>Status</th><th style="min-width:220px">Mitigation / Response</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+
+function renderMilestoneTable(){
+  var rows = MILESTONES.map(function(m){
+    return '<tr><td class="mono">' + m.id + '</td><td>' + esc(m.label) + '</td><td class="mono">Wk ' + m.week + ' — ' + m.date + '</td>' +
+      '<td>' + (m.critical ? '<span class="pill-critical">CRITICAL PATH</span>' : 'Float available') + '</td>' +
+      '<td>' + ragBadge(m.rag) + '</td><td>' + esc(m.exit || "—") + '</td></tr>';
+  }).join("");
+  return '<div class="tablewrap"><table class="doc-table"><thead><tr><th>ID</th><th>Milestone</th><th>Date</th><th>Path</th><th>RAG</th><th style="min-width:260px">Exit Criteria</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+
+function renderSprintTables(){
+  var cap = SPRINT.capacity.map(function(c){ return '<tr><td>' + esc(c.name) + '</td><td>' + esc(c.role) + '</td><td class="mono">' + c.hrs + '</td></tr>'; }).join("");
+  var totalHrs = SPRINT.capacity.reduce(function(a,c){return a+c.hrs;},0);
+  var capTable = '<div class="tablewrap"><table class="doc-table"><thead><tr><th>Team Member</th><th>Role</th><th>Available Hours</th></tr></thead><tbody>' + cap +
+    '<tr style="font-weight:700;background:var(--surface-alt)"><td colspan="2">Total Capacity</td><td class="mono">' + totalHrs + ' hrs</td></tr></tbody></table></div>';
+  var back = SPRINT.backlog.map(function(b){
+    return '<tr><td class="mono">' + b.id + '</td><td>' + esc(b.story) + '</td><td class="mono">' + b.pts + '</td><td>' + esc(b.pri) + '</td><td>' + esc(b.who) + '</td><td>' + esc(b.ac) + '</td><td>' + (b.status==="Stretch" ? '<span class="badge badge-grey">Stretch</span>' : '<span class="badge badge-berry">Committed</span>') + '</td></tr>';
+  }).join("");
+  var committedPts = SPRINT.backlog.filter(function(b){return b.status==="Committed";}).reduce(function(a,b){return a+b.pts;},0);
+  var stretchPts = SPRINT.backlog.filter(function(b){return b.status==="Stretch";}).reduce(function(a,b){return a+b.pts;},0);
+  var backTable = '<div class="tablewrap"><table class="doc-table"><thead><tr><th>ID</th><th style="min-width:260px">Story</th><th>Pts</th><th>Priority</th><th>Assignee</th><th style="min-width:200px">Acceptance Criteria</th><th>Status</th></tr></thead><tbody>' + back +
+    '<tr style="font-weight:700;background:var(--surface-alt)"><td colspan="2">Total</td><td class="mono">' + (committedPts+stretchPts) + '</td><td colspan="4">Committed: ' + committedPts + ' pts · Stretch: ' + stretchPts + ' pts</td></tr></tbody></table></div>';
+  var dod = '<ul>' + SPRINT.dod.map(function(d){return '<li>'+esc(d)+'</li>';}).join("") + '</ul>';
+  return {cap:capTable, backlog:backTable, dod:dod};
+}
+
+function renderBudgetTable(){
+  var rows = BUDGET.map(function(b){
+    var variance = b.planned - b.eac;
+    var vColor = variance>=0 ? 'var(--leaf)' : 'var(--cherry)';
+    return '<tr><td>' + esc(b.cat) + '</td><td class="mono">' + money(b.planned) + '</td><td class="mono">' + money(b.actual) + '</td>' +
+      '<td class="mono">' + money(b.committed) + '</td><td class="mono">' + money(b.eac) + '</td>' +
+      '<td class="mono" style="color:' + vColor + ';font-weight:700">' + (variance>=0?"+":"") + money(variance) + '</td></tr>';
+  }).join("");
+  var totals = BUDGET.reduce(function(a,b){ a.planned+=b.planned;a.actual+=b.actual;a.committed+=b.committed;a.eac+=b.eac; return a; },{planned:0,actual:0,committed:0,eac:0});
+  var totalVar = totals.planned-totals.eac;
+  return '<div class="tablewrap"><table class="doc-table"><thead><tr><th style="min-width:220px">Category</th><th>Planned</th><th>Actual (Wk 9)</th><th>Committed</th><th>Forecast (EAC)</th><th>Variance</th></tr></thead><tbody>' + rows +
+    '<tr style="font-weight:700;background:var(--surface-alt);border-top:2px solid var(--berry)"><td>TOTAL</td><td class="mono">' + money(totals.planned) + '</td><td class="mono">' + money(totals.actual) + '</td><td class="mono">' + money(totals.committed) + '</td><td class="mono">' + money(totals.eac) + '</td><td class="mono" style="color:' + (totalVar>=0?'var(--leaf)':'var(--cherry)') + '">' + (totalVar>=0?"+":"") + money(totalVar) + '</td></tr></tbody></table></div>';
+}
+
+/* ---- SVG line chart (generic) ---- */
+function renderLineChart(opts){
+  // opts: {width,height,labels[],series:[{name,data[],color,dashed}],yFormat}
+  var w = opts.width||760, h = opts.height||260, padL=64,padR=20,padT=18,padB=32;
+  var innerW = w-padL-padR, innerH = h-padT-padB;
+  var allVals = [];
+  opts.series.forEach(function(s){ s.data.forEach(function(v){ if(v!==null) allVals.push(v); }); });
+  var maxV = Math.max.apply(null, allVals), minV = Math.min(0, Math.min.apply(null, allVals));
+  var n = opts.labels.length;
+  function xAt(i){ return padL + (n<=1?0:(innerW*i/(n-1))); }
+  function yAt(v){ return padT + innerH - ((v-minV)/(maxV-minV||1))*innerH; }
+  var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" style="min-width:' + Math.min(w,560) + 'px" role="img" aria-label="' + esc(opts.title||"chart") + '">';
+  var gridN = 4;
+  for(var g=0; g<=gridN; g++){
+    var v = minV + (maxV-minV)*g/gridN;
+    var y = yAt(v);
+    svg += '<line x1="' + padL + '" y1="' + y + '" x2="' + (w-padR) + '" y2="' + y + '" stroke="var(--border)" stroke-width="1"></line>';
+    svg += '<text x="' + (padL-8) + '" y="' + (y+3) + '" font-size="9" text-anchor="end" fill="var(--muted)">' + (opts.yFormat?opts.yFormat(v):Math.round(v)) + '</text>';
+  }
+  var labelStep = Math.ceil(n/12);
+  opts.labels.forEach(function(lb,i){
+    if(i%labelStep===0 || i===n-1){
+      svg += '<text x="' + xAt(i) + '" y="' + (h-10) + '" font-size="8.5" text-anchor="middle" fill="var(--muted)">' + esc(lb) + '</text>';
+    }
+  });
+  opts.series.forEach(function(s){
+    var pts = s.data.map(function(v,i){ return v===null?null:[xAt(i),yAt(v)]; }).filter(function(p){return p;});
+    var d = pts.map(function(p,i){ return (i===0?"M":"L") + p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" ");
+    svg += '<path d="' + d + '" fill="none" stroke="' + s.color + '" stroke-width="2.4" ' + (s.dashed?'stroke-dasharray="5,4"':'') + '></path>';
+    pts.forEach(function(p){ svg += '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="2.6" fill="' + s.color + '"></circle>'; });
+  });
+  svg += '</svg>';
+  var legend = '<div class="chart-legend">' + opts.series.map(function(s){ return '<span class="lg"><span class="sw" style="background:' + s.color + '"></span>' + esc(s.name) + '</span>'; }).join("") + '</div>';
+  return svg + legend;
+}
+
+function renderDonut(segments, opts){
+  opts = opts||{};
+  var size = opts.size||200, cx=size/2, cy=size/2, r=size*0.34, sw=size*0.16;
+  var total = segments.reduce(function(a,s){return a+s.value;},0);
+  var circumf = 2*Math.PI*r;
+  var offset = 0;
+  var svg = '<svg viewBox="0 0 ' + (size+150) + ' ' + size + '" width="100%" style="min-width:340px" role="img" aria-label="Milestone RAG donut">';
+  svg += '<g transform="translate(0,0)">';
+  segments.forEach(function(s){
+    var frac = total? s.value/total : 0;
+    var len = frac*circumf;
+    svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + s.color + '" stroke-width="' + sw + '" ' +
+      'stroke-dasharray="' + len.toFixed(1) + ' ' + (circumf-len).toFixed(1) + '" stroke-dashoffset="' + (-offset).toFixed(1) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"></circle>';
+    offset += len;
+  });
+  svg += '<text x="' + cx + '" y="' + (cy-2) + '" text-anchor="middle" font-size="22" font-weight="900" fill="var(--text)">' + total + '</text>';
+  svg += '<text x="' + cx + '" y="' + (cy+16) + '" text-anchor="middle" font-size="9.5" fill="var(--muted)">MILESTONES</text>';
+  svg += '</g>';
+  var lx = size+18, ly = size*0.28;
+  segments.forEach(function(s,i){
+    var yy = ly + i*26;
+    svg += '<rect x="' + lx + '" y="' + (yy-10) + '" width="13" height="13" rx="3" fill="' + s.color + '"></rect>';
+    svg += '<text x="' + (lx+20) + '" y="' + yy + '" font-size="11.5" fill="var(--text)">' + esc(s.label) + ': ' + s.value + '</text>';
+  });
+  svg += '</svg>';
+  return svg;
+}
+
+/* =========================================================================
+   KPI DASHBOARD
+   ========================================================================= */
+function renderKPIDashboard(){
+  var tiles = [
+    {label:"Overall Health", value:"AMBER", sub:"as of " + PROJECT.statusDate, cls:"t-amber"},
+    {label:"Schedule (SPI)", value:STATUS.spi.toFixed(2), sub:STATUS.spi<1?"slightly behind baseline":"on/ahead of baseline", cls: STATUS.spi<0.95?"t-red":(STATUS.spi<1?"t-amber":"t-green")},
+    {label:"Cost (CPI)", value:STATUS.cpi.toFixed(2), sub:"under budget (timing, not savings)", cls:"t-green"},
+    {label:"Schedule Progress", value:"45%", sub:"Week 9 of 20", cls:"t-green"},
+    {label:"Entity Extraction Accuracy", value:STATUS.entityAccuracy+"%", sub:"target ≥" + STATUS.entityAccuracyTarget + "%", cls:"t-amber"},
+    {label:"Handle-Time Reduction", value:"-"+STATUS.handleTimeReductionPct+"%", sub:"target -" + STATUS.handleTimeReductionTarget + "%", cls:"t-amber"},
+    {label:"Open High Risks", value:STATUS.openHighRisks, sub:"R1 Guidewire delay, R2 accuracy gap", cls:"t-amber"},
+    {label:"Budget Spent", value:STATUS.budgetSpentPct+"%", sub:money(498000) + " of " + money(1200000), cls:"t-green"}
+  ];
+  return '<div class="kpi-grid">' + tiles.map(function(t){
+    return '<div class="kpi-tile ' + t.cls + '"><div class="kpi-label">' + esc(t.label) + '</div><div class="kpi-value">' + t.value + '</div><div class="kpi-sub">' + esc(t.sub) + '</div></div>';
+  }).join("") + '</div>';
+}
+
+/* =========================================================================
+   DOWNLOAD / PRINT INFRASTRUCTURE
+   ========================================================================= */
+var DOC_STYLE = [
+  "body{font-family:'Roboto',system-ui,Arial,sans-serif;color:#1A1A1A;margin:0;background:#F8F8F7;}",
+  ".mono{font-family:'Roboto Mono',ui-monospace,monospace;}",
+  ".page{max-width:900px;margin:0 auto;background:#FFFFFF;}",
+  ".cover{background:linear-gradient(135deg,#367895,#274f61);color:#fff;padding:70px 50px;text-align:center;}",
+  ".cover img{height:46px;margin-bottom:28px;filter:brightness(0) invert(1);}",
+  ".cover h1{font-size:28px;margin:0 0 10px;}",
+  ".cover .sub{font-size:15px;opacity:.9;margin-bottom:34px;}",
+  ".cover .meta{display:inline-block;text-align:left;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:18px 26px;font-size:12.5px;line-height:2;}",
+  ".dcs{display:flex;flex-wrap:wrap;background:#F8F8F7;border-bottom:1px solid #E4E4E3;}",
+  ".dcs div{padding:10px 20px;border-right:1px solid #E4E4E3;font-size:11px;flex:1;min-width:120px;}",
+  ".dcs .l{display:block;text-transform:uppercase;color:#6B6B6B;font-family:'Roboto Mono',monospace;font-size:9.5px;margin-bottom:2px;}",
+  ".body{padding:34px 44px;}",
+  "h2{color:#367895;border-bottom:2px solid #E4E4E3;padding-bottom:6px;}",
+  "h3{color:#367895;}",
+  "table{width:100%;border-collapse:collapse;font-size:12px;margin:14px 0;}",
+  "th{background:#367895;color:#fff;text-align:left;padding:8px 10px;font-size:10.5px;text-transform:uppercase;}",
+  "td{padding:8px 10px;border-bottom:1px solid #E4E4E3;}",
+  "tr:nth-child(even) td{background:#F8F8F7;}",
+  ".callout{border-left:4px solid #367895;background:#F8F8F7;padding:12px 16px;margin:14px 0;font-size:12.5px;border-radius:0 6px 6px 0;}",
+  ".callout.key{border-color:#FB2832;}",
+  ".signoff{display:flex;border:1px solid #E4E4E3;border-radius:8px;overflow:hidden;margin-top:26px;}",
+  ".signoff div{flex:1;padding:16px 18px;border-right:1px solid #E4E4E3;font-size:11px;}",
+  ".signoff div:last-child{border-right:none;}",
+  ".so-role{color:#367895;font-weight:700;text-transform:uppercase;font-size:10px;margin-bottom:14px;font-family:'Roboto Mono',monospace;}",
+  ".so-line{border-bottom:1px solid #1A1A1A;height:30px;}",
+  ".foot{background:#F8F8F7;border-top:1px solid #E4E4E3;padding:14px 44px;font-size:10px;color:#6B6B6B;display:flex;justify-content:space-between;}",
+  "@media print{ .page{max-width:none;} .cover{page-break-after:always;} }"
+].join("\n");
+
+function buildStandaloneDoc(cfg){
+  // cfg: {code,title,subtitle,owner,status,version,date,bodyHTML}
+  return '<!doctype html><html><head><meta charset="utf-8"><title>' + esc(cfg.title) + ' — ' + esc(PROJECT.project) + '</title>' +
+  '<style>' + DOC_STYLE + '</style></head><body><div class="page">' +
+  '<div class="cover"><img src="' + LOGO_SRC + '" alt="Colaberry">' +
+  '<h1>' + esc(cfg.title) + '</h1><div class="sub">' + esc(cfg.subtitle) + '</div>' +
+  '<div class="meta">' +
+  '<strong>Project:</strong> ' + esc(PROJECT.project) + '<br>' +
+  '<strong>Organization:</strong> ' + esc(PROJECT.company) + '<br>' +
+  '<strong>Sponsor:</strong> ' + esc(PROJECT.sponsor) + '<br>' +
+  '<strong>Prepared by:</strong> ' + esc(cfg.owner) + '<br>' +
+  '<strong>Document date:</strong> ' + esc(cfg.date) +
+  '</div></div>' +
+  '<div class="dcs">' +
+  '<div><span class="l">Document</span>' + esc(cfg.code) + '</div>' +
+  '<div><span class="l">Version</span>' + esc(cfg.version) + '</div>' +
+  '<div><span class="l">Owner</span>' + esc(cfg.owner) + '</div>' +
+  '<div><span class="l">Status</span>' + esc(cfg.status) + '</div>' +
+  '<div><span class="l">Date</span>' + esc(cfg.date) + '</div>' +
+  '</div>' +
+  '<div class="body">' + cfg.bodyHTML +
+  '<div class="signoff">' +
+  '<div><div class="so-role">Prepared By</div><div class="so-line"></div><div style="margin-top:4px">' + esc(cfg.owner) + '</div></div>' +
+  '<div><div class="so-role">Reviewed By</div><div class="so-line"></div><div style="margin-top:4px">' + esc(PROJECT.architect) + '</div></div>' +
+  '<div><div class="so-role">Approved By</div><div class="so-line"></div><div style="margin-top:4px">' + esc(PROJECT.sponsor) + '</div></div>' +
+  '</div>' +
+  '</div>' +
+  '<div class="foot"><span>&copy; 2026 Colaberry, Inc. — ' + esc(PROJECT.project) + '</span><span>Internal / Instructional Use Only</span></div>' +
+  '</div></body></html>';
+}
+
+var DOC_CONFIGS = {}; // populated below once bodies are built
+
+function downloadBlob(filename, content, mime){
+  var blob = new Blob([content], {type:mime});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);}, 1000);
+}
+
+function downloadDoc(key){
+  var cfg = DOC_CONFIGS[key];
+  var html = buildStandaloneDoc(cfg);
+  downloadBlob(cfg.code.replace(/\s+/g,"_") + ".html", html, "text/html");
+}
+
+function printDoc(key){
+  var cfg = DOC_CONFIGS[key];
+  var html = buildStandaloneDoc(cfg);
+  var w = window.open("", "_blank");
+  w.document.open(); w.document.write(html); w.document.close();
+  w.onload = function(){ setTimeout(function(){ w.focus(); w.print(); }, 300); };
+}
+
+function csvEscape(v){
+  v = String(v==null?"":v);
+  if(/[",\n]/.test(v)) return '"' + v.replace(/"/g,'""') + '"';
+  return v;
+}
+function arrayToCSV(headers, rows){
+  var lines = [headers.map(csvEscape).join(",")];
+  rows.forEach(function(r){ lines.push(r.map(csvEscape).join(",")); });
+  return lines.join("\r\n");
+}
+function downloadCSV(key){
+  var builders = {
+    wbs: function(){
+      return arrayToCSV(["WBS ID","Work Package","% of Scope","Effort (hrs)","Owner","Key Deliverable"],
+        WBS.map(function(w){ return [w.id,w.name,w.pct+"%",w.hrs,w.owner,w.deliverable||""]; }));
+    },
+    raid: function(){
+      return arrayToCSV(["ID","Type","Description","Impact","Likelihood","Owner","Raised","Review","Status","RAG","Mitigation / Response"],
+        RAID.map(function(r){ return [r.id,r.type,r.desc,r.impact,r.likelihood,r.owner,r.raised,r.review,r.status,r.rag,r.response]; }));
+    },
+    raci: function(){
+      return arrayToCSV(["Activity"].concat(RACI_ROLES),
+        RACI_ROWS.map(function(r){ return [r.activity].concat(r.cells); }));
+    },
+    budget: function(){
+      return arrayToCSV(["Category","Planned","Actual (Wk 9)","Committed","Forecast (EAC)","Variance"],
+        BUDGET.map(function(b){ return [b.cat,b.planned,b.actual,b.committed,b.eac,b.planned-b.eac]; }));
+    }
+  };
+  var csv = builders[key]();
+  downloadBlob(key + "_claimsiq.csv", csv, "text/csv");
+}
+
+function docToolbar(key, opts){
+  var csvBtn = opts && opts.csv ? '<button onclick="ClaimsIQ.downloadCSV(\''+key+'\')">Export CSV</button>' : "";
+  return '<div class="doc-toolbar">' +
+    '<button class="primary" onclick="ClaimsIQ.downloadDoc(\''+key+'\')">Download HTML</button>' +
+    '<button onclick="ClaimsIQ.printDoc(\''+key+'\')">Print / Save as PDF</button>' +
+    csvBtn +
+    '</div>';
+}
+
+/* =========================================================================
+   BUILD EACH DOCUMENT SECTION (on-page + register standalone config)
+   ========================================================================= */
+function buildDocuments(){
+  var root = document.getElementById("docsRoot");
+  var html = "";
+
+  /* ---- 01 Charter ---- */
+  var charterBody =
+    '<h2>1. Business Case</h2>' +
+    '<p>Meridian Mutual Insurance Group processes roughly 4,200 First Notice of Loss (FNOL) claims per month across auto and homeowners lines. Average FNOL intake takes 22 minutes, severity triage is inconsistent between intake staff, and 14% of claims are mis-routed to the wrong adjuster queue — driving SLA breaches and an estimated $2.1M per year in adjuster overtime. ClaimsIQ deploys an AI copilot to structure intake, extract key entities, score severity/complexity, and recommend routing and an advisory reserve range, with a licensed adjuster confirming every recommendation.</p>' +
+    '<h2>2. Objectives (SMART)</h2><ul>' +
+    '<li>Reduce average FNOL handle time from 22 minutes to ≤12 minutes within 8 weeks of full go-live.</li>' +
+    '<li>Reduce misrouted claims from 14% to under 5% within 8 weeks of full go-live.</li>' +
+    '<li>Achieve ≥90% entity-extraction accuracy against a licensed-adjuster QA sample before the production Go/No-Go gate.</li>' +
+    '<li>Maintain 100% adjuster review of every AI severity and reserve recommendation — no exceptions, no automation of the decision itself.</li>' +
+    '<li>Deliver within the 20-week schedule and the $1,200,000 authorized budget.</li></ul>' +
+    '<h2>3. Scope</h2>' +
+    '<div class="grid-2"><div class="card"><strong style="color:var(--leaf)">In Scope</strong><ul><li>Personal-lines Auto and Homeowners FNOL intake (phone via existing Genesys IVR feed, and web portal)</li><li>Integration to Guidewire ClaimCenter</li><li>Adjuster-facing review and override UI</li><li>Severity / complexity scoring model</li><li>Advisory-only reserve-range suggestion</li><li>Full audit logging of every AI recommendation and adjuster action</li></ul></div>' +
+    '<div class="card"><strong style="color:var(--cherry)">Out of Scope (Phase 1)</strong><ul><li>Commercial lines claims</li><li>Any automated claims adjudication or payment decision</li><li>SIU fraud-investigation workflows</li><li>Non-English intake (Spanish deferred to Phase 2)</li><li>Native mobile app changes</li></ul></div></div>' +
+    '<h2>4. Success Criteria</h2>' +
+    '<table><tr><th>Metric</th><th>Baseline</th><th>Target</th><th>Measurement Method</th></tr>' +
+    '<tr><td>FNOL handle time</td><td>22 min</td><td>≤ 12 min</td><td>Genesys call-timer average, 4-week rolling window</td></tr>' +
+    '<tr><td>Misrouted claims</td><td>14%</td><td>&lt; 5%</td><td>Guidewire queue-reassignment audit</td></tr>' +
+    '<tr><td>Entity extraction accuracy</td><td>n/a</td><td>≥ 90%</td><td>Manual QA sample vs. model output, 500 claims</td></tr>' +
+    '<tr><td>Adjuster review rate</td><td>n/a</td><td>100%</td><td>Audit log — zero unreviewed AI recommendations</td></tr></table>' +
+    '<h2>5. Assumptions &amp; Constraints</h2><ul>' +
+    '<li>Licensed adjusters remain the final decision-maker for every severity and reserve output (regulatory constraint, not negotiable — see RAID A3).</li>' +
+    '<li>Genesys IVR transcripts and the historical claims corpus are available and representative (RAID A1, A2).</li>' +
+    '<li>Guidewire ClaimCenter sandbox access is vendor-provisioned and outside direct project control (RAID D1).</li></ul>' +
+    '<h2>6. Top Risks (see full RAID Log, Document 04)</h2><ul>' +
+    '<li>Guidewire vendor sandbox delivery delay (R1)</li>' +
+    '<li>Entity-extraction accuracy plateau on injury-flag detection (R2)</li>' +
+    '<li>Regulatory reclassification of severity scoring as an automated adverse decision (R3)</li></ul>' +
+    '<h2>7. Budget &amp; Timeline Summary</h2>' +
+    '<p>Total authorized budget: <strong>$1,200,000</strong>. Duration: <strong>20 weeks</strong> (2026-06-08 to 2026-10-23), hybrid delivery — waterfall compliance gates around seven agile sprints. Full detail in Documents 02, 03, and 08.</p>' +
+    '<h2>8. Governance &amp; Authority</h2>' +
+    '<p>The Sponsor, Denise Okafor (VP Claims Operations), holds budget authority to $1.5M and approves scope changes within Insurance &amp; IT Steering Committee guardrails. Any change exceeding $150,000 or touching a regulatory filing escalates to the Enterprise AI Steering Committee. Full role-by-activity authority is defined in the RACI Matrix, Document 05.</p>' +
+    '<h2>9. Key Stakeholders</h2>' +
+    '<table><tr><th>Name</th><th>Role</th></tr>' +
+    '<tr><td>Denise Okafor</td><td>Sponsor — VP Claims Operations</td></tr>' +
+    '<tr><td>Priya Raman</td><td>Project Manager</td></tr>' +
+    '<tr><td>AI Solution Architect (you)</td><td>Technical plan review &amp; approval authority</td></tr>' +
+    '<tr><td>Marcus Feld</td><td>Product Owner — Claims Business Lead</td></tr>' +
+    '<tr><td>Dr. Aisha Bello</td><td>Data Science Lead</td></tr>' +
+    '<tr><td>Sam Nakamura, Elena Vogel</td><td>ML / NLP Engineers</td></tr>' +
+    '<tr><td>Tom Reyes</td><td>Integration Engineer (Guidewire)</td></tr>' +
+    '<tr><td>Grace Lin</td><td>Compliance &amp; Regulatory Lead</td></tr>' +
+    '<tr><td>Devon Park</td><td>QA Lead</td></tr>' +
+    '<tr><td>Wanda Ihejirika</td><td>Change Management &amp; Training Lead</td></tr></table>';
+  DOC_CONFIGS.charter = {code:"01 - Project Charter", title:"Project Charter", subtitle:"ClaimsIQ — AI-Powered FNOL Intake & Triage Copilot", owner:"Priya Raman", status:"Approved", version:PROJECT.version, date:"2026-06-08", bodyHTML: charterBody};
+  html += docSection("doc-charter","01","Project Charter","The foundational authorization document: business case, scope boundaries, success criteria, and governance authority.", "charter", charterBody, false);
+
+  /* ---- 02 WBS ---- */
+  var wbsIntro = '<div class="callout key"><div class="co-title">Reconciliation check</div>The eight Level-1 categories sum to exactly <strong>100%</strong> of authorized scope (9,600 total planning hours). This is the first thing an architect verifies before approving any AI-generated WBS.</div>' +
+    '<div class="chart-box"><div class="chart-title">WBS Tree — Level 1 Decomposition</div>' + renderWBSTree() + '</div>' +
+    renderWBSTable();
+  DOC_CONFIGS.wbs = {code:"02 - Work Breakdown Structure", title:"Work Breakdown Structure", subtitle:"Scope decomposition — reconciles to 100% of authorized work", owner:"Priya Raman", status:"Baselined", version:PROJECT.version, date:"2026-06-15", bodyHTML: '<h2>Work Packages</h2>' + wbsIntro};
+  html += docSection("doc-wbs","02","Work Breakdown Structure","Every work package the project will deliver, decomposed until each is small enough to estimate and own — summing to exactly 100% of scope.", "wbs", wbsIntro, true);
+
+  /* ---- 03 Timeline ---- */
+  var timelineBody = '<div class="chart-box"><div class="chart-title">Milestone Timeline — Weeks 1–20 (critical path in cherry red)</div>' + renderGantt() + '</div>' + renderMilestoneTable();
+  DOC_CONFIGS.timeline = {code:"03 - Milestone Timeline", title:"Milestone Timeline / Gantt", subtitle:"Sequence, dependencies, and the protected critical path", owner:"Priya Raman", status:"Baselined", version:PROJECT.version, date:"2026-06-15", bodyHTML:'<h2>Schedule</h2><p>The critical path runs Discovery &amp; Compliance → Data Pipeline → Severity Model → Guidewire Integration → Testing/UAT → Deployment. Nine of the eleven milestones sit on this path with zero float; a slip on any one moves the finish line. The Entity Extraction workstream (M4) and Adjuster UI (M6) carry float and are not driving the finish date.</p>' + timelineBody};
+  html += docSection("doc-timeline","03","Milestone Timeline / Gantt","Sequenced schedule with dependencies and dates — the critical path is named and marked, not implied.", "timeline", timelineBody, false);
+
+  /* ---- 04 RAID ---- */
+  var raidBody = renderRAIDTable();
+  DOC_CONFIGS.raid = {code:"04 - RAID Log", title:"RAID Log", subtitle:"Risks, Assumptions, Issues & Dependencies — every row owned and dated", owner:"Priya Raman", status:"Live — updated weekly", version:PROJECT.version, date:PROJECT.statusDate, bodyHTML: '<h2>Risks, Assumptions, Issues & Dependencies</h2>' + raidBody};
+  html += docSection("doc-raid","04","RAID Log","Everything that could go wrong, everything taken on faith, everything that already went wrong, and everything owed by an outside party — each with one owner and a date.", "raid", raidBody, true);
+
+  /* ---- 05 RACI ---- */
+  var raciBody = renderRACIGrid();
+  DOC_CONFIGS.raci = {code:"05 - RACI Matrix", title:"RACI Matrix", subtitle:"One Accountable owner per activity, no exceptions", owner:"Priya Raman", status:"Baselined", version:PROJECT.version, date:"2026-06-15", bodyHTML:'<h2>Responsibility Assignment</h2>' + raciBody};
+  html += docSection("doc-raci","05","RACI Matrix","Thirteen key activities mapped against nine roles — verified to have exactly one Accountable owner per row.", "raci", raciBody, true);
+
+  /* ---- 06 Sprint ---- */
+  var st = renderSprintTables();
+  var sprintBody = '<h2>Sprint Goal</h2><div class="callout key"><div class="co-title">Sprint ' + SPRINT.number + ' — ' + SPRINT.dates + '</div>' + esc(SPRINT.goal) + '</div>' +
+    '<h2>Team Capacity</h2>' + st.cap +
+    '<p style="font-size:12.5px;color:var(--muted)">Trailing velocity (Sprints 1–3): ' + SPRINT.velocityHistory.join(", ") + ' points — 3-sprint average ' + (SPRINT.velocityHistory.reduce(function(a,b){return a+b;},0)/3).toFixed(1) + ' points.</p>' +
+    '<h2>Committed &amp; Stretch Backlog</h2>' + st.backlog +
+    '<h2>Definition of Done</h2>' + st.dod +
+    '<h2>Sprint Risk</h2><div class="callout warn"><div class="co-title">Watch item</div>' + esc(SPRINT.risk) + '</div>';
+  DOC_CONFIGS.sprint = {code:"06 - Sprint Plan", title:"Sprint Plan", subtitle:"Sprint " + SPRINT.number + " — the next committed increment", owner:"Priya Raman", status:"Committed", version:PROJECT.version, date:"2026-08-08", bodyHTML: sprintBody};
+  html += docSection("doc-sprint","06","Sprint Plan","The next increment of AI model development and integration work — estimated, capacity-checked, and committed by the team.", "sprint", sprintBody, false);
+
+  /* ---- 07 Status ---- */
+  var wsRows = STATUS.workstreams.map(function(w){ return '<tr><td>' + esc(w.name) + '</td><td>' + ragBadge(w.rag) + '</td></tr>'; }).join("");
+  var burndownChart = renderLineChart({
+    title:"Sprint 3 burndown", width:640, height:230,
+    labels:["D0","D1","D2","D3","D4","D5","D6","D7","D8","D9","D10"],
+    series:[
+      {name:"Ideal", data:SPRINT3_BURNDOWN.ideal, color:"var(--muted)", dashed:true},
+      {name:"Actual", data:SPRINT3_BURNDOWN.actual, color:"var(--berry)"}
+    ]
+  });
+  var donutChart = renderDonut([
+    {label:"Green", value:8, color:"var(--leaf)"},
+    {label:"Amber", value:3, color:"var(--amber)"},
+    {label:"Red", value:0, color:"var(--cherry)"}
+  ]);
+  var statusBody = '<h2>Overall Health</h2><div style="margin-bottom:10px">' + ragBadge(STATUS.overallRag) + ' <strong>as of ' + PROJECT.statusDate + '</strong> — project is 45% through schedule (Week 9 of 20).</div>' +
+    renderKPIDashboard() +
+    '<h2>Workstream RAG</h2><table>' + '<tr><th>Workstream</th><th>RAG</th></tr>' + wsRows + '</table>' +
+    '<div class="grid-2"><div class="chart-box"><div class="chart-title">Milestone RAG Distribution</div>' + donutChart + '</div>' +
+    '<div class="chart-box"><div class="chart-title">Sprint 3 Burndown — Ideal vs. Actual (40 pts committed)</div>' + burndownChart + '</div></div>' +
+    '<h2>Accomplishments This Period</h2><ul>' + STATUS.accomplishments.map(function(a){return '<li>'+esc(a)+'</li>';}).join("") + '</ul>' +
+    '<h2>Planned Next Period</h2><ul>' + STATUS.nextPeriod.map(function(a){return '<li>'+esc(a)+'</li>';}).join("") + '</ul>' +
+    '<h2>Decisions Needed From Sponsor</h2>' + STATUS.decisions.map(function(d){return '<div class="callout warn"><div class="co-title">Decision Required</div>'+esc(d)+'</div>';}).join("") +
+    '<h2>Top Risks</h2><p>See RAID R1 (Guidewire sandbox delay) and R2 (entity-extraction accuracy gap) in Document 04 — both Amber, both actively mitigated in Sprint 4.</p>';
+  DOC_CONFIGS.status = {code:"07 - Status Report", title:"Status Report", subtitle:"As of " + PROJECT.statusDate, owner:"Priya Raman", status:"Amber — mitigations in flight", version:PROJECT.version, date:PROJECT.statusDate, bodyHTML: statusBody};
+  html += docSection("doc-status","07","Status Report","Honest RAG health against baseline, this period's progress, and the two decisions the sponsor needs to make now.", "status", statusBody, false);
+
+  /* ---- 08 Budget ---- */
+  var budgetLine = renderLineChart({
+    title:"Budget burn", width:760, height:260,
+    labels: BUDGET_WEEKLY_PLANNED.map(function(_,i){return "W"+(i+1);}),
+    series:[
+      {name:"Planned (cumulative)", data:BUDGET_WEEKLY_PLANNED, color:"var(--berry)"},
+      {name:"Actual (through Wk 9)", data:BUDGET_WEEKLY_ACTUAL.concat(Array(20-BUDGET_WEEKLY_ACTUAL.length).fill(null)), color:"var(--leaf)"},
+      {name:"Forecast (EAC)", data:Array(8).fill(null).concat([498000]).concat(Array(10).fill(null)).concat([1212000]), color:"var(--cherry)", dashed:true}
+    ],
+    yFormat: function(v){ return "$"+Math.round(v/1000)+"k"; }
+  });
+  var budgetBody = '<h2>Budget by Category</h2>' + renderBudgetTable() +
+    '<div class="chart-box"><div class="chart-title">Cumulative Spend — Planned vs. Actual vs. Forecast (EAC)</div>' + budgetLine + '</div>' +
+    '<h2>Narrative</h2><p>Through Week 9, actual cumulative spend is $498,000 against a $520,000 plan — a favorable variance driven primarily by Guidewire licensing invoice timing, not a true efficiency gain, and should not be read as banked savings. Forecast at completion (EAC) is <strong>$1,212,000</strong>, roughly 1% over the $1,200,000 authorization, driven by the proposed $35,000 contract-annotator addition (see Status Report, Document 07, Decisions Needed). The 10% contingency reserve ($80,000) comfortably covers this variance; no budget escalation is required at this time.</p>';
+  DOC_CONFIGS.budget = {code:"08 - Budget & Burn", title:"Budget / Burn", subtitle:"Planned vs. actual spend and forecast to complete", owner:"Priya Raman", status:"Live — updated weekly", version:PROJECT.version, date:PROJECT.statusDate, bodyHTML: budgetBody};
+  html += docSection("doc-budget","08","Budget / Burn","Planned versus actual spend by category, a full cumulative burn chart, and an honest forecast to complete.", "budget", budgetBody, true);
+
+  root.innerHTML = html;
+}
+
+function docSection(id, num, title, lede, key, bodyHTML, hasCsv){
+  return '<section class="topic" id="' + id + '" data-searchable data-title="Document ' + num + ' — ' + esc(title) + '">' +
+    '<div class="eyebrow">Document ' + num + ' of 08</div>' +
+    '<h2>' + esc(title) + '</h2>' +
+    '<p class="lede">' + esc(lede) + '</p>' +
+    docToolbar(key, {csv:hasCsv}) +
+    '<div class="doc-frame">' +
+      '<div class="df-header"><img src="' + LOGO_SRC + '" alt="Colaberry"><div class="df-titles"><strong>' + esc(title) + '</strong><span>' + esc(PROJECT.project) + '</span></div></div>' +
+      '<div class="doc-control-strip">' +
+        '<div class="dcs-item"><span class="dcs-label">Document</span><span class="dcs-val">' + esc(DOC_CONFIGS[key].code) + '</span></div>' +
+        '<div class="dcs-item"><span class="dcs-label">Version</span><span class="dcs-val">' + esc(DOC_CONFIGS[key].version) + '</span></div>' +
+        '<div class="dcs-item"><span class="dcs-label">Owner</span><span class="dcs-val">' + esc(DOC_CONFIGS[key].owner) + '</span></div>' +
+        '<div class="dcs-item"><span class="dcs-label">Status</span><span class="dcs-val">' + esc(DOC_CONFIGS[key].status) + '</span></div>' +
+        '<div class="dcs-item"><span class="dcs-label">Date</span><span class="dcs-val">' + esc(DOC_CONFIGS[key].date) + '</span></div>' +
+      '</div>' +
+      '<div class="doc-body">' + bodyHTML +
+        '<div class="signoff">' +
+          '<div class="so-col"><div class="so-role">Prepared By</div><div class="so-line"></div><div class="so-cap">' + esc(DOC_CONFIGS[key].owner) + '</div></div>' +
+          '<div class="so-col"><div class="so-role">Reviewed By</div><div class="so-line"></div><div class="so-cap">' + esc(PROJECT.architect) + '</div></div>' +
+          '<div class="so-col"><div class="so-role">Approved By</div><div class="so-line"></div><div class="so-cap">' + esc(PROJECT.sponsor) + '</div></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="doc-footer-strip"><span>&copy; 2026 Colaberry, Inc. — ' + esc(PROJECT.project) + '</span><span>Internal / Instructional Use Only</span></div>' +
+    '</div>' +
+  '</section>';
+}
+
+/* =========================================================================
+   FUNDAMENTALS DEPENDENCY NETWORK (teaching diagram)
+   ========================================================================= */
+function injectFundamentalsDiagram(){
+  var host = document.getElementById("f-critical-path");
+  if(!host) return;
+  var box = document.createElement("div");
+  box.className = "chart-box";
+  box.innerHTML = '<div class="chart-title">Dependency Network — ClaimsIQ Workstreams (critical path in red)</div>' + renderDependencyNetwork();
+  host.appendChild(box);
+}
+
+/* =========================================================================
+   GLOSSARY
+   ========================================================================= */
+var GLOSSARY = [
+  ["Baseline","The originally approved version of scope, schedule, or budget, used as the fixed reference point for measuring variance."],
+  ["Burndown Chart","A chart plotting remaining work against time within a single sprint, comparing an ideal straight-line pace to actual progress."],
+  ["Critical Path","The longest sequence of dependent tasks with zero float; it sets the earliest possible finish date."],
+  ["CPI (Cost Performance Index)","Earned value divided by actual cost; above 1.0 means under budget for the work delivered."],
+  ["EAC (Estimate at Completion)","The forecast total cost of the project given current performance, combining actual spend to date with a re-forecast of remaining work."],
+  ["Float / Slack","The amount of time a task can slip without delaying the overall project finish date."],
+  ["Gate","A milestone with a formal go/no-go decision and written, measurable exit criteria."],
+  ["Milestone","A significant point in time in a schedule; it has no duration and consumes no effort by itself."],
+  ["RACI","A responsibility matrix: Responsible, Accountable, Consulted, Informed — exactly one Accountable per activity."],
+  ["RAG Status","Red / Amber / Green shorthand for health: on track, at risk, or off track against baseline."],
+  ["RAID Log","A tracked list of Risks, Assumptions, Issues, and Dependencies, each with one owner and a date."],
+  ["SPI (Schedule Performance Index)","Earned value divided by planned value; above 1.0 means ahead of schedule."],
+  ["Sprint","A short, fixed-length iteration (commonly two weeks) in agile delivery, ending in a potentially shippable increment."],
+  ["Velocity","The amount of work, usually in story points, a team reliably completes per sprint, based on actual history."],
+  ["WBS (Work Breakdown Structure)","A decomposition of total project scope into ownable work packages that sum to 100% of scope."]
+];
+function renderGlossary(){
+  var el = document.getElementById("glossaryList");
+  el.innerHTML = GLOSSARY.map(function(g){ return '<dt>' + esc(g[0]) + '</dt><dd>' + esc(g[1]) + '</dd>'; }).join("");
+}
+
+/* =========================================================================
+   DASHBOARD (top of page)
+   ========================================================================= */
+function renderDashboard(){
+  document.getElementById("kpiDashboard").innerHTML = renderKPIDashboard();
+  document.getElementById("chartDashDonut").innerHTML = '<div class="chart-title">Milestone RAG Distribution (11 milestones)</div>' + renderDonut([
+    {label:"Green", value:8, color:"var(--leaf)"},
+    {label:"Amber", value:3, color:"var(--amber)"},
+    {label:"Red", value:0, color:"var(--cherry)"}
+  ]);
+  document.getElementById("chartDashBudget").innerHTML = '<div class="chart-title">Cumulative Budget Burn (Wk 1–9 actual)</div>' + renderLineChart({
+    width:420, height:220,
+    labels: BUDGET_WEEKLY_PLANNED.slice(0,9).map(function(_,i){return "W"+(i+1);}),
+    series:[
+      {name:"Planned", data:BUDGET_WEEKLY_PLANNED.slice(0,9), color:"var(--berry)"},
+      {name:"Actual", data:BUDGET_WEEKLY_ACTUAL, color:"var(--leaf)"}
+    ],
+    yFormat: function(v){ return "$"+Math.round(v/1000)+"k"; }
+  });
+}
+
+/* =========================================================================
+   SEARCH
+   ========================================================================= */
+var SEARCH_INDEX = [];
+function buildSearchIndex(){
+  SEARCH_INDEX = [];
+  document.querySelectorAll("[data-searchable]").forEach(function(sec){
+    SEARCH_INDEX.push({
+      id: sec.id,
+      title: sec.getAttribute("data-title") || sec.id,
+      text: (sec.innerText || sec.textContent || "").replace(/\s+/g," ").trim()
+    });
+  });
+}
+function runSearch(q){
+  q = q.trim().toLowerCase();
+  var box = document.getElementById("searchResults");
+  if(!q){ box.classList.remove("open"); box.innerHTML=""; return; }
+  var scored = SEARCH_INDEX.map(function(item){
+    var score = 0;
+    var titleL = item.title.toLowerCase();
+    if(titleL.indexOf(q)>-1) score += 10;
+    var idx = item.text.toLowerCase().indexOf(q);
+    if(idx>-1) score += 3;
+    q.split(/\s+/).forEach(function(tok){
+      if(tok.length<3) return;
+      if(titleL.indexOf(tok)>-1) score += 2;
+      if(item.text.toLowerCase().indexOf(tok)>-1) score += 1;
+    });
+    var snippetIdx = idx>-1?idx:0;
+    var snippet = item.text.substring(Math.max(0,snippetIdx-40), snippetIdx+90);
+    return {item:item, score:score, snippet:snippet};
+  }).filter(function(s){return s.score>0;}).sort(function(a,b){return b.score-a.score;}).slice(0,8);
+
+  if(!scored.length){ box.innerHTML = '<div class="sr-empty">No matches for &quot;' + esc(q) + '&quot;. Try a shorter term.</div>'; box.classList.add("open"); return; }
+  box.innerHTML = scored.map(function(s){
+    return '<a class="sr-item" href="#' + s.item.id + '" data-target="' + s.item.id + '"><div class="sr-title">' + esc(s.item.title) + '</div><div class="sr-snip">…' + esc(s.snippet) + '…</div></a>';
+  }).join("");
+  box.classList.add("open");
+}
+
+function goToSection(id){
+  var el = document.getElementById(id);
+  if(!el) return;
+  history.replaceState(null,"","#"+id);
+  el.scrollIntoView({behavior:"smooth", block:"start"});
+  el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+  document.querySelectorAll(".sidenav a").forEach(function(a){a.classList.remove("active");});
+  var navLink = document.querySelector('.sidenav a[href="#'+id+'"]');
+  if(navLink) navLink.classList.add("active");
+}
+
+/* =========================================================================
+   ASK THE GUIDE
+   ========================================================================= */
+var STOPWORDS = {"the":1,"is":1,"a":1,"an":1,"of":1,"for":1,"to":1,"what":1,"who":1,"how":1,"does":1,"do":1,"are":1,"in":1,"on":1,"and":1,"this":1,"that":1,"me":1,"tell":1,"please":1,"can":1,"you":1,"i":1};
+function tokenize(s){ return s.toLowerCase().replace(/[^a-z0-9\s]/g," ").split(/\s+/).filter(function(t){return t && !STOPWORDS[t];}); }
+
+function askMatch(question){
+  var toks = tokenize(question);
+  var best = null, bestScore = 0;
+  QA_DB.forEach(function(entry){
+    var score = 0;
+    toks.forEach(function(t){
+      entry.kw.forEach(function(k){
+        if(k===t) score += 3;
+        else if(k.indexOf(t)>-1 || t.indexOf(k)>-1) score += 1;
+      });
+    });
+    if(score > bestScore){ bestScore = score; best = entry; }
+  });
+  return bestScore>0 ? best : null;
+}
+
+function appendAskMsg(role, html){
+  var body = document.getElementById("askBody");
+  var div = document.createElement("div");
+  div.className = "ask-msg " + role;
+  div.innerHTML = html;
+  body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+}
+
+function handleAsk(){
+  var input = document.getElementById("askInput");
+  var q = input.value.trim();
+  if(!q) return;
+  appendAskMsg("user", esc(q));
+  input.value = "";
+  var match = askMatch(q);
+  setTimeout(function(){
+    if(match){
+      appendAskMsg("bot", esc(match.a) + '<br><a class="src" href="#' + match.sec + '" data-target="' + match.sec + '">Source: ' + esc(match.title) + ' &rarr;</a>');
+    } else {
+      appendAskMsg("bot", "I couldn't find a direct answer to that in the guide. Try the search box above, or ask about the WBS, critical path, RAID log, RACI matrix, budget, or the ClaimsIQ status report.");
+    }
+  }, 220);
+}
+
+function renderAskSuggestions(){
+  var suggestions = ["What is the critical path?","Who is accountable for go/no-go?","What's the current budget status?","What is RAID?","Explain the RACI matrix"];
+  var box = document.getElementById("askSuggest");
+  box.innerHTML = suggestions.map(function(s){ return '<button type="button" data-q="' + esc(s) + '">' + esc(s) + '</button>'; }).join("");
+}
+
+/* =========================================================================
+   WIRE-UP
+   ========================================================================= */
+function init(){
+  document.getElementById("logoTop").src = LOGO_SRC;
+
+  buildDocuments();
+  renderDashboard();
+  injectFundamentalsDiagram();
+  renderGlossary();
+  buildSearchIndex();
+  renderAskSuggestions();
+
+  // Search
+  var input = document.getElementById("searchInput");
+  input.addEventListener("input", function(){ runSearch(input.value); });
+  input.addEventListener("focus", function(){ if(input.value) runSearch(input.value); });
+  document.addEventListener("click", function(e){
+    var box = document.getElementById("searchResults");
+    if(e.target.closest && e.target.closest(".sr-item")){
+      e.preventDefault();
+      var t = e.target.closest(".sr-item").getAttribute("data-target");
+      goToSection(t);
+      box.classList.remove("open");
+      input.value = "";
+    } else if(!e.target.closest(".searchwrap")){
+      box.classList.remove("open");
+    }
+  });
+
+  // Nav links (event delegation covers dynamically built content)
+  document.addEventListener("click", function(e){
+    var a = e.target.closest("a[href^='#']");
+    if(a && document.getElementById(a.getAttribute("href").slice(1))){
+      e.preventDefault();
+      goToSection(a.getAttribute("href").slice(1));
+      document.body.classList.remove("nav-open");
+    }
+  });
+
+  // Mobile nav toggle
+  document.getElementById("navToggle").addEventListener("click", function(){
+    document.body.classList.toggle("nav-open");
+  });
+
+  // Theme toggle
+  document.getElementById("themeToggle").addEventListener("click", function(){
+    var html = document.documentElement;
+    var cur = html.getAttribute("data-theme");
+    var next = cur === "dark" ? "light" : "dark";
+    html.setAttribute("data-theme", next);
+    try{ localStorage.setItem("cb-fieldguide-theme", next); }catch(e){}
+  });
+  try{
+    var saved = localStorage.getItem("cb-fieldguide-theme");
+    if(saved) document.documentElement.setAttribute("data-theme", saved);
+  }catch(e){}
+
+  // Ask panel
+  var askPanel = document.getElementById("askPanel");
+  document.getElementById("askOpenBtn").addEventListener("click", function(){ askPanel.classList.add("open"); document.getElementById("askInput").focus(); });
+  document.getElementById("askClose").addEventListener("click", function(){ askPanel.classList.remove("open"); });
+  document.getElementById("askSend").addEventListener("click", handleAsk);
+  document.getElementById("askInput").addEventListener("keydown", function(e){ if(e.key==="Enter") handleAsk(); });
+  document.getElementById("askSuggest").addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-q]");
+    if(btn){ document.getElementById("askInput").value = btn.getAttribute("data-q"); handleAsk(); }
+  });
+
+  // Deep link on load
+  if(location.hash){
+    setTimeout(function(){ goToSection(location.hash.slice(1)); }, 60);
+  }
+
+  // Expose download/print/csv for inline onclick handlers
+  window.ClaimsIQ = { downloadDoc:downloadDoc, printDoc:printDoc, downloadCSV:downloadCSV };
+}
+
+if(document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
+
+})();
+</script>

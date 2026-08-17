@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Command Center — Full-Service Travel Agency Platform</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div id="topnav-root"></div>
+
+<main class="container">
+  <div class="page-header">
+    <h1 id="cc-title"></h1>
+    <p class="page-desc" id="cc-oneliner"></p>
+  </div>
+
+  <div class="section">
+    <h2>Where we are</h2>
+    <div class="grid" id="where-we-are"></div>
+  </div>
+
+  <div class="section">
+    <h2>What's live right now</h2>
+    <div class="card" id="whats-live"></div>
+  </div>
+
+  <div class="section">
+    <h2>At a glance</h2>
+    <div class="grid" id="quick-stats"></div>
+  </div>
+
+  <div class="section">
+    <h2>All tabs</h2>
+    <div class="tile-grid" id="tab-grid"></div>
+  </div>
+
+  <footer class="site-footer">
+    Data source: one shared file (<code>assets/data.js</code>). Toggle Sample/Real above — the switch applies to every tab.
+  </footer>
+</main>
+
+<script src="assets/data.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  Site.init("overview");
+
+  var TAB_DESCRIPTIONS = {
+    overview:   "The 30-second view: what this is, which release we're in, what's live.",
+    outcomes:   "The numbers this platform has to move. No targets defined yet.",
+    users:      "Who this is for, from the roles named in the user stories.",
+    guardrails: "The promises the system makes, and what enforces them today.",
+    systems:    "External systems this platform connects to. None named yet.",
+    pm:         "Releases, stories, and due dates — a Gantt view you can click into.",
+    agents:     "Who owns each story. Not a scoped AI agent roster yet.",
+    kb:         "Everything the project knows about itself, with a Q&A panel.",
+    "data-model": "The tables behind all of the above, derived from the requirements."
+  };
+
+  function render() {
+    var data = Site.currentData();
+    var meta = data.meta;
+
+    document.getElementById("cc-title").textContent = meta.title;
+    document.getElementById("cc-oneliner").textContent = meta.oneLiner + " (" + meta.sector + ")";
+
+    // ---- Where we are ----------------------------------------------------
+    var today = meta.todayISO;
+    var currentRelease = null, nextRelease = null;
+    data.releases.forEach(function (r, i) {
+      if (today >= r.start && today <= r.end) currentRelease = r;
+      if (!currentRelease && !nextRelease && today < r.start) nextRelease = r;
+    });
+
+    var releaseHtml = "";
+    if (currentRelease) {
+      var total = Site.daysBetween(currentRelease.start, currentRelease.end) + 1;
+      var elapsed = Math.min(total, Math.max(0, Site.daysBetween(currentRelease.start, today) + 1));
+      var pct = Math.round((elapsed / total) * 100);
+      releaseHtml =
+        '<div class="card">' +
+          '<div class="stat-label">CURRENT RELEASE</div>' +
+          '<div class="stat-value" style="font-size:20px;">' + Site.escapeHtml(currentRelease.id) + ' — ' + Site.escapeHtml(currentRelease.name) + '</div>' +
+          '<div class="stat-sub">' + Site.fmtDate(currentRelease.start) + ' → ' + Site.fmtDate(currentRelease.end) + '</div>' +
+          '<div style="margin-top:10px;" class="progress-track"><div class="progress-fill" style="width:' + pct + '%;"></div></div>' +
+          '<div class="stat-sub" style="margin-top:4px;">' + elapsed + ' of ' + total + ' days elapsed</div>' +
+        '</div>';
+    } else {
+      releaseHtml =
+        '<div class="card">' +
+          '<div class="stat-label">CURRENT RELEASE</div>' +
+          '<div class="stat-value" style="font-size:16px;">Between releases</div>' +
+          '<div class="stat-sub">Next up: ' + (nextRelease ? Site.escapeHtml(nextRelease.id) + ' — ' + Site.escapeHtml(nextRelease.name) + ' (' + Site.fmtDate(nextRelease.start) + ')' : '—') + '</div>' +
+        '</div>';
+    }
+
+    var demoDays = Site.daysBetween(today, meta.demoDayISO);
+    var buildDays = Site.daysBetween(today, meta.buildEndsISO);
+    var demoHtml =
+      '<div class="card">' +
+        '<div class="stat-label">DEMO DAY</div>' +
+        '<div class="stat-value" style="font-size:20px;">' + Site.fmtDate(meta.demoDayISO) + '</div>' +
+        '<div class="stat-sub">' + demoDays + ' days away · build ends ' + Site.fmtDate(meta.buildEndsISO) + ' (' + buildDays + ' days) · then a week of demo prep</div>' +
+      '</div>';
+
+    var demoTarget = data.releases.filter(function (r) { return r.isDemoTarget; })[0];
+    var scopeHtml =
+      '<div class="card">' +
+        '<div class="stat-label">DEMO SCOPE</div>' +
+        '<div class="stat-value" style="font-size:20px;">' + (demoTarget ? Site.escapeHtml(demoTarget.id.toUpperCase()) : "—") + '</div>' +
+        '<div class="stat-sub">' + (demoTarget ? Site.escapeHtml(demoTarget.name) + ' is this term\'s demo target. Releases after it are roadmap, not build scope.' : "No release marked as the demo target.") + '</div>' +
+      '</div>';
+
+    document.getElementById("where-we-are").innerHTML = releaseHtml + demoHtml + scopeHtml;
+
+    // ---- What's live --------------------------------------------------
+    var liveHtml = '<div class="grid">';
+    data.guardrails.forEach(function (g) {
+      var enforced = !!g.enforcedBy;
+      liveHtml += '<div>' +
+        Site.statusDot(enforced ? "up" : "unknown", null, enforced ? "Enforced" : "Not yet enforced") +
+        '<div style="font-size:13px;margin-top:4px;"><strong>' + Site.escapeHtml(g.id) + '</strong> — ' + Site.escapeHtml(g.promise) + '</div>' +
+        (enforced ? '<div class="stat-sub">' + Site.escapeHtml(g.enforcedBy) + '</div>' : '') +
+        '</div>';
+    });
+    liveHtml += '</div>';
+
+    var systemsLine = data.systems.length
+      ? '<div class="stat-sub" style="margin-top:14px;">' + data.systems.length + ' external system(s) connected.</div>'
+      : '<div class="empty-state" style="margin-top:14px;">No external systems connected yet — none are named in the plan. The <strong>Systems</strong> tab will track these once integrations start.</div>';
+
+    document.getElementById("whats-live").innerHTML =
+      '<div class="stat-label" style="margin-bottom:10px;">GUARDRAILS (' + data.guardrails.length + ' SAFE requirements)</div>' +
+      liveHtml + systemsLine;
+
+    // ---- Quick stats ----------------------------------------------------
+    var mustCount = data.requirements.filter(function (r) { return r.priority === "must"; }).length;
+    var shouldCount = data.requirements.filter(function (r) { return r.priority === "should"; }).length;
+    var doneStories = data.stories.filter(function (s) { return s.status === "done"; }).length;
+
+    var stats = [
+      { value: data.requirements.length, label: "Requirements", sub: mustCount + " must · " + shouldCount + " should" },
+      { value: data.stories.length, label: "Stories", sub: "across " + data.releases.length + " releases" },
+      { value: doneStories + " / " + data.stories.length, label: "Stories delivered", sub: Site.getMode() === "sample" ? "sample status shown" : "nothing shipped yet" },
+      { value: data.roles.length, label: "User roles", sub: data.roles.join(", ") },
+      { value: data.guardrails.length, label: "Guardrails (SAFE reqs)", sub: data.guardrails.filter(function(g){return g.enforcedBy;}).length + " enforced today" }
+    ];
+
+    document.getElementById("quick-stats").innerHTML = stats.map(function (s) {
+      return '<div class="stat"><div class="stat-value">' + Site.escapeHtml(String(s.value)) + '</div>' +
+        '<div class="stat-label">' + Site.escapeHtml(s.label) + '</div>' +
+        '<div class="stat-sub">' + Site.escapeHtml(s.sub) + '</div></div>';
+    }).join("");
+
+    // ---- Tab grid ---------------------------------------------------------
+    document.getElementById("tab-grid").innerHTML = Site.TABS.map(function (t) {
+      var desc = TAB_DESCRIPTIONS[t.id] || "";
+      if (t.built) {
+        return '<a class="tile current" href="' + t.href + '">' +
+          '<div class="tile-title">' + Site.escapeHtml(t.label) + '</div>' +
+          '<div class="tile-desc">' + Site.escapeHtml(desc) + '</div>' +
+          '<div class="tile-meta">you are here</div></a>';
+      }
+      return '<div class="tile disabled">' +
+        '<div class="tile-title">' + Site.escapeHtml(t.label) + '</div>' +
+        '<div class="tile-desc">' + Site.escapeHtml(desc) + '</div>' +
+        '<div class="tile-meta">not built yet</div></div>';
+    }).join("");
+  }
+
+  document.addEventListener("cc-mode-changed", render);
+  render();
+</script>
+</body>
+</html>
