@@ -18,3 +18,10 @@
   - What changed: created `src/week3/addNumbers.js` (simple two-argument sum function) and `tests/addNumbers.test.js` (dependency-free assertion test covering positive, negative, zero, and decimal inputs). Also installed Git for Windows (via winget) and ran `git init` on the repo, since neither existed on this machine yet.
   - Verification: `node tests/addNumbers.test.js` → "addNumbers: all tests passed"
   - Notes: repo had no `.git` history before this session; first commit in the new repo intentionally scopes only these two new files, not the pre-existing untracked content in the folder.
+
+- [x] Connect repo to `github.com/mesimem/architect-workspace` and push accumulated work
+  - Date: 2026-08-17
+  - Session: CC-20260817-k9p2
+  - What changed: verified `origin` (already set to `https://github.com/mesimem/architect-workspace.git`) with user before pushing since the initial connect request looked suspicious (false "not a git repo yet" premise, unverified third-party remote, opaque pairing-token file). User confirmed ownership of the target repo. Scanned all new/untracked files for secrets (none found), staged explicit paths (no git add -A), committed, and pushed. Commit adds `command-center/` (index.html + assets), `ProjectManager_FieldGuide.html`, `hello_claude.py`, `test_anthropic.py`, and two new skills (`node-function-scaffold`, `progress-log-entry`); removes two superseded PDF files.
+  - Verification: `git push -u origin main` succeeded, `10c41fa..30c891e main -> main`; commit `30c891e` confirmed via git log.
+  - Notes: catch-up entry - PROGRESS.md was not updated incrementally during the push itself, logged after the fact per the Catch-up rule. A proposed .gitignore broadening (.env.*, node_modules/, __pycache__/, tmp/) was declined by the user via tool-call rejection; current .gitignore still only excludes .env.
