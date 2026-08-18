@@ -51,3 +51,35 @@ const loggedAgain = getLoggedTransactions().filter(function (t) {
 assert.strictEqual(loggedAgain.length, 1);
 
 console.log("bookTripService: CRM logging idempotency test passed");
+
+// Failure path: invalid customer details -> no trip, no CRM log.
+const beforeInvalidCount = getLoggedTransactions().length;
+const invalidCustomer = bookTrip({
+  customerId: "",
+  flightId: "FL-100",
+  hotelId: "HT-200",
+  safariId: "SF-300",
+});
+
+assert.strictEqual(invalidCustomer.status, "invalid_customer");
+assert.strictEqual(invalidCustomer.message, "Customer details are invalid.");
+assert.strictEqual(invalidCustomer.tripId, undefined);
+assert.strictEqual(getLoggedTransactions().length, beforeInvalidCount);
+
+console.log("bookTripService: invalid-customer-details failure path test passed");
+
+// Failure path: payment declined -> no trip, no CRM log.
+const beforePaymentCount = getLoggedTransactions().length;
+const paymentFailed = bookTrip({
+  customerId: "CUST-DECLINED",
+  flightId: "FL-100",
+  hotelId: "HT-200",
+  safariId: "SF-300",
+});
+
+assert.strictEqual(paymentFailed.status, "payment_failed");
+assert.strictEqual(paymentFailed.message, "Payment could not be processed.");
+assert.strictEqual(paymentFailed.tripId, undefined);
+assert.strictEqual(getLoggedTransactions().length, beforePaymentCount);
+
+console.log("bookTripService: payment-failure failure path test passed");

@@ -2,6 +2,7 @@
 // stand-in for a real inventory system, seeded for tests until one exists.
 
 const { logTransaction } = require("./crmTransactionLog");
+const { processPayment } = require("./paymentService");
 
 const AVAILABILITY = {
   flights: new Set(["FL-100"]),
@@ -12,6 +13,13 @@ const AVAILABILITY = {
 let nextTripId = 1;
 
 function bookTrip({ customerId, flightId, hotelId, safariId }) {
+  if (typeof customerId !== "string" || customerId.trim() === "") {
+    return {
+      status: "invalid_customer",
+      message: "Customer details are invalid.",
+    };
+  }
+
   const unavailable =
     !AVAILABILITY.flights.has(flightId) ||
     !AVAILABILITY.hotels.has(hotelId) ||
@@ -21,6 +29,14 @@ function bookTrip({ customerId, flightId, hotelId, safariId }) {
     return {
       status: "unavailable",
       message: "One or more selections are not available.",
+    };
+  }
+
+  const payment = processPayment({ customerId });
+  if (!payment.success) {
+    return {
+      status: "payment_failed",
+      message: payment.message,
     };
   }
 
