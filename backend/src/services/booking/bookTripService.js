@@ -43,12 +43,28 @@ const { processPayment } = require("./paymentService");
 // customer details are deliberately NOT routed - see the inclusion test in
 // advisorRouting.js.
 const { routeOutcomeToAdvisor } = require("../advisor/advisorRouting");
+// STORY-004: every completed booking is a financial transaction, and every
+// attempted one is an audit fact. The recorder owns both - see
+// ../accounting/transactionRecorder.js for why they are two stores.
+const { recordTransaction } = require("../accounting/transactionRecorder");
+const { deriveAuditKey } = require("../audit/auditLog");
 
+// STORY-004: Maps rather than Sets, because a leg now carries a price. `.has()`
+// works identically on both, so every availability check below is unchanged -
+// this is additive, not a reshape. Availability and pricing being one structure
+// here is a convenience of the stand-in; in a real agency they are separate
+// systems (inventory vs. rate card) and will separate again when either becomes
+// real.
 const AVAILABILITY = {
-  flights: new Set(["FL-100"]),
-  hotels: new Set(["HT-200"]),
-  safaris: new Set(["SF-300"]),
+  flights: new Map([["FL-100", { priceCents: 128000 }]]),
+  hotels: new Map([["HT-200", { priceCents: 76000 }]]),
+  safaris: new Map([["SF-300", { priceCents: 245000 }]]),
 };
+
+// Single-currency on purpose. The platform is U.S.-based and nothing in r0
+// prices in anything else; multi-currency means FX rates, rounding rules and a
+// reporting currency, which is a story of its own, not a constant.
+const CURRENCY = "USD";
 
 const KEY_MIN_LENGTH = 8;
 const KEY_MAX_LENGTH = 128;
@@ -64,6 +80,76 @@ let nextTripId = 1;
 
 function fingerprintOf({ customerId, flightId, hotelId, safariId }) {
   return JSON.stringify([customerId, flightId, hotelId, safariId]);
+}
+
+// The trip price is the sum of its legs. Only ever called after the
+// availability check above has passed, so every leg is present; the `|| 0`
+// guards a leg that is listed as available but unpriced, which would otherwise
+// make the total NaN and be rejected further down as an invalid amount rather
+// than charging something nonsensical.
+function priceTrip({ flightId, hotelId, safariId }) {
+  const leg = function (inventory, id) {
+    const row = inventory.get(id);
+    return row && Number.isSafeInteger(row.priceCents) ? row.priceCents : 0;
+  };
+  return (
+    leg(AVAILABILITY.flights, flightId) +
+    leg(AVAILABILITY.hotels, hotelId) +
+    leg(AVAILABILITY.safaris, safariId)
+  );
+}
+
+// STORY-004: bookkeeping must never un-confirm a booking.
+//
+// By the time this runs the customer's payment has gone through. recordTransaction
+// is written not to throw, but "written not to throw" is not the same as "cannot
+// throw", and the cost of being wrong here is a confirmed, paid booking that
+// surfaces to the customer as a crash. So the exception is caught, classified and
+// logged - never swallowed - and the booking stands. The audit gap is visible in
+// the log rather than inferred from a missing entry.
+async function recordTransactionSafely(args) {
+  try {
+    return await recordTransaction(args);
+  } catch (error) {
+    console.error(
+      JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: "error",
+        service: "booking",
+        event: "transaction_recording_threw",
+        outcome: "failure",
+        error_class: error && error.errorClass ? error.errorClass : "UnknownError",
+        context: { auditKey: args.auditKey },
+      })
+    );
+    return { status: "audit_failed", audited: false, posted: false, accounting: null };
+  }
+}
+
+// The accounting-shaped view of a booking. `transactionId` is the booking's own
+// idempotency key: it is already unique per booking attempt and already bounded
+// to the length the accounting boundary accepts, so inventing a second
+// identifier would only create something else to keep in step.
+function transactionFor(booking, idempotencyKey) {
+  return {
+    transactionId: idempotencyKey,
+    customerId: booking.customerId,
+    entryType: "sale",
+    amountCents: booking.amountCents,
+    currency: booking.currency,
+    occurredAt: booking.bookedAt,
+    memo: "Trip " + booking.tripId,
+  };
+}
+
+// Callers get the outcome, not the recorder's internals - a booking response is
+// not the place to leak the shape of our bookkeeping.
+function accountingSummary(result) {
+  return {
+    status: result.status,
+    posted: Boolean(result.posted),
+    reference: result.reference || null,
+  };
 }
 
 function isUsableKey(idempotencyKey) {
@@ -107,7 +193,23 @@ async function bookTrip({ customerId, flightId, hotelId, safariId, idempotencyKe
       };
     }
     // Exact replay: hand back the original booking. No second charge.
-    return Object.assign({}, existing, { replayed: true });
+    //
+    // STORY-004: the accounting post IS re-attempted here, deliberately. If the
+    // first run confirmed the booking but could not reach the accounting API,
+    // the books are missing an entry and a replay is the natural moment to fix
+    // that. It cannot double-post - the recorder dedups on transactionId - so
+    // the cost of a replay that already posted is one map lookup.
+    const replayAccounting = await recordTransactionSafely({
+      auditKey: deriveAuditKey(idempotencyKey, "confirmed"),
+      transaction: transactionFor(existing, idempotencyKey),
+      completed: true,
+      actor: existing.customerId,
+      correlationId: idempotencyKey,
+    });
+    return Object.assign({}, existing, {
+      replayed: true,
+      accounting: accountingSummary(replayAccounting),
+    });
   }
 
   if (typeof customerId !== "string" || customerId.trim() === "") {
@@ -143,15 +245,43 @@ async function bookTrip({ customerId, flightId, hotelId, safariId, idempotencyKe
     };
   }
 
-  const payment = processPayment({ customerId });
+  const amountCents = priceTrip({ flightId, hotelId, safariId });
+  const payment = processPayment({ customerId, amountCents, currency: CURRENCY });
   if (!payment.success) {
     // Deliberately NOT recorded against the key. A declined card is a
     // retryable condition — the agent fixes payment and retries with the
     // same key. Storing it would wedge that key permanently.
+    //
+    // STORY-004, ACCEPTANCE CRITERION 2: this is a failed transaction, so it
+    // must NOT reach the accounting software - and criterion 3 says it must
+    // still be audited. `completed: false` is exactly that instruction: the
+    // recorder writes the audit entry and never calls the accounting API.
+    //
+    // The audit key carries the outcome because the audit log is
+    // first-write-wins and this key can legitimately be reused: the declined
+    // attempt and the later successful retry are two different facts, and
+    // keying both on the bare booking key would record only the decline.
+    const declined = await recordTransactionSafely({
+      auditKey: deriveAuditKey(idempotencyKey, "payment_failed"),
+      transaction: {
+        transactionId: idempotencyKey,
+        customerId: customerId,
+        entryType: "sale",
+        amountCents: amountCents,
+        currency: CURRENCY,
+        occurredAt: new Date().toISOString(),
+        memo: "Declined booking attempt",
+      },
+      completed: false,
+      reason: "payment_declined",
+      actor: customerId,
+      correlationId: idempotencyKey,
+    });
     return {
       status: "payment_failed",
       message: payment.message,
       replayed: false,
+      accounting: accountingSummary(declined),
     };
   }
 
@@ -161,13 +291,33 @@ async function bookTrip({ customerId, flightId, hotelId, safariId, idempotencyKe
     customerId,
     status: "confirmed",
     legs: { flightId, hotelId, safariId },
+    // Taken from what the processor says it charged, not from what we asked it
+    // to charge. If those ever disagree, the books should follow the money.
+    amountCents: payment.amountCents,
+    currency: payment.currency,
+    bookedAt: new Date().toISOString(),
   };
 
   BOOKINGS_BY_KEY.set(idempotencyKey, booking);
   FINGERPRINT_BY_KEY.set(idempotencyKey, fingerprint);
   logTransaction(booking);
 
-  return Object.assign({}, booking, { replayed: false });
+  // STORY-004, ACCEPTANCE CRITERIA 1 AND 3. Last, after the booking is durable:
+  // a bookkeeping failure must leave a confirmed booking confirmed, and the
+  // recorder writes its audit entry before it calls the accounting API, so the
+  // attempt is on record even if that call never lands.
+  const recorded = await recordTransactionSafely({
+    auditKey: deriveAuditKey(idempotencyKey, "confirmed"),
+    transaction: transactionFor(booking, idempotencyKey),
+    completed: true,
+    actor: customerId,
+    correlationId: idempotencyKey,
+  });
+
+  return Object.assign({}, booking, {
+    replayed: false,
+    accounting: accountingSummary(recorded),
+  });
 }
 
-module.exports = { bookTrip, AVAILABILITY };
+module.exports = { bookTrip, AVAILABILITY, CURRENCY };

@@ -1,6 +1,15 @@
+// STORY-004: the booking path now posts to the accounting software. A test
+// token keeps that deterministic instead of depending on the developer's
+// environment - with no token configured the client refuses to post, which
+// would make these assertions pass or fail for the wrong reason.
+process.env.COLABERRY_ACCOUNTING_API_TOKEN = "test-token-not-a-secret";
+
 const assert = require("assert");
 const { bookTrip } = require("./bookTripService");
 const { logTransaction, getLoggedTransactions } = require("./crmTransactionLog");
+const { getLedger } = require("../accounting/accountingClient");
+const { accountingAuditKey } = require("../accounting/transactionRecorder");
+const { findAuditEntry, deriveAuditKey } = require("../audit/auditLog");
 
 // bookTrip() is async as of STORY-003 (an unavailable selection is routed to
 // a travel advisor), so the whole suite runs inside one async main().
@@ -190,6 +199,94 @@ async function main() {
   assert.strictEqual(getLoggedTransactions().length, beforeKeyGuardCount);
 
   console.log("bookTripService: missing or malformed idempotencyKey is refused");
+
+  // ---------------------------------------------------------------------------
+  // STORY-004: accounting integration and audit trail.
+  // ---------------------------------------------------------------------------
+
+  // CRITERION 1: a completed transaction is logged in the accounting software.
+  // 1280.00 flight + 760.00 hotel + 2450.00 safari = 4490.00.
+  assert.strictEqual(booking.amountCents, 449000);
+  assert.strictEqual(booking.currency, "USD");
+  assert.strictEqual(booking.accounting.status, "recorded_and_posted");
+  assert.strictEqual(booking.accounting.posted, true);
+  assert.ok(booking.accounting.reference.startsWith("ACCT-"));
+
+  const ledgerRow = getLedger().find(function (r) {
+    return r.transactionId === "trip-key-0001";
+  });
+  assert.strictEqual(ledgerRow.amountCents, 449000);
+  assert.strictEqual(ledgerRow.currency, "USD");
+  assert.strictEqual(ledgerRow.entryType, "sale");
+  assert.strictEqual(ledgerRow.memo, "Trip " + booking.tripId);
+
+  console.log("bookTripService: a confirmed booking is posted to the accounting software");
+
+  // CRITERION 3: the same booking produced an audit entry for the transaction
+  // and one for what we did about it in the books.
+  const confirmedKey = deriveAuditKey("trip-key-0001", "confirmed");
+  const processedEntry = findAuditEntry(confirmedKey);
+  assert.strictEqual(processedEntry.event, "transaction.processed");
+  assert.strictEqual(processedEntry.outcome, "success");
+  assert.strictEqual(processedEntry.actor, "CUST-1");
+  assert.strictEqual(processedEntry.context.amountCents, 449000);
+
+  const postEntry = findAuditEntry(accountingAuditKey(confirmedKey, "posted"));
+  assert.strictEqual(postEntry.event, "accounting.post");
+  assert.strictEqual(postEntry.outcome, "success");
+  assert.strictEqual(postEntry.context.reference, booking.accounting.reference);
+
+  console.log("bookTripService: the confirmed booking produced both audit entries");
+
+  // CRITERION 2: a failed transaction is audited but must NOT reach the books.
+  // A key of its own, never retried, so nothing later can put it in the ledger.
+  const declinedForGood = await bookTrip({
+    customerId: "CUST-DECLINED",
+    flightId: "FL-100",
+    hotelId: "HT-200",
+    safariId: "SF-300",
+    idempotencyKey: "trip-key-0006",
+  });
+
+  assert.strictEqual(declinedForGood.status, "payment_failed");
+  assert.strictEqual(declinedForGood.accounting.status, "recorded_not_posted");
+  assert.strictEqual(declinedForGood.accounting.posted, false);
+  assert.strictEqual(declinedForGood.accounting.reference, null);
+
+  const declinedEntry = findAuditEntry(deriveAuditKey("trip-key-0006", "payment_failed"));
+  assert.strictEqual(declinedEntry.event, "transaction.processed");
+  assert.strictEqual(declinedEntry.outcome, "failure");
+  assert.strictEqual(declinedEntry.context.reason, "payment_declined");
+  assert.strictEqual(declinedEntry.context.completed, false);
+
+  console.log("bookTripService: a declined booking is audited but kept out of the books");
+
+  // The declined-then-recovered key from earlier: BOTH facts are on record.
+  // Keying the audit entry on the bare booking key would have kept only the
+  // decline, because the audit log is first-write-wins.
+  assert.strictEqual(
+    findAuditEntry(deriveAuditKey("trip-key-0004", "payment_failed")).outcome,
+    "failure"
+  );
+  assert.strictEqual(
+    findAuditEntry(deriveAuditKey("trip-key-0004", "confirmed")).outcome,
+    "success"
+  );
+
+  console.log("bookTripService: a decline and its later recovery are both on the audit trail");
+
+  // The whole point, stated once against the ledger: only the three bookings
+  // that actually completed are in the accounting software. The unavailable
+  // one, the invalid-customer one and the two declines are not - and
+  // trip-key-0004 appears exactly once despite being attempted twice.
+  const ledgerIds = getLedger()
+    .map(function (r) {
+      return r.transactionId;
+    })
+    .sort();
+  assert.deepStrictEqual(ledgerIds, ["trip-key-0001", "trip-key-0004", "trip-key-0005"]);
+
+  console.log("bookTripService: only completed transactions reached the accounting software");
 
 }
 

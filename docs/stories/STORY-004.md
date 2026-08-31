@@ -28,8 +28,8 @@ the same criteria out of `.colaberry/progress.json`, which Claude Code keeps in
 step (see the managed block in CLAUDE.md). Ticking something you have not
 actually met only misleads you.
 
-- [ ] Given a completed transaction, when it is processed, then it should be logged in the accounting software.
-- [ ] Given a failed transaction, when it is attempted, then it should not be logged in the accounting software.
-- [ ] Trust: Given any transaction, when it is processed, then an audit log entry must be created.
+- [x] Given a completed transaction, when it is processed, then it should be logged in the accounting software.
+- [x] Given a failed transaction, when it is attempted, then it should not be logged in the accounting software.
+- [x] Trust: Given any transaction, when it is processed, then an audit log entry must be created.
 
 When every box above is ticked, stop and show the demo.
