@@ -8,6 +8,7 @@ const booking = bookTrip({
   flightId: "FL-100",
   hotelId: "HT-200",
   safariId: "SF-300",
+  idempotencyKey: "trip-key-0001",
 });
 
 assert.strictEqual(booking.status, "confirmed");
@@ -16,6 +17,7 @@ assert.strictEqual(booking.legs.flightId, "FL-100");
 assert.strictEqual(booking.legs.hotelId, "HT-200");
 assert.strictEqual(booking.legs.safariId, "SF-300");
 assert.ok(booking.tripId.startsWith("TRIP-"));
+assert.strictEqual(booking.replayed, false);
 
 console.log("bookTripService: happy path test passed");
 
@@ -25,6 +27,7 @@ const unavailable = bookTrip({
   flightId: "FL-999",
   hotelId: "HT-200",
   safariId: "SF-300",
+  idempotencyKey: "trip-key-0002",
 });
 
 assert.strictEqual(unavailable.status, "unavailable");
@@ -59,6 +62,7 @@ const invalidCustomer = bookTrip({
   flightId: "FL-100",
   hotelId: "HT-200",
   safariId: "SF-300",
+  idempotencyKey: "trip-key-0003",
 });
 
 assert.strictEqual(invalidCustomer.status, "invalid_customer");
@@ -75,6 +79,7 @@ const paymentFailed = bookTrip({
   flightId: "FL-100",
   hotelId: "HT-200",
   safariId: "SF-300",
+  idempotencyKey: "trip-key-0004",
 });
 
 assert.strictEqual(paymentFailed.status, "payment_failed");
@@ -83,3 +88,98 @@ assert.strictEqual(paymentFailed.tripId, undefined);
 assert.strictEqual(getLoggedTransactions().length, beforePaymentCount);
 
 console.log("bookTripService: payment-failure failure path test passed");
+
+// ---------------------------------------------------------------------------
+// Idempotency of bookTrip() itself. Before the 2026-08-28 change every one of
+// these produced a NEW trip ID and a SECOND charge.
+// ---------------------------------------------------------------------------
+
+// Replay: the same key with the same arguments returns the original booking
+// and does not create a second trip or a second CRM entry.
+const beforeReplayCount = getLoggedTransactions().length;
+const replay = bookTrip({
+  customerId: "CUST-1",
+  flightId: "FL-100",
+  hotelId: "HT-200",
+  safariId: "SF-300",
+  idempotencyKey: "trip-key-0001",
+});
+
+assert.strictEqual(replay.status, "confirmed");
+assert.strictEqual(replay.tripId, booking.tripId);
+assert.strictEqual(replay.replayed, true);
+assert.strictEqual(getLoggedTransactions().length, beforeReplayCount);
+
+console.log("bookTripService: replay returns the original trip, no second charge");
+
+// A DIFFERENT key for the same trip is a genuinely new booking. This is the
+// documented escape hatch, and it must keep working.
+const deliberateRebook = bookTrip({
+  customerId: "CUST-1",
+  flightId: "FL-100",
+  hotelId: "HT-200",
+  safariId: "SF-300",
+  idempotencyKey: "trip-key-0005",
+});
+
+assert.strictEqual(deliberateRebook.status, "confirmed");
+assert.notStrictEqual(deliberateRebook.tripId, booking.tripId);
+assert.strictEqual(deliberateRebook.replayed, false);
+
+console.log("bookTripService: a new key books a genuinely new trip");
+
+// Key reuse with different arguments is caught rather than returning someone
+// else's booking.
+const conflict = bookTrip({
+  customerId: "CUST-OTHER",
+  flightId: "FL-100",
+  hotelId: "HT-200",
+  safariId: "SF-300",
+  idempotencyKey: "trip-key-0001",
+});
+
+assert.strictEqual(conflict.status, "idempotency_conflict");
+assert.strictEqual(conflict.tripId, undefined);
+
+console.log("bookTripService: key reuse with different arguments is rejected");
+
+// A declined payment must not wedge its key — the agent fixes payment and
+// retries with the same key, and that retry must be able to succeed.
+const declinedRetry = bookTrip({
+  customerId: "CUST-DECLINED",
+  flightId: "FL-100",
+  hotelId: "HT-200",
+  safariId: "SF-300",
+  idempotencyKey: "trip-key-0004",
+});
+assert.strictEqual(declinedRetry.status, "payment_failed");
+assert.strictEqual(declinedRetry.replayed, false);
+
+const recovered = bookTrip({
+  customerId: "CUST-RECOVERED",
+  flightId: "FL-100",
+  hotelId: "HT-200",
+  safariId: "SF-300",
+  idempotencyKey: "trip-key-0004",
+});
+assert.strictEqual(recovered.status, "confirmed");
+assert.strictEqual(recovered.replayed, false);
+
+console.log("bookTripService: a declined key is not wedged, retry can succeed");
+
+// A missing or too-short key is refused outright — no trip, no charge.
+const beforeKeyGuardCount = getLoggedTransactions().length;
+[undefined, "", "short", 12345678].forEach(function (badKey) {
+  const rejected = bookTrip({
+    customerId: "CUST-1",
+    flightId: "FL-100",
+    hotelId: "HT-200",
+    safariId: "SF-300",
+    idempotencyKey: badKey,
+  });
+  assert.strictEqual(rejected.status, "invalid_idempotency_key");
+  assert.strictEqual(rejected.tripId, undefined);
+});
+assert.strictEqual(getLoggedTransactions().length, beforeKeyGuardCount);
+
+console.log("bookTripService: missing or malformed idempotencyKey is refused");
