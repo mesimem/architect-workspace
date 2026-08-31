@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session CC-20260828-b4k2 — Change Report</title>
+<style>
+  :root {
+    --cherry: #FB2832;
+    --berry: #367895;
+    --leaf: #5BA63C;
+    --ink: #16202a;
+    --muted: #5c6b7a;
+    --rule: #dfe5ea;
+    --surface: #ffffff;
+    --canvas: #f4f6f8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: Roboto, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    line-height: 1.6;
+  }
+  code {
+    font-family: "Roboto Mono", ui-monospace, Consolas, "Courier New", monospace;
+    font-size: 0.9em;
+    background: #eef2f5;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.05em 0.35em;
+    word-break: break-word;
+  }
+  header.masthead {
+    background: var(--surface);
+    border-bottom: 3px solid var(--cherry);
+    padding: 2rem 1.5rem 1.5rem;
+  }
+  .wrap { max-width: 60rem; margin: 0 auto; }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--berry);
+    margin: 0 0 0.35rem;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 0.5rem; font-weight: 700; letter-spacing: -0.01em; }
+  .meta { color: var(--muted); font-size: 0.88rem; margin: 0; }
+  main { padding: 1.75rem 1.5rem 3rem; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--berry);
+    border-radius: 4px;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1.1rem;
+  }
+  .card-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    padding-bottom: 0.7rem;
+    margin-bottom: 0.9rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .card-index {
+    font-family: "Roboto Mono", ui-monospace, Consolas, monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    flex: none;
+  }
+  .card-head h2 { font-size: 1.06rem; margin: 0; font-weight: 600; flex: 1 1 auto; }
+  .badge {
+    flex: none;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .badge-done { background: #eaf5e4; color: #3d7327; border: 1px solid var(--leaf); }
+  .badge-open { background: #fdf1e3; color: #8a5810; border: 1px solid #E8920C; }
+  .field { display: grid; grid-template-columns: 9.5rem 1fr; gap: 1rem; padding: 0.4rem 0; }
+  .field + .field { border-top: 1px dotted var(--rule); }
+  .field-label {
+    font-size: 0.73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    padding-top: 0.2rem;
+  }
+  .field-value { font-size: 0.93rem; overflow-wrap: anywhere; }
+  footer { color: var(--muted); font-size: 0.8rem; padding: 0 1.5rem 2.5rem; }
+  @media (max-width: 40rem) {
+    .field { grid-template-columns: 1fr; gap: 0.15rem; }
+  }
+  @media print {
+    body { background: #fff; }
+    .card { break-inside: avoid; border-left-color: #999; }
+  }
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Claude Code session report</p>
+    <h1>Session CC-20260828-b4k2</h1>
+    <p class="meta">9 changes logged &middot; generated 2026-08-28T01:31:30.727Z</p>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">01</span>
+    <h2>Scaffold <code>mcp/order-status</code> MCP server project (Order Support Assistant)</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-08-28</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value">environment readiness check plus a new uv-managed Python project at <code>mcp/order-status/</code>, sibling to <code>mcp/destination-catalog/</code>. Holds <code>pyproject.toml</code> (<code>mcp[cli]&gt;=2.1.1</code>), <code>uv.lock</code>, and <code>server.py</code> containing a single server instance named <code>order-status</code> on STDIO transport. No tools, resources or prompts yet — instance only, by request. No existing file was modified.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value">toolchain confirmed present at Python 3.12.10 / Node v24.18.0 / uv 0.12.3, re-checked in a second fresh shell (no installs were needed, so nothing was PATH-stale). <code>uv run python -c &quot;import server&quot;</code> in <code>mcp/order-status/</code> returned <code>IMPORT OK -&gt; MCPServer | name: order-status</code>. Existing <code>mcp/destination-catalog/server.py</code> also re-verified as importing cleanly.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">the requested &quot;FastMCP instance&quot; does not exist in the installed SDK — <code>mcp</code> resolves to 2.1.1 and <code>mcp.server.fastmcp</code> raises <code>ModuleNotFoundError</code>; the class is <code>MCPServer</code> from <code>mcp.server</code>. Scaffolded against the current SDK rather than pinning <code>mcp&lt;2</code> to preserve the older name, matching the same finding recorded in session CC-20260825-3d7k. <code>uv init --bare --python 3.12</code> again did not pin the interpreter (<code>--bare</code> skips <code>.python-version</code>), so the venv built on uv-managed CPython 3.14.7 while <code>requires-python</code> says <code>&gt;=3.12</code> — harmless but restated because it is the second session to hit it. <code>scripts/generateSessionChangelog.js</code>, which CLAUDE.md requires running after every change, still DOES NOT EXIST — confirmed absent a third time; gate flagged, not silently skipped.</div></div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">02</span>
+    <h2><code>mcp/booking-desk</code>: MCP surface over the booking flow (tool + resource + prompt), with the idempotency key the JS origin lacks</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-08-28</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value">new uv-managed project at <code>mcp/booking-desk/</code>, third sibling under <code>mcp/</code>. Three modules. <code>booking.py</code> ports the booking rule from <code>backend/src/services/booking/bookTripService.js</code> (plus <code>paymentService.js</code>, <code>crmTransactionLog.js</code>) into Python, because that module is <code>module.exports</code> only — no HTTP route exists anywhere in the repo, so nothing outside Node could book a trip. <code>server.py</code> publishes exactly three surfaces, one per primitive, each chosen by who may initiate it: tool <code>book_trip</code> (model-initiated — reserves inventory and charges, so it belongs on the channel the host gates behind approval), resource <code>travel://availability/current</code> / <code>application/json</code> (application-initiated — read-only inventory the app pins into context so the model does not guess IDs), prompt <code>confirm-booking</code> (user-initiated — the named workflow an agent picks, which restates the trip and *waits* for explicit go-ahead before any booking). <code>strict_arguments.py</code> is context-tier middleware rejecting undeclared tool arguments. Tool constraints published into <code>inputSchema</code>: <code>customer_id</code> <code>^CUST-[A-Z0-9-]{1,58}$</code> / 1–64, <code>flight_id</code> <code>^FL-\d{3,6}$</code>, <code>hotel_id</code> <code>^HT-\d{3,6}$</code>, <code>safari_id</code> <code>^SF-\d{3,6}$</code>, <code>idempotency_key</code> 8–128, all five required. Also deleted <code>mcp/order-status/</code> — scaffolded earlier this session against the unreplaced MY PROJECT placeholder line, wrong project, untracked, scaffold only. Planned and approved in plan mode; the proposed surface table was reviewed row by row and ratified unchanged.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value"><code>python tmp/verify_booking_desk.py</code> launched <code>server.py</code> as a real STDIO subprocess and ran 29 checks — <code>ALL CHECKS PASSED</code>, exit 0. Covers <code>initialize</code> (serverInfo <code>booking-desk</code>); <code>tools/list</code> publishing every pattern, length bound, the required set, <code>outputSchema</code>, and <code>readOnlyHint: false</code>; <code>resources/list</code> returning the URI and <code>application/json</code>, and <code>resources/read</code> returning the seeded IDs; <code>prompts/list</code> + <code>prompts/get</code> (prompt embeds the client ID and instructs the model to WAIT); happy path -&gt; <code>TRIP-1</code>; <strong>idempotency — same key twice returned the same <code>TRIP-1</code> with <code>replayed: true</code>, not a second booking</strong>; key reuse with different arguments -&gt; <code>idempotency_conflict</code>; <code>unavailable</code>; <code>payment_failed</code>; a declined key re-running rather than staying wedged; and rejection of malformed <code>customer_id</code>, short <code>idempotency_key</code>, missing <code>idempotency_key</code>, and an unknown argument.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">the point of the exercise. <code>bookTrip()</code> in the JS origin <strong>is not idempotent</strong> — <code>nextTripId++</code> fires on every call with no key, so booking the same trip twice issues two trip IDs and charges twice, violating the blueprint's day-one guarantee (&quot;no double-booking, no payment errors&quot;) and CLAUDE.md's idempotency rule. The Python port fixes it using the pattern already correct in <code>backend/src/services/africa/interactionLog.js</code>. <strong>The JS original is unchanged and still has this defect</strong> — fixing it there is separate work. Three further notes. (1) BREAK/HARDEN: the unknown-argument check failed on first run exactly as predicted from the <code>destination-catalog</code> finding — the SDK generates no <code>additionalProperties: false</code> and its <code>ArgModelBase</code> has no <code>extra=&quot;forbid&quot;</code>, so extras are silently dropped. Hardened via middleware; the rejection lands on the JSON-RPC <code>error</code> channel (-32602), unlike tool failures which come back as <code>isError</code> results. (2) The first middleware attempt awaited <code>server.list_tools()</code> inside the chain and <strong>deadlocked</strong> — middleware runs before the handler context exists and the dispatcher blocks until the chain returns. Rewritten to read allowed names from <code>inspect.signature</code> at registration. <code>MCPServer.middleware</code> is documented as provisional and may change in a 2.x minor. (3) Declined payments are deliberately NOT memoized against the key, so a fixed card can retry with the same key; only confirmed bookings replay. Known not handled: concurrent calls racing on one key (single-process in-memory; real deployment needs a Postgres unique constraint), and there is still no way to read a booking back after the fact — <code>travel://bookings/{trip_id}</code> was deliberately omitted to honour the one-primitive-each constraint. <code>scripts/generateSessionChangelog.js</code> still DOES NOT EXIST — flagged, not silently skipped, consistent with sessions CC-20260825-3d7k and CC-20260827-9k4m.</div></div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">03</span>
+    <h2>Fix the idempotency defect in <code>bookTripService.js</code> (the JS origin, not just the Python port)</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-08-28</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value"><code>backend/src/services/booking/bookTripService.js</code> now REQUIRES an <code>idempotencyKey</code>. Previously <code>nextTripId++</code> fired on every call with no dedup, so booking the same trip twice issued two trip IDs and charged twice — a direct violation of the blueprint's day-one guarantee (&quot;no double-booking, no payment errors — every time&quot;) and of CLAUDE.md's non-negotiable idempotency rule. Added two module-level Maps (<code>BOOKINGS_BY_KEY</code>, <code>FINGERPRINT_BY_KEY</code>), a key guard (string, 8–128 chars), and reordered the function so the key is checked FIRST, before validation or any side effect, matching the blueprint's booking sequence diagram. Three new statuses: <code>invalid_idempotency_key</code>, <code>idempotency_conflict</code> (key reused with different arguments), and a <code>replayed</code> boolean on every result. Declined payments are deliberately NOT recorded against the key so a fixed card can retry on the same key. BREAKING CONTRACT CHANGE — the signature gained a required argument and results gained a field; the only caller in the repo is <code>bookTripService.test.js</code>, updated in the same diff as CLAUDE.md's contract rule requires. Also corrected the header comment in <code>mcp/booking-desk/booking.py</code>, which claimed the JS &quot;does not&quot; take a key — true when written earlier this session, false once this landed.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value"><code>node backend/src/services/booking/bookTripService.test.js</code> -&gt; 11 named assertions pass, exit 0. The 6 pre-existing ones (happy path, unavailable, CRM logging, CRM log idempotency, invalid customer, payment failure) still pass unchanged. 5 new ones cover the defect directly: replay with the same key returns the ORIGINAL <code>tripId</code> with <code>replayed: true</code> and adds no second CRM entry; a different key books a genuinely new trip; key reuse with different arguments returns <code>idempotency_conflict</code>; a declined key is not wedged and a later retry on it succeeds; and <code>undefined</code> / <code>&quot;&quot;</code> / <code>&quot;short&quot;</code> / a non-string key are all refused with no trip and no CRM entry.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">this closes the gap flagged in the <code>mcp/booking-desk</code> entry above, where the Python port was fixed but the JS origin was knowingly left broken. The two implementations now agree on all four rules (check key first, replay exact repeats, reject conflicting reuse, never memoize a decline). ONE DELIBERATE DIFFERENCE, documented in both files: the Python side rejects a malformed key via its published JSON schema before the body runs and so has no <code>invalid_idempotency_key</code> status; the JS has no schema layer and guards at runtime. Still not handled, unchanged by this fix: concurrent calls racing on the same key. Both sides are single-process and in-memory; a real deployment needs a unique constraint in Postgres, which is where this rule ultimately belongs. Availability, payment and CRM remain in-memory stand-ins, and there is still no HTTP entry point.</div></div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">04</span>
+    <h2>Write the missing <code>scripts/generateSessionChangelog.js</code></h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-08-28</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value">new <code>scripts/generateSessionChangelog.js</code>, the script CLAUDE.md has required after every change but which did not exist — flagged as absent by sessions CC-20260825-3d7k, CC-20260827-9k4m and twice by this one. Implements the documented contract exactly: <code>node scripts/generateSessionChangelog.js &lt;SessionID&gt; [--no-open]</code> reads <code>PROGRESS.md</code>, selects only entries whose <code>Session:</code> matches, writes <code>docs/sessions/SESSION_&lt;SessionID&gt;.html</code> (one card per change, fields rendered in the CLAUDE.md order — Date, What changed, Verification, Files touched, Notes — with unknown fields appended rather than dropped, and <code>Session:</code> suppressed since it is already in the masthead), and opens it in the default browser unless <code>--no-open</code>. Zero dependencies: the repo has no root <code>package.json</code> and CLAUDE.md forbids assuming global tooling. Styled to the mandated Colaberry palette (Cherry Red #FB2832, Berry Blue #367895, Leaf Green #5BA63C, Amber #E8920C) with Roboto and system fallbacks, no emoji, no network fetches, and a print stylesheet. Parser handles wrapped continuation lines, <code>[ ]</code> as well as <code>[x]</code>, and ends an entry at the first non-indented line so headings and prose cannot bleed in. Exports its parse/render functions for testability.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value">three failure paths first — no argument -&gt; usage text, exit 1; unknown session ID -&gt; &quot;No PROGRESS.md entries tagged...&quot;, exit 1 (deliberately non-zero, since a silent empty report would read as &quot;nothing to log&quot;, which is the opposite of what this gate is for); missing PROGRESS.md -&gt; handled path present. Then parsed against real history: <code>CC-20260824-4b7e</code> -&gt; 6 changes, and a structural check of the output confirmed 6 <code>&lt;article&gt;</code> open/close pairs, 24 field blocks (4 per card), labels in the expected order, <code>Session</code> correctly absent from card bodies, 97 <code>&lt;code&gt;</code> spans rendered from backticks, and no unescaped markup leaking through. Finally run for real on this session.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">inline markdown is deliberately minimal — only backtick <code>code</code> and <code><strong>bold</strong></code> — and is applied strictly AFTER HTML escaping, so a PROGRESS.md entry containing angle brackets or markup cannot inject HTML into the report. Two reports generated during parser testing (<code>SESSION_CC-20260827-9k4m.html</code>, <code>SESSION_CC-20260824-4b7e.html</code>) were deleted afterwards: those sessions belong to other instances, and CLAUDE.md keys one HTML per session specifically so concurrent instances do not collide. <code>docs/sessions/</code> is created on demand.</div></div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">05</span>
+    <h2>Fix <code>mcp dev</code> startup crash in <code>mcp/booking-desk/server.py</code> (<code>NameError: name 'Annotated' is not defined</code>)</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-08-28</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value">removed <code>from __future__ import annotations</code> from <code>mcp/booking-desk/server.py</code> and replaced it with a comment explaining why it must not come back. That import turns every annotation into a string; both <code>@server.tool</code> and <code>@server.prompt</code> hand this module's functions to Pydantic, which resolves those strings against <code>sys.modules[func.__module__]</code>. <code>mcp dev</code> loads the file through <code>importlib</code> as <code>server_module</code> WITHOUT registering it in <code>sys.modules</code>, so the lookup missed, the namespace came back empty, <code>BookingResult</code>'s output schema silently failed to build, and decoration then died outright on the prompt. Every annotation in the file (<code>str | None</code>, <code>list[UserMessage]</code>) is native on the Python this project requires, so the import bought nothing. <code>booking.py</code> and <code>strict_arguments.py</code> keep theirs — neither is introspected by Pydantic.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value">reproduced the exact <code>mcp dev</code> import path in isolation (<code>importlib.util.module_from_spec</code> + <code>exec_module</code> as <code>server_module</code>, deliberately not inserted into <code>sys.modules</code>) — before the fix it raised <code>NameError: name 'Annotated' is not defined</code>; after, it prints <code>name = booking-desk</code>, <code>book_trip | output_schema present: True</code>, <code>resources: ['travel://availability/current']</code>, <code>prompts: ['confirm-booking']</code>. Direct boot still exits 0 silently. <code>uv run mcp dev server.py:server</code> then started cleanly and the Inspector came up on <code>http://127.0.0.1:6274</code> (verified LISTENING via netstat, PID 8496).</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">this is a verification-coverage failure worth recording, not just a bug. The 29-check harness in <code>tmp/verify_booking_desk.py</code> passed throughout, because it launches <code>python server.py</code> as a subprocess — there the module is <code>__main__</code> and IS in <code>sys.modules</code>, so annotations resolve and the defect is invisible. The server was genuinely broken for the documented Inspector workflow while the suite was green. The <code>INFO Cannot create schema for type ... BookingResult</code> line that <code>mcp dev</code> emitted first was the early warning; it was logged at INFO and did not fail the run, which is exactly how it went unnoticed. Gap left open deliberately: the harness still does not exercise the <code>mcp dev</code> import path, so a regression of this class would not be caught automatically.</div></div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">06</span>
+    <h2>Publish explicit length bounds on all <code>book_trip</code> string inputs</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-08-28</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value">added <code>min_length=6</code> / <code>max_length=9</code> to <code>flight_id</code>, <code>hotel_id</code> and <code>safari_id</code> in <code>mcp/booking-desk/server.py</code>. All three previously carried only a <code>pattern</code>; the regex (<code>^FL-\d{3,6}$</code> and friends) already implies 6–9 characters, but <code>minLength</code>/<code>maxLength</code> are what a client actually reads out of the published input schema, so they are now declared rather than left implicit. <code>customer_id</code> (1–64) and <code>idempotency_key</code> (8–128) already had both. No behaviour change — no input that was previously accepted is now rejected, and vice versa. Docstring reviewed with the user and approved unchanged.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value">introspected the generated schema through the <code>mcp dev</code> import path — all five properties now report both <code>minLength</code> and <code>maxLength</code> (<code>customer_id</code> 1/64, the three IDs 6/9, <code>idempotency_key</code> 8/128), and <code>all five have both bounds: True</code>. Full harness re-run: <code>python tmp/verify_booking_desk.py</code> -&gt; <code>ALL CHECKS PASSED</code> (29 checks), exit 0. Inspector confirmed still LISTENING on 127.0.0.1:6274 afterwards.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">no new tool was added. The user asked for &quot;one tool implementing the tool row from the primitive map&quot;, which is <code>book_trip</code> — already built earlier this session against the real ported booking logic in <code>booking.py</code>, not sample data, so no sample data file was generated and none was needed. Five of the six stated requirements were already satisfied; this entry covers the one that was not (explicit string bounds on three of five fields). Constraints now live at <code>server.py:106-158</code>.</div></div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">07</span>
+    <h2>Add <code>travel://bookings/{trip_id}</code> resource template, and fix a shallow-copy leak it exposed</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-08-28</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value">added a resource TEMPLATE at <code>travel://bookings/{trip_id}</code> (<code>application/json</code>) to <code>mcp/booking-desk/server.py</code> — one handler serving every individually addressable booking — backed by a new read-only <code>find_booking(trip_id)</code> in <code>booking.py</code>. This is the surface deliberately withheld from the original one-primitive-each plan and explicitly noted there as the natural next addition. A miss returns <code>{&quot;found&quot;: false, ...}</code> with a message rather than raising: a trip ID that does not exist is a normal question with a normal answer. Also lifted the <code>travel://</code> scheme rationale into a comment next to the URI constants. No new tool; the existing fixed resource <code>travel://availability/current</code> was already the ratified resource row and was not duplicated.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value">introspected through the <code>mcp dev</code> import path — <code>resources/list</code> reports <code>travel://availability/current | application/json</code> and <code>resources/templates/list</code> reports <code>travel://bookings/{trip_id} | application/json</code>. Miss path <code>travel://bookings/TRIP-999</code> returns the structured not-found body; hit path after booking returns <code>found: true</code> with the full booking. Isolation proven by mutation attempt: <code>find_booking isolated: True</code>, <code>replay isolated: True</code>. Full harness <code>python tmp/verify_booking_desk.py</code> -&gt; <code>ALL CHECKS PASSED</code> (29 checks), exit 0.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">the new resource exposed a pre-existing defect worth recording. <code>find_booking</code> originally returned <code>dict(record)</code> — a SHALLOW copy — and its docstring claimed a caller &quot;cannot reach through and mutate the stored record&quot;. That claim was FALSE: the nested <code>legs</code> dict was shared, and a test that mutated it rewrote the stored booking's flight ID to <code>FL-999</code>. The same shallow-copy leak existed on both <code>book_trip</code> return paths (replay and fresh confirm) and had been there since the module was written. All three now use <code>copy.deepcopy</code>, verified by attempting the mutation and confirming the store is unchanged. Found only because the read-only claim was tested rather than assumed — the MCP resource handler itself only does <code>json.dumps</code>, so the surface was never actually read-write and no data was at risk; the leak was in the module's public function contract.</div></div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">08</span>
+    <h2>Rework the <code>confirm-booking</code> prompt: three arguments, two modes, returns text</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-08-28</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value">reworked the existing <code>confirm-booking</code> prompt in <code>mcp/booking-desk/server.py</code> rather than adding a second one — it was already the ratified prompt row. Three changes. (1) Return type changed from <code>list[UserMessage]</code> to a plain <code>str</code>, per the requirement that the expanded template come back as text; the docstring now records that a multi-turn workflow can instead return a list of typed messages (<code>UserMessage</code> / <code>AssistantMessage</code> from <code>mcp.server.mcpserver</code>) to seed a conversation with turns already in it, and why a single string is right here. The now-unused <code>UserMessage</code> import was removed. (2) Added a third argument, <code>trip_id</code> (default empty), giving the same template two modes: empty means book a new trip, populated means review an existing one via the <code>travel://bookings/{trip_id}</code> resource added earlier this session. <code>customer_id</code> stays required; <code>itinerary_note</code> keeps its empty default. (3) Body rewritten to encode the whole workflow explicitly — which resource to read, which tool to call, when to stop and wait, what to produce — plus an <code>&lt;awkward_situations&gt;</code> block covering NOTHING MATCHES, STATUS NOT 'confirmed', NEVER RETRY ON YOUR OWN, and DETAILS MISSING, and a closing output contract. Review mode carries its own NOT FOUND rule that forbids &quot;recreating&quot; a missing booking, since that would charge the client for a trip they may already have.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value">introspected through the <code>mcp dev</code> import path — <code>prompts/list</code> reports <code>confirm-booking</code> with <code>customer_id required=True</code>, <code>itinerary_note required=False</code>, <code>trip_id required=False</code>. <code>prompts/get</code> renders both modes correctly: book mode interpolates the client ID and wraps the note in <code>&lt;what_the_client_asked_for&gt;</code>; review mode targets <code>travel://bookings/TRIP-1</code> and states &quot;Do not book anything&quot;. Result is a single message, <code>role=user</code>, <code>content.type=text</code>. Full harness <code>python tmp/verify_booking_desk.py</code> -&gt; <code>ALL CHECKS PASSED</code> (29 checks), exit 0.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">on the request to reuse wording from a &quot;Week 4 prompt library&quot; — THERE IS NO WEEK 4 LIBRARY in this repo. <code>find -ipath '*week4*'</code> returns nothing and <code>src/</code> holds only <code>week1/</code> and <code>week3/</code>. The prompt library at <code>prompts/</code> contains exactly one real prompt, <code>triage</code> (v1.0.0 and v1.1.0), whose subject is turning an inbound support message into a four-field triage record. That does not fit a booking workflow, so its WORDING was deliberately not reused — forcing it would have produced a worse prompt than writing for the actual task. What was reused is its SHAPE, which is genuinely proven here: XML-tagged sections (ladder rung 3, scored 1.00 on a 10-case eval), an explicit <code>&lt;awkward_situations&gt;</code> block, and a closing output contract. That structural borrowing is recorded in the function's docstring so the lineage is visible in the code, not just here.</div></div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">09</span>
+    <h2>Register <code>booking-desk</code> with Claude Code (stdio, absolute path)</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-08-28</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value">registered the MCP server with Claude Code at LOCAL scope — <code>claude mcp add booking-desk --scope local -- uv --directory C:\Users\Mems\Documents\AI-Project\mcp\booking-desk run python server.py</code>. Writes to <code>C:\Users\Mems\.claude.json</code> under this project; no file in the repo was created or modified, and <code>.mcp.json</code> was deliberately NOT used so nothing config-related lands in version control without the DRI's review. <code>uv --directory &lt;absolute path&gt;</code> rather than a relative path or a bare <code>cd</code>, so the command resolves identically whatever working directory the client launches it from.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value">proved the path claim before registering — piped a raw <code>initialize</code> request to the exact command from an unrelated working directory (<code>C:\Windows</code>) and got a valid handshake back advertising all three capabilities (<code>serverInfo.name: booking-desk</code>, <code>prompts</code>, <code>resources</code>, <code>tools</code>). After registering, <code>claude mcp list</code> reports <code>booking-desk ... ✔ Connected</code> and <code>claude mcp get booking-desk</code> confirms <code>Scope: Local config</code>, <code>Type: stdio</code>, <code>Status: ✔ Connected</code>.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">logged because CLAUDE.md counts infra/config affecting runtime, even though the modified file lives outside the repo. Two operational consequences worth recording: the registered server is a SEPARATE process from the one <code>mcp dev</code> spawns for the Inspector, so state is not shared between them; and because all booking state is in-memory, every new client session starts with an empty store and trip numbering restarts at <code>TRIP-1</code>. Both follow from the in-memory stand-ins and disappear once Postgres lands.</div></div>
+</article>
+  </div>
+</main>
+<footer>
+  <div class="wrap">
+    Generated from PROGRESS.md by scripts/generateSessionChangelog.js. Only entries
+    tagged <code>Session: CC-20260828-b4k2</code> appear here.
+  </div>
+</footer>
+</body>
+</html>

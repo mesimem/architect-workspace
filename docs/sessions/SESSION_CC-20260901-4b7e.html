@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session CC-20260901-4b7e — Change Report</title>
+<style>
+  :root {
+    --cherry: #FB2832;
+    --berry: #367895;
+    --leaf: #5BA63C;
+    --ink: #16202a;
+    --muted: #5c6b7a;
+    --rule: #dfe5ea;
+    --surface: #ffffff;
+    --canvas: #f4f6f8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: Roboto, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    line-height: 1.6;
+  }
+  code {
+    font-family: "Roboto Mono", ui-monospace, Consolas, "Courier New", monospace;
+    font-size: 0.9em;
+    background: #eef2f5;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.05em 0.35em;
+    word-break: break-word;
+  }
+  header.masthead {
+    background: var(--surface);
+    border-bottom: 3px solid var(--cherry);
+    padding: 2rem 1.5rem 1.5rem;
+  }
+  .wrap { max-width: 60rem; margin: 0 auto; }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--berry);
+    margin: 0 0 0.35rem;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 0.5rem; font-weight: 700; letter-spacing: -0.01em; }
+  .meta { color: var(--muted); font-size: 0.88rem; margin: 0; }
+  main { padding: 1.75rem 1.5rem 3rem; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--berry);
+    border-radius: 4px;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1.1rem;
+  }
+  .card-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    padding-bottom: 0.7rem;
+    margin-bottom: 0.9rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .card-index {
+    font-family: "Roboto Mono", ui-monospace, Consolas, monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    flex: none;
+  }
+  .card-head h2 { font-size: 1.06rem; margin: 0; font-weight: 600; flex: 1 1 auto; }
+  .badge {
+    flex: none;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .badge-done { background: #eaf5e4; color: #3d7327; border: 1px solid var(--leaf); }
+  .badge-open { background: #fdf1e3; color: #8a5810; border: 1px solid #E8920C; }
+  .field { display: grid; grid-template-columns: 9.5rem 1fr; gap: 1rem; padding: 0.4rem 0; }
+  .field + .field { border-top: 1px dotted var(--rule); }
+  .field-label {
+    font-size: 0.73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    padding-top: 0.2rem;
+  }
+  .field-value { font-size: 0.93rem; overflow-wrap: anywhere; }
+  footer { color: var(--muted); font-size: 0.8rem; padding: 0 1.5rem 2.5rem; }
+  @media (max-width: 40rem) {
+    .field { grid-template-columns: 1fr; gap: 0.15rem; }
+  }
+  @media print {
+    body { background: #fff; }
+    .card { break-inside: avoid; border-left-color: #999; }
+  }
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Claude Code session report</p>
+    <h1>Session CC-20260901-4b7e</h1>
+    <p class="meta">1 change logged &middot; generated 2026-08-31T21:38:44.543Z</p>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">01</span>
+    <h2>STORY-002: close the remaining gaps — system-timeout failure path, a browsable section, and an unguarded audit key</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-09-01</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value">three paced steps over <code>backend/src/services/africa/</code>, all inside STORY-002's scope. (1) TIMEOUT BOUNDARY — the catalog moved behind an async source (<code>catalogSource.js</code>) and every read now goes through an explicit timeout with capped retries, closing the third failure path the story brief names and which the original commit <code>9a52f6b</code> deliberately deferred. New statuses <code>timeout</code> and <code>unavailable</code>, both returning a contact-advisor message and both written to the interaction log. Retry policy is deliberately asymmetric: only timeouts retry (2 attempts, 100ms apart); a source that THROWS is not retried, because a refused connection or rejected credential does not fix itself and retrying doubles load on something already broken. (2) SECTION BROWSE — new <code>africanSectionService.js</code> with <code>listAfricanDestinations()</code>, because <code>getSafariDetails()</code> could only answer if the customer already knew a destination ID, so there was nothing to &quot;navigate to&quot;. Returns summary rows (<code>destinationId</code>, <code>name</code>, <code>country</code>, <code>detailsComplete</code>) rather than full records; incomplete destinations are listed but flagged, not hidden. This forced the extraction of <code>catalogRead.js</code> (timeout, retry policy, failure classification, structured failure log) out of <code>safariDetailsService.js</code> — two readers with two hand-rolled retry loops would drift, and the retry rule must not differ by which screen the customer is on. <code>REQUIRED_FIELDS</code>/<code>isCompleteRecord()</code> moved to <code>catalogSource.js</code> so both readers judge completeness identically by construction. (3) AUDIT KEY GUARD — <code>interactionLog.js</code> accepted <code>undefined</code> as an interaction key, so a caller who forgot one logged their first interaction and then silently REPLAYED it forever: every later interaction matched the <code>undefined</code> entry already in the map and was dropped. The log would look healthy and be quietly wrong. Key is now bounded 8–128 chars (mirroring <code>bookTripService.js</code>), <code>logInteraction</code> throws a classified <code>InvalidInteractionKeyError</code>, and both services check the key BEFORE any read and return <code>invalid_request</code> — an unauditable read of the section is a compliance hole against the project guardrail &quot;maintain audit logs for all transactions and changes&quot;, so we refuse to serve what we cannot audit.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value"><code>node backend/src/services/africa/safariDetailsService.test.js</code> -&gt; 9 named tests pass, exit 0 (the 4 original assertions unchanged, plus timeout-after-exactly-2-attempts, timeout-then-retry-recovers, throwing-source-not-retried, invalid-key-refused-before-any-read across 5 bad key shapes, and <code>logInteraction</code> throwing directly). <code>node backend/src/services/africa/africanSectionService.test.js</code> -&gt; 10 named tests pass, exit 0 (browse happy path with logged <code>destinationCount</code>, incomplete flagged not hidden, list flag agrees with the detail view for SF-301/SF-300, returned rows are copies not catalog references, logging idempotency, empty-catalog boundary, timeout, broken source, non-array source rejected as <code>ContractViolation</code>, invalid key refused). Step 2's extraction was regression-checked by re-running step 1's test file UNMODIFIED — 7/7 still passed, which is what proves the refactor changed no behaviour. <code>grep</code> confirmed no JS outside <code>backend/src/services/africa/</code> imports any of these modules, so the async signature change breaks no caller.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value"><code>getSafariDetails()</code> is now ASYNC — a breaking contract change. Its only caller in the repo is its own test, updated in the same diff per CLAUDE.md's contract rule. Two findings from BREAK. (a) The first run of the throwing-source path logged <code>error_class: &quot;Error&quot;</code>, which CLAUDE.md rules out as a classification; anything thrown without naming itself is now classified <code>UpstreamUnavailable</code>. (b) A source resolving to a non-array would have rendered as an empty section — success reported, customer shown nothing — so it is now rejected as <code>ContractViolation</code> rather than treated as empty. Known and deliberately not handled, documented in each file's header: the in-flight call behind a timeout cannot be cancelled (Node), so a slow source keeps running after we stop waiting; record field CONTENT is unvalidated (only presence of <code>REQUIRED_FIELDS</code>); no paging or filtering on a two-row catalog. Unchanged caveats from the original story: catalog and interaction log are in-memory and reset on restart, and there is still no HTTP entry point — the services are called directly. STORY-003 (flagging uncertain requests for advisor review) was left unbuilt as instructed; the <code>invalid_request</code>/<code>unavailable</code>/<code>timeout</code> statuses all route the customer to an advisor, which is where that story will attach.</div></div>
+</article>
+  </div>
+</main>
+<footer>
+  <div class="wrap">
+    Generated from PROGRESS.md by scripts/generateSessionChangelog.js. Only entries
+    tagged <code>Session: CC-20260901-4b7e</code> appear here.
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,1 @@
+{"id": "example-001", "input": {"field_name": "example value the prompt would receive"}, "expected": {"field_name": "the value the prompt should return"}, "notes": "One JSON object per line. No commas between lines, no wrapping brackets."}

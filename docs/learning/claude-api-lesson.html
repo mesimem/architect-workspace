@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Building with the Claude API — A Working Lesson</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body {
+    font-family: "Segoe UI", Calibri, Helvetica, Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    color: #1a1d21;
+    margin: 0;
+  }
+
+  /* ---------- Title page ---------- */
+  .title-page { page-break-after: always; padding-top: 40mm; }
+  .title-page h1 {
+    font-size: 30pt; line-height: 1.15; margin: 0 0 6mm 0;
+    letter-spacing: -0.5px; border: none; padding: 0;
+  }
+  .title-page .sub { font-size: 13pt; color: #4a5057; margin-bottom: 22mm; }
+  .meta-box {
+    border: 1px solid #d4d8dd; border-left: 4px solid #1a4d7a;
+    padding: 6mm 7mm; background: #f7f9fb; font-size: 9.5pt;
+  }
+  .meta-box dt { font-weight: 600; color: #1a4d7a; }
+  .meta-box dd { margin: 0 0 3mm 0; }
+
+  /* ---------- Structure ---------- */
+  h1 {
+    font-size: 17pt; margin: 0 0 5mm 0; padding-bottom: 2.5mm;
+    border-bottom: 2.5px solid #1a4d7a; color: #12283d;
+    page-break-after: avoid;
+  }
+  .chapter { page-break-before: always; }
+  h2 {
+    font-size: 13pt; margin: 8mm 0 3mm 0; color: #12283d;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 11pt; margin: 6mm 0 2mm 0; color: #2a3138;
+    page-break-after: avoid;
+  }
+  p { margin: 0 0 3mm 0; }
+  ul, ol { margin: 0 0 3mm 0; padding-left: 6mm; }
+  li { margin-bottom: 1.5mm; }
+
+  /* ---------- Code ---------- */
+  pre {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 8.4pt; line-height: 1.42;
+    background: #f6f8fa; border: 1px solid #dfe3e8;
+    border-left: 3px solid #6b7684;
+    padding: 3mm 4mm; margin: 0 0 4mm 0;
+    white-space: pre-wrap; word-wrap: break-word;
+    page-break-inside: avoid;
+  }
+  code {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 9pt; background: #f0f2f5;
+    padding: 0.3mm 1.2mm; border-radius: 2px;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  /* ---------- Tables ---------- */
+  table {
+    width: 100%; border-collapse: collapse; margin: 0 0 4mm 0;
+    font-size: 9.2pt; page-break-inside: avoid;
+  }
+  th {
+    background: #12283d; color: #fff; text-align: left;
+    padding: 2mm 2.5mm; font-weight: 600;
+  }
+  td { padding: 2mm 2.5mm; border-bottom: 1px solid #e2e6ea; vertical-align: top; }
+  tr:nth-child(even) td { background: #f7f9fb; }
+
+  /* ---------- Callouts ---------- */
+  .note, .warn, .key {
+    padding: 3mm 4mm; margin: 0 0 4mm 0; font-size: 9.8pt;
+    page-break-inside: avoid; border-radius: 2px;
+  }
+  .key  { background: #eef4f9; border-left: 4px solid #1a4d7a; }
+  .warn { background: #fdf4ec; border-left: 4px solid #b5651d; }
+  .note { background: #f4f6f4; border-left: 4px solid #5a6b5a; }
+  .callout-label {
+    display: block; font-size: 8pt; font-weight: 700;
+    letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 1.5mm;
+  }
+  .key .callout-label  { color: #1a4d7a; }
+  .warn .callout-label { color: #b5651d; }
+  .note .callout-label { color: #4a5a4a; }
+
+  .toc ol { padding-left: 5mm; }
+  .toc > ol > li { margin-bottom: 2mm; font-weight: 600; }
+  .toc ol ol { padding-left: 5mm; margin-top: 1mm; }
+  .toc ol ol li { font-weight: 400; color: #3a4149; }
+
+  hr { border: none; border-top: 1px solid #dfe3e8; margin: 6mm 0; }
+  .fine { font-size: 8.8pt; color: #5a6169; }
+  em.term { font-style: normal; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- ============ TITLE ============ -->
+<div class="title-page">
+  <h1>Building with the Claude&nbsp;API</h1>
+  <div class="sub">From API key to evaluated, tool-using assistant — a working lesson</div>
+
+  <dl class="meta-box">
+    <dt>Prepared</dt><dd>25 August 2026</dd>
+    <dt>Language</dt><dd>Python 3.12.10 &middot; <code>anthropic</code> 0.122.0</dd>
+    <dt>Model throughout</dt><dd><code>claude-opus-5</code></dd>
+    <dt>Verified against</dt><dd>The SDK actually installed on this machine, not documentation alone. Signatures and method names in this document were introspected before being written.</dd>
+  </dl>
+
+  <p style="margin-top:14mm" class="fine">
+    Six chapters, in the order they were worked through: securing a key, authenticating,
+    holding a conversation, giving Claude real actions to take, designing the contracts
+    around those actions, and proving any of it works. Chapter&nbsp;7 records findings
+    specific to this repository.
+  </p>
+</div>
+
+<!-- ============ TOC ============ -->
+<h1>Contents</h1>
+<div class="toc">
+<ol>
+  <li>Getting and storing an API key
+    <ol>
+      <li>Why nobody can retrieve it for you</li>
+      <li>Storing it safely on Windows</li>
+      <li>The three traps</li>
+    </ol>
+  </li>
+  <li>Authenticating to the API
+    <ol>
+      <li>The three required headers</li>
+      <li>Two ways to prove identity</li>
+      <li>Credential resolution order</li>
+      <li>Reading the error</li>
+    </ol>
+  </li>
+  <li>Multi-turn conversations
+    <ol>
+      <li>The API has no memory</li>
+      <li>Anatomy of the messages list</li>
+      <li>Why you append blocks, not text</li>
+      <li>The cost consequence</li>
+    </ol>
+  </li>
+  <li>A workflow assistant that takes action
+    <ol>
+      <li>The rule that shapes the design</li>
+      <li>Storage, confirmation, and the three tools</li>
+      <li>The agent loop</li>
+    </ol>
+  </li>
+  <li>Tool schemas and result handling
+    <ol>
+      <li>Schema design decisions</li>
+      <li>Results as messages into context</li>
+      <li>The mechanical layer</li>
+      <li>Intercepting without leaving the runner</li>
+    </ol>
+  </li>
+  <li>Evaluating prompts objectively
+    <ol>
+      <li>Dataset design</li>
+      <li>Grading in three tiers</li>
+      <li>Making the number trustworthy</li>
+    </ol>
+  </li>
+  <li>Findings in this repository</li>
+  <li>Quick reference</li>
+</ol>
+</div>
+
+<!-- ============ 1 ============ -->
+<div class="chapter">
+<h1>1. Getting and storing an API key</h1>
+
+<h2>1.1 Why nobody can retrieve it for you</h2>
+<p>
+Anthropic displays a new API key exactly once, at the moment you create it. After that
+only a hashed fingerprint is stored, which cannot be reversed. This is a safety property,
+not an inconvenience: it means a leak of Anthropic's own records does not leak your key.
+</p>
+<p>
+The practical consequence: if you do not have the key saved, it is gone. Create a new one
+and delete the old. This costs nothing and takes under a minute.
+</p>
+
+<h2>1.2 Storing it safely on Windows</h2>
+<ol>
+  <li>Go to <strong>console.anthropic.com</strong> &rarr; <strong>API Keys</strong> &rarr; <strong>Create Key</strong>.</li>
+  <li>Name it after the machine it will live on — <code>paul-laptop-aug2026</code>. If the laptop is ever lost you then know exactly which key to revoke without breaking anything else.</li>
+  <li>Copy the key. It begins <code>sk-ant-</code> and is roughly 108 characters. Use the copy button rather than selecting by hand.</li>
+  <li>Press <strong>Windows</strong>, type <code>environment</code>, open <strong>&ldquo;Edit environment variables for your account.&rdquo;</strong></li>
+  <li>In the <strong>top</strong> box (<em>User variables</em>), click <strong>New&hellip;</strong></li>
+  <li>Name: <code>ANTHROPIC_API_KEY</code>. Value: paste the key. OK, OK.</li>
+  <li>Close and reopen every terminal and fully quit VS Code.</li>
+</ol>
+
+<div class="key">
+  <span class="callout-label">Why the dialog, not PowerShell</span>
+  Anything typed into PowerShell is written to a plain-text history file on disk. Setting the
+  key by command would leave a copy behind indefinitely. The dialog writes to your account's
+  registry instead — not a file that gets swept into a backup, a shared drive, or a commit.
+</div>
+
+<div class="key">
+  <span class="callout-label">Why the top box</span>
+  <strong>User variables</strong> apply only to your login. <strong>System variables</strong>
+  (bottom box) expose the key to every account on the machine. There is no upside to the
+  wider scope for a personal key.
+</div>
+
+<h2>1.3 The three traps</h2>
+<table>
+  <tr><th style="width:32%">Trap</th><th>What happens</th></tr>
+  <tr><td>Pasting with quote marks</td><td>Windows treats <code>"sk-ant-..."</code> as including the quotes. You get a 401 with no hint why. Paste the bare key.</td></tr>
+  <tr><td>Hardcoding in source</td><td><code>Anthropic(api_key="sk-ant-...")</code> puts a live secret in a file that can be committed, shared, or backed up. Use the zero-argument constructor instead — see &sect;2.2.</td></tr>
+  <tr><td>Saving a &ldquo;backup&rdquo; copy</td><td>A note, a Word doc, an email to yourself. If you want a backup, use a password manager. One authoritative location is the point.</td></tr>
+</table>
+
+<div class="warn">
+  <span class="callout-label">If it leaks, don't deliberate</span>
+  Delete the key in the Console and create a new one. Thirty seconds, no cost. A key you are
+  unsure about is a key you should replace. This applies to pasting it into a chat, a ticket,
+  or a screenshot.
+</div>
+</div>
+
+<!-- ============ 2 ============ -->
+<div class="chapter">
+<h1>2. Authenticating to the API</h1>
+
+<h2>2.1 The three required headers</h2>
+<p>
+Your program sends an ordinary HTTPS request to <code>api.anthropic.com</code>. Proof of
+identity travels in the request <em class="term">headers</em> — the envelope of labels
+alongside the message body.
+</p>
+<table>
+  <tr><th style="width:28%">Header</th><th style="width:26%">Value</th><th>Purpose</th></tr>
+  <tr><td><code>content-type</code></td><td><code>application/json</code></td><td>The body is JSON</td></tr>
+  <tr><td><code>x-api-key</code></td><td>your key</td><td><strong>The authentication</strong></td></tr>
+  <tr><td><code>anthropic-version</code></td><td><code>2023-06-01</code></td><td>Which version of the API's rules to apply</td></tr>
+</table>
+
+<div class="key">
+  <span class="callout-label">On that version date</span>
+  It is not your key's date and not today's date. It is a fixed contract-freeze marker: by
+  sending <code>2023-06-01</code> you ask for the rules as defined then, so Anthropic can
+  evolve the API without silently breaking your code. It is the same literal string for
+  everyone, and it is required on every request.
+</div>
+
+<pre>curl https://api.anthropic.com/v1/messages \
+  -H "content-type: application/json" \
+  -H "x-api-key: $ANTHROPIC_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -d '{"model":"claude-opus-5","max_tokens":1024,
+       "messages":[{"role":"user","content":"Hello"}]}'</pre>
+
+<h2>2.2 Two ways to prove identity</h2>
+<table>
+  <tr><th style="width:22%"></th><th>API key</th><th>Login profile</th></tr>
+  <tr><td>What it is</td><td>A long-lived secret you store</td><td>A browser login storing a short-lived token</td></tr>
+  <tr><td>Header sent</td><td><code>x-api-key: sk-ant-&hellip;</code></td><td><code>Authorization: Bearer &lt;token&gt;</code> plus <code>anthropic-beta: oauth-2025-04-20</code></td></tr>
+  <tr><td>Setup</td><td>Create in Console, set env var</td><td>Install the <code>ant</code> CLI, run <code>ant auth login</code></td></tr>
+  <tr><td>Expires</td><td>No — valid until deleted</td><td>Yes, and refreshes itself</td></tr>
+  <tr><td>Best for</td><td>Servers, scripts, unattended work</td><td>Development on your own machine</td></tr>
+</table>
+<p>
+The profile route means no static secret in your environment at all, which is genuinely
+better for laptop use. Note that converting a raw <code>curl</code> from a key to a profile
+token is a <em>header change</em>, not a value swap — OAuth tokens go on
+<code>Authorization: Bearer</code>, never on <code>x-api-key</code>, and
+<code>/v1/messages</code> additionally requires the beta header shown above.
+</p>
+
+<p>Either way, your code looks identical, and this is the form to use:</p>
+<pre>import anthropic
+
+client = anthropic.Anthropic()   # no arguments — this is correct</pre>
+<p>
+The empty parentheses are not an oversight. The SDK goes looking for credentials itself.
+</p>
+
+<h2>2.3 Credential resolution order</h2>
+<p>The SDK checks these in order, and <strong>the first match wins</strong>:</p>
+<ol>
+  <li><code>ANTHROPIC_API_KEY</code> environment variable</li>
+  <li><code>ANTHROPIC_AUTH_TOKEN</code> environment variable</li>
+  <li>A login profile from <code>ant auth login</code></li>
+  <li>Workload identity federation variables (cloud servers)</li>
+  <li>The default profile saved on disk</li>
+</ol>
+
+<div class="warn">
+  <span class="callout-label">Three failure modes worth memorising</span>
+  <strong>A forgotten key beats everything below it.</strong> Set a key months ago, log in
+  with a profile later, and requests still silently use the old key — billing whichever
+  account it belongs to.<br><br>
+  <strong>An empty key still wins.</strong> <code>ANTHROPIC_API_KEY=""</code> does not mean
+  &ldquo;no key&rdquo;; it claims slot 1 and authenticates with nothing. It must be genuinely
+  deleted, not blanked.<br><br>
+  <strong>Setting both slot 1 and slot 2 breaks it.</strong> The SDK sends both and the API
+  rejects the request outright.
+</div>
+<p class="fine">
+The rule that avoids all three: have exactly one credential configured. Not zero, not two.
+</p>
+
+<h2>2.4 Reading the error</h2>
+<p>The SDK raises a distinct named exception per case, so you never have to guess:</p>
+<pre>try:
+    response = client.messages.create(...)
+except anthropic.AuthenticationError:      # 401
+    ...
+except anthropic.PermissionDeniedError:    # 403
+    ...
+except anthropic.NotFoundError:            # 404
+    ...
+except anthropic.RateLimitError:           # 429 — the SDK already retries these
+    ...
+except anthropic.APIConnectionError:       # network
+    ...</pre>
+<table>
+  <tr><th style="width:26%">Error</th><th style="width:8%">HTTP</th><th>Plain meaning</th></tr>
+  <tr><td><code>AuthenticationError</code></td><td>401</td><td>Key missing, mistyped, or deleted</td></tr>
+  <tr><td><code>PermissionDeniedError</code></td><td>403</td><td>Key is real but not allowed to do this — wrong workspace or missing permission</td></tr>
+  <tr><td><code>NotFoundError</code></td><td>404</td><td>Usually <strong>not</strong> auth — a misspelled model name</td></tr>
+  <tr><td><code>RateLimitError</code></td><td>429</td><td>Too fast; the SDK retries automatically (default 2 retries)</td></tr>
+</table>
+<div class="note">
+  <span class="callout-label">The hour-waster</span>
+  A misspelled model ID surfaces as 404 &ldquo;not found,&rdquo; which sends people hunting
+  through their credentials. <strong>Auth failures are 401 and 403. Nothing else.</strong>
+</div>
+</div>
+
+<!-- ============ 3 ============ -->
+<div class="chapter">
+<h1>3. Multi-turn conversations</h1>
+
+<h2>3.1 The API has no memory</h2>
+<p>
+Anthropic stores nothing between calls. Each request is wholly independent. When it seems
+Claude remembers something from three turns ago, that is only because <strong>you resent the
+entire conversation</strong>.
+</p>
+<p>
+So a &ldquo;conversation&rdquo; is not a server-side object. It is a list you keep and grow,
+and resend in full every turn.
+</p>
+
+<h2>3.2 Anatomy of the messages list</h2>
+<pre>messages = [
+    {"role": "user",      "content": "My name is Paul."},          # turn 1 — me
+    {"role": "assistant", "content": "Nice to meet you, Paul."},   # turn 1 — Claude
+    {"role": "user",      "content": "What's my name?"},           # turn 2 — me
+]</pre>
+<p>
+<code>role</code> is who is speaking, and normally only two values occur:
+<code>"user"</code> (you or your end user) and <code>"assistant"</code> (Claude).
+</p>
+<div class="key">
+  <span class="callout-label">The part that surprises people</span>
+  The <code>assistant</code> entries are Claude's own past replies, handed back as
+  <em>input</em>. You are not describing what Claude said — you are replaying it. Claude reads
+  that transcript fresh and infers &ldquo;I must have said that.&rdquo;<br><br>
+  A consequence: you can edit or fabricate those entries, and nothing verifies them. That is
+  legitimate and useful — trimming an old reply to save tokens, or seeding a conversation with
+  an example exchange. It also means an incorrect entry becomes something Claude now believes
+  it said.
+</div>
+<p>
+<strong>The system prompt is not in the list.</strong> It is a separate parameter — the job
+description, persistent, not part of the dialogue, never something Claude replies to:
+</p>
+<pre>response = client.messages.create(
+    model="claude-opus-5",
+    max_tokens=16000,
+    system="You are a concise assistant.",   # standing instructions, separate
+    messages=messages,                       # the back-and-forth
+)</pre>
+
+<h3>Working example</h3>
+<pre>import anthropic
+
+client = anthropic.Anthropic()
+
+SYSTEM = "You are a concise, friendly assistant."
+messages = []
+
+def send(user_text: str) -> str:
+    # 1. Add my new message to the running history
+    messages.append({"role": "user", "content": user_text})
+
+    # 2. Send the ENTIRE history — not just the new message
+    response = client.messages.create(
+        model="claude-opus-5",
+        max_tokens=16000,
+        system=SYSTEM,
+        messages=messages,
+    )
+
+    # 3. Add Claude's reply back into the history, in full
+    messages.append({"role": "assistant", "content": response.content})
+
+    # 4. Pull out readable text for display
+    return "".join(b.text for b in response.content if b.type == "text")
+
+
+print(send("My name is Paul, and I work in data analytics."))
+print(send("What field did I say I work in?"))   # knows — because step 2 resent turn 1</pre>
+
+<h2>3.3 Why you append blocks, not text</h2>
+<p>
+<code>response.content</code> is <strong>a list of blocks</strong>, not a string. One reply
+from Opus 5 can contain several:
+</p>
+<table>
+  <tr><th style="width:26%">Block type</th><th>What it is</th></tr>
+  <tr><td><code>text</code></td><td>The visible prose</td></tr>
+  <tr><td><code>thinking</code></td><td>Claude's reasoning — on by default for Opus 5</td></tr>
+  <tr><td><code>tool_use</code></td><td>A request to call one of your tools</td></tr>
+  <tr><td><code>compaction</code></td><td>Bookkeeping for very long conversations</td></tr>
+</table>
+<p>The tempting shortcut throws information away:</p>
+<pre># Works for plain chat, but discards thinking and tool blocks
+text = next(b.text for b in response.content if b.type == "text")
+messages.append({"role": "assistant", "content": text})</pre>
+<p>The robust form passes the blocks straight back — the SDK handles them:</p>
+<pre>messages.append({"role": "assistant", "content": response.content})</pre>
+<p>
+This habit means your code does not quietly break the day you add tools, or the day the
+conversation gets long enough for compaction to engage — compaction returns a block the API
+needs handed back, and text-only appending loses it silently.
+</p>
+<div class="warn">
+  <span class="callout-label">Also on the reading side</span>
+  <code>response.content[0].text</code> looks reasonable and works right up until block zero
+  is a thinking block. Always filter on <code>b.type</code> first.
+</div>
+
+<h3>Formatting rules</h3>
+<table>
+  <tr><th style="width:34%">Rule</th><th>Detail</th></tr>
+  <tr><td>First message must be <code>user</code></td><td>A conversation cannot open with <code>assistant</code></td></tr>
+  <tr><td>Roles usually alternate</td><td>user &rarr; assistant &rarr; user &rarr; assistant</td></tr>
+  <tr><td>Same role twice is legal</td><td>Consecutive <code>user</code> messages merge into one turn — useful when someone sends two messages before Claude replies</td></tr>
+  <tr><td><code>content</code> takes a string <em>or</em> a list</td><td>A plain string is shorthand; use a block list to mix text with images or documents</td></tr>
+  <tr><td>Order is meaning</td><td>The list is chronological. Reordering rewrites history</td></tr>
+</table>
+<p>The richer <code>content</code> shape:</p>
+<pre>{"role": "user", "content": [
+    {"type": "image", "source": {"type": "url", "url": "https://example.com/chart.png"}},
+    {"type": "text",  "text": "What trend does this show?"},
+]}</pre>
+
+<h2>3.4 The cost consequence</h2>
+<p>
+Resending everything means input grows every turn. Turn 20 pays for turns 1&ndash;19 again.
+Total spend across a conversation grows with roughly the <em>square</em> of its length.
+</p>
+<p>Two levers. <strong>Prompt caching</strong> — cached input costs about a tenth:</p>
+<pre>response = client.messages.create(
+    model="claude-opus-5",
+    max_tokens=16000,
+    cache_control={"type": "ephemeral"},   # caches the stable front of the request
+    system=SYSTEM,
+    messages=messages,
+)</pre>
+<p>
+Caching is a <strong>prefix match</strong> — reuse stops at the first byte that changed. Keep
+volatile content (timestamps, per-request IDs) out of the front of the request. Verify with
+<code>response.usage.cache_read_input_tokens</code>; if that stays zero across turns,
+something in your prefix is changing every time.
+</p>
+<p>
+<strong>Compaction</strong> — for conversations approaching the context window, the API can
+summarise older parts server-side. This is where appending full <code>response.content</code>
+stops being merely wise and becomes required.
+</p>
+
+<h3>One extra option on Opus 5</h3>
+<p>
+To inject an instruction mid-conversation without disturbing the cached prefix, append a
+<code>system</code> role into the messages list:
+</p>
+<pre>messages.append({"role": "user", "content": "Summarize that."})
+messages.append({"role": "system", "content": "Terse mode: under 40 words."})</pre>
+<p class="fine">
+Supported on Opus 5 with no beta flag. Three constraints: it cannot be first, it must follow
+a <code>user</code> message, and it must either end the list or be followed by an assistant
+turn. This one is genuinely model-dependent — Sonnet 5 rejects it with a 400 — so if you may
+switch models, keep standing instructions in the top-level <code>system</code> parameter.
+</p>
+</div>
+
+<!-- ============ 4 ============ -->
+<div class="chapter">
+<h1>4. A workflow assistant that takes action</h1>
+
+<h2>4.1 The rule that shapes the design</h2>
+<div class="key">
+  <span class="callout-label">The whole design follows from this</span>
+  <strong>Claude decides <em>which</em> action to take. Your Python does the action.</strong>
+</div>
+<p>
+Claude never touches the data. It picks a function name and arguments; ordinary deterministic
+code does the rest. This is what makes handing real actions to a model acceptable: every side
+effect lives in code you can read, test, and re-run, and the probabilistic part is confined to
+routing.
+</p>
+<p class="fine">
+The worked example below manages a task queue in a local JSON file — runnable with no external
+credentials. The structure is the reusable part, not the task; &sect;5 covers how to redraw it
+around a real workflow.
+</p>
+
+<h2>4.2 Storage, confirmation, and the three tools</h2>
+<pre>"""workflow_assistant.py — a Claude-powered work-item queue."""
+
+import json
+import pathlib
+import uuid
+
+import anthropic
+from anthropic import beta_tool
+
+STORE = pathlib.Path("tasks.json")
+MODEL = "claude-opus-5"
+
+client = anthropic.Anthropic()
+
+
+def _load() -> dict:
+    if not STORE.exists():
+        return {"tasks": []}
+    return json.loads(STORE.read_text(encoding="utf-8"))
+
+
+def _save(data: dict) -> None:
+    # Write to a temp file, then rename. A rename is atomic, so an
+    # interrupted run can never leave a half-written tasks.json behind.
+    tmp = STORE.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    tmp.replace(STORE)
+
+
+def _confirm(action: str) -> bool:
+    answer = input(f"\n  Claude wants to: {action}\n  Allow? [y/N] ").strip().lower()
+    return answer == "y"</pre>
+<p class="fine">
+Write-then-rename in <code>_save</code> is not ceremony. Without it, a crash mid-write leaves
+corrupt JSON and the next run cannot start.
+</p>
+
+<h3>The read-only tool</h3>
+<pre>@beta_tool
+def list_tasks(status: str = "all") -> str:
+    """List work items in the queue.
+
+    Call this whenever the user asks what is outstanding or what is done.
+    Also call it before creating a task, to check for an existing duplicate,
+    and before completing one, to look up the correct id.
+
+    Args:
+        status: Which items to return — "open", "done", or "all".
+    """
+    tasks = _load()["tasks"]
+    if status in ("open", "done"):
+        tasks = [t for t in tasks if t["status"] == status]
+    return json.dumps(tasks, indent=2) if tasks else "No matching tasks."</pre>
+
+<div class="key">
+  <span class="callout-label">The docstring is the API contract</span>
+  <code>@beta_tool</code> generates the JSON schema from your signature and docstring. Type
+  hints become types; the docstring becomes the description; <code>Args:</code> lines become
+  per-parameter descriptions; defaults make parameters optional. <strong>The docstring is not
+  a comment — it is the only thing Claude reads when deciding whether to call your
+  function.</strong>
+</div>
+<p class="fine">
+Note the description says <em>when to call it</em>, not just what it does. That is deliberate:
+recent Opus models reach for tools conservatively, and stating trigger conditions measurably
+improves whether the tool gets called when it should. &ldquo;Lists tasks&rdquo; would be a
+worse description despite being accurate.
+</p>
+
+<h3>The write tool</h3>
+<pre>@beta_tool
+def create_task(title: str, owner: str, priority: str = "medium") -> str:
+    """Create a new work item in the queue.
+
+    Call this when the user asks for something to be added, tracked, or
+    assigned to someone. Check list_tasks first — never create a second
+    copy of an item that already exists.
+
+    Args:
+        title: Short description of the work, e.g. "Fix the nightly ETL retry".
+        owner: Who the item is assigned to.
+        priority: One of "low", "medium", "high".
+    """
+    if priority not in ("low", "medium", "high"):
+        return f"Error: priority must be low, medium, or high — got {priority!r}."
+
+    data = _load()
+
+    # Idempotency: same title + same owner IS the same task, not a second one.
+    for t in data["tasks"]:
+        if t["title"].strip().lower() == title.strip().lower() and t["owner"] == owner:
+            return f"Task already exists (id {t['id']}); nothing was created."
+
+    if not _confirm(f'create "{title}" for {owner} ({priority})'):
+        return "User declined. The task was not created."
+
+    task = {
+        "id": uuid.uuid4().hex[:8],
+        "title": title,
+        "owner": owner,
+        "priority": priority,
+        "status": "open",
+    }
+    data["tasks"].append(task)
+    _save(data)
+    return f"Created task {task['id']}: {title} ({priority}, {owner})."</pre>
+
+<p>Three defences, in deliberate order — <strong>validate, dedupe, then confirm</strong>:</p>
+<ol>
+  <li><strong>Validation first.</strong> <code>priority</code> is described as an enum, but a description is guidance, not a guarantee. Check it in code.</li>
+  <li><strong>Dedupe before the prompt.</strong> If the task already exists the user is never asked — a duplicate request becomes a no-op rather than a prompt.</li>
+  <li><strong>Confirm last</strong>, so you are only ever asked about work that is actually going to happen.</li>
+</ol>
+
+<h3>The state-change tool</h3>
+<pre>@beta_tool
+def complete_task(task_id: str) -> str:
+    """Mark a work item as done.
+
+    Args:
+        task_id: The 8-character id of the task, as shown by list_tasks.
+    """
+    data = _load()
+    for t in data["tasks"]:
+        if t["id"] == task_id:
+            if t["status"] == "done":
+                return f"Task {task_id} was already done; nothing changed."
+            if not _confirm(f'mark "{t["title"]}" as done'):
+                return "User declined. The task was not changed."
+            t["status"] = "done"
+            _save(data)
+            return f"Task {task_id} marked done."
+    return f"Error: no task with id {task_id}. Call list_tasks for valid ids."</pre>
+<div class="note">
+  <span class="callout-label">That last line does real work</span>
+  When Claude invents an id — it occasionally will — the error string goes back into the
+  conversation, Claude reads it, calls <code>list_tasks</code>, and retries with a real id.
+  <strong>Error messages are instructions to Claude, not just log output.</strong>
+  &ldquo;Invalid id&rdquo; leaves it stuck; naming the recovery path gets it unstuck.
+</div>
+
+<h2>4.3 The agent loop</h2>
+<pre>SYSTEM = """You are a workflow assistant managing a work-item queue.
+
+- Check list_tasks before creating anything, to avoid duplicates.
+- Never invent a task id — read ids from list_tasks.
+- If a request is ambiguous (no owner given, unclear which task), ask
+  instead of guessing.
+- After acting, state plainly what changed."""
+
+TOOLS = [list_tasks, create_task, complete_task]
+
+
+def run(user_input: str) -> None:
+    runner = client.beta.messages.tool_runner(
+        model=MODEL,
+        max_tokens=16000,
+        system=SYSTEM,
+        tools=TOOLS,
+        messages=[{"role": "user", "content": user_input}],
+        max_iterations=10,   # hard stop — a bug can't spin forever
+    )
+
+    for message in runner:
+        for block in message.content:
+            if block.type == "text" and block.text.strip():
+                print(block.text)
+            elif block.type == "tool_use":
+                print(f"  -> {block.name}({block.input})")
+
+
+if __name__ == "__main__":
+    import sys
+    run(" ".join(sys.argv[1:]) or "What's on the queue?")</pre>
+<p>
+<code>tool_runner</code> is what saves you from hand-writing the loop. Without it you would
+manage this yourself: call the API, check <code>stop_reason</code>, extract
+<code>tool_use</code> blocks, run the matching function, append results with matching ids,
+call again, repeat. <code>max_iterations</code> is the circuit breaker — two tools that
+trigger each other would otherwise loop until you noticed.
+</p>
+
+<h3>Running it</h3>
+<pre>python workflow_assistant.py "add a task for Ali to fix the nightly ETL retry, high priority"
+python workflow_assistant.py "what's still open?"
+python workflow_assistant.py "add a task for Ali to fix the nightly ETL retry"   # deduped</pre>
+<p>
+The third is the one to actually try: a differently-worded duplicate that should return
+&ldquo;already exists&rdquo; without prompting. Then try <code>"mark the ETL one done"</code>
+and watch Claude call <code>list_tasks</code> first to find the id. You never asked for two
+steps — the tool descriptions produced them.
+</p>
+
+<div class="warn">
+  <span class="callout-label">Two honest limitations</span>
+  <strong>Single-shot.</strong> Each invocation starts fresh. To make it conversational, keep a
+  <code>messages</code> list between calls as in &sect;3.<br><br>
+  <strong>No <code>is_error</code> flag.</strong> When a <code>@beta_tool</code> returns a
+  string, that string is the result; there is no separate error marker. Claude handles
+  descriptive error strings fine — which is why their wording carries weight. If you
+  specifically need the flag, that requires the manual loop.
+</div>
+</div>
+
+<!-- ============ 5 ============ -->
+<div class="chapter">
+<h1>5. Tool schemas and result handling</h1>
+
+<h2>5.1 Schema design decisions</h2>
+
+<h3>Granularity — the decision that matters most</h3>
+<p>Before parameters or descriptions, decide how many tools and where the seams go.</p>
+<table>
+  <tr><th style="width:16%">Shape</th><th style="width:34%">Example</th><th>Result</th></tr>
+  <tr><td>Too coarse</td><td><code>manage_task(action, **kwargs)</code></td><td>Claude must guess which fields pair with which action. Errors move from &ldquo;wrong tool&rdquo; to &ldquo;wrong arguments&rdquo; — harder to catch</td></tr>
+  <tr><td><strong>Right</strong></td><td><code>list_tasks</code>, <code>create_task</code>, <code>complete_task</code></td><td>Each schema is exactly right for one job</td></tr>
+  <tr><td>Too fine</td><td><code>set_task_priority</code>, <code>set_task_owner</code>, &hellip;</td><td>Claude burns turns chaining; the tool list crowds out reasoning</td></tr>
+</table>
+<p>
+The heuristic: <strong>one tool per thing a user would ask for.</strong> Nobody asks to
+&ldquo;set task priority&rdquo; in isolation — they ask to create a task, priority included.
+That is the seam. Keep the set small; a focused four beats a vague twelve.
+</p>
+
+<h3>Required vs optional is a real decision</h3>
+<pre>def list_tasks(status: str = "all") -> str:      # optional — Claude may omit it
+def create_task(title: str, owner: str) -> str:  # required — must supply both</pre>
+<p>
+<strong>Optional means Claude will sometimes leave it out and your default applies
+silently.</strong> Make required exactly the things with no sane default, where guessing wrong
+is worse than asking.
+</p>
+<p class="fine">
+<code>owner</code> is the interesting case. Required means Claude must extract it or ask.
+Optional with <code>owner: str = "unassigned"</code> means &ldquo;add a task to fix the
+ETL&rdquo; quietly creates an unowned task. Neither is wrong — but that is a workflow policy
+decision being made in a type signature, so make it deliberately.
+</p>
+
+<h3>Validate anyway</h3>
+<p>
+Naming an enum in the schema both constrains generation and documents itself. You still check
+in code, because a description shapes behaviour rather than guaranteeing it:
+</p>
+<pre>if priority not in ("low", "medium", "high"):
+    return f"Error: priority must be low, medium, or high — got {priority!r}."</pre>
+
+<h3>When to abandon the decorator</h3>
+<p>Hand-write raw JSON schema when the signature cannot express what you need:</p>
+<ul>
+  <li><strong>Nested objects or arrays of objects</strong> — <code>line_items: [{sku, qty}]</code></li>
+  <li><strong>Runtime-generated tools</strong> — schemas built from config or a database</li>
+  <li><strong><code>strict: True</code></strong> — a guarantee that <code>tool_use.input</code> validates exactly, rather than usually</li>
+</ul>
+<pre>tools = [{
+    "name": "create_task",
+    "description": "Create a work item. Call this when the user asks for "
+                   "something to be tracked or assigned.",
+    "strict": True,
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "title":    {"type": "string", "description": "Short description of the work"},
+            "owner":    {"type": "string", "description": "Who it's assigned to"},
+            "priority": {"type": "string", "enum": ["low", "medium", "high"]},
+        },
+        "required": ["title", "owner", "priority"],
+        "additionalProperties": False,   # required for strict
+    },
+}]</pre>
+<p class="fine">
+<code>strict</code> needs both <code>required</code> and
+<code>additionalProperties: False</code>. Worth it when a malformed input is expensive — a
+payment, an outbound email, a production write. For a local JSON file it is overkill.
+</p>
+
+<h2>5.2 Results as messages into context</h2>
+<div class="key">
+  <span class="callout-label">The reframe</span>
+  A tool's return value is not a return value in the ordinary sense. <strong>It is a message
+  you are writing into Claude's context.</strong> One string serves three purposes at once:
+  Claude's only evidence of what happened, the input to its next decision, and the basis of
+  what it tells your user.
+</div>
+
+<h3>Rule 1 — Return the resulting state, not an acknowledgement</h3>
+<pre>return "OK"                                                    # useless
+return f"Created task {task['id']}: {title} ({priority}, {owner})."   # useful</pre>
+<p>
+<code>"OK"</code> forces Claude to describe an outcome it cannot see — exactly when models
+fill gaps with plausible invention.
+</p>
+
+<h3>Rule 2 — Return the identifiers needed for the next step</h3>
+<p>
+Claude cannot call <code>complete_task(task_id=...)</code> unless an earlier result contained
+that id. <strong>Chaining is only possible through returned values.</strong> When a multi-step
+workflow stalls, the usual cause is a tool that did its job but returned nothing consumable.
+</p>
+
+<h3>Rule 3 — Budget the size</h3>
+<p>
+Tool results are conversation history, so <strong>every result is resent on every subsequent
+turn</strong>. A tool that dumps 50&nbsp;KB of JSON does not cost you once — it costs you every
+turn for the rest of the session, and crowds out the reasoning space that made the assistant
+useful. Paginate and summarise <em>at the tool boundary</em>:
+</p>
+<pre>@beta_tool
+def list_tasks(status: str = "all", limit: int = 20) -> str:
+    """List work items in the queue.
+    ...
+        limit: Maximum items to return. Defaults to 20.
+    """
+    tasks = _load()["tasks"]
+    if status in ("open", "done"):
+        tasks = [t for t in tasks if t["status"] == status]
+
+    total = len(tasks)
+    shown = tasks[:limit]
+    # Return only fields Claude needs to act — not the whole record
+    slim = [{"id": t["id"], "title": t["title"], "owner": t["owner"],
+             "priority": t["priority"]} for t in shown]
+
+    out = json.dumps(slim, indent=2)
+    if total > limit:
+        out += f"\n\n({limit} of {total} shown. Narrow with status, or raise limit.)"
+    return out</pre>
+<div class="warn">
+  <span class="callout-label">Why the truncation note matters</span>
+  Without it, Claude treats a partial list as complete and will confidently tell your user
+  there are 20 tasks when there are 400.
+</div>
+
+<h3>Rule 4 — Nothing sensitive in a return value</h3>
+<p>
+Results land in Claude's context, in your logs, and in the transcript. Return
+<code>"Emailed a******@example.com"</code> rather than the full address; <code>"Auth
+succeeded"</code> rather than the token. If a tool reads a table with PII, project only the
+columns you need.
+</p>
+
+<h3>Rule 5 — Errors are instructions</h3>
+<table>
+  <tr><th style="width:40%">Instead of</th><th>Write</th></tr>
+  <tr><td><code>"Error: not found"</code></td><td><code>"No task with id a1b2c3. Call list_tasks for valid ids."</code></td></tr>
+  <tr><td><code>"Invalid input"</code></td><td><code>"priority must be low, medium, or high — got 'urgent'."</code></td></tr>
+  <tr><td><code>"Request failed"</code></td><td><code>"Upstream timed out after 10s. Safe to retry once."</code></td></tr>
+</table>
+<p class="fine">
+The last one carries information Claude cannot otherwise have: whether retrying is safe. For
+anything with a side effect, say so explicitly — otherwise a retry decision is a guess.
+</p>
+
+<h3>Rule 6 — Report partial success honestly</h3>
+<pre>return (f"Created {len(created)} of {len(requested)}. "
+        f"Created: {', '.join(created)}. "
+        f"Failed: {failed_detail}")</pre>
+<p>
+Claude relays what you return. Vague returns become confident, wrong summaries.
+</p>
+
+<h2>5.3 The mechanical layer</h2>
+<p>
+Worth understanding even though the runner handles it, because it is what you will debug.
+Claude's response carries a <code>tool_use</code> block with <code>id</code>,
+<code>name</code>, <code>input</code>. Your reply must contain a <code>tool_result</code>
+whose <code>tool_use_id</code> matches that id exactly.
+</p>
+<pre>for block in response.content:
+    if block.type == "tool_use":
+        result = execute_tool(block.name, block.input)
+        tool_results.append({
+            "type": "tool_result",
+            "tool_use_id": block.id,      # must match, or the API rejects it
+            "content": result,
+            # "is_error": True            # only available via the manual loop
+        })
+
+messages.append({"role": "assistant", "content": response.content})  # full content
+messages.append({"role": "user", "content": tool_results})            # ALL results, one message</pre>
+<p>Three failure modes live in those lines:</p>
+<ul>
+  <li><strong>Parallel calls must return in a single user message.</strong> Claude often requests two or three tools at once. Splitting the results does not error — it silently teaches Claude to stop parallelising, and your assistant gets slower for reasons that never appear in a log.</li>
+  <li><strong>Append the full <code>response.content</code>.</strong> Text-only appending drops the <code>tool_use</code> blocks, and the <code>tool_result</code> you send next then references an id no longer present in history.</li>
+  <li><strong>Parse <code>input</code> as JSON; never string-match it.</strong> Opus 5 varies its JSON string escaping. <code>json.loads()</code> handles it; a regex over the serialised form breaks intermittently — the worst way for anything to break.</li>
+</ul>
+
+<h2>5.4 Intercepting without leaving the runner</h2>
+<p>
+You do not need the manual loop for control. Each iteration hands you the assistant message
+<strong>before</strong> your tools run:
+</p>
+<pre>for message in runner:
+    # 1. Inspect what Claude wants to do, before it happens
+    for block in message.content:
+        if block.type == "tool_use":
+            log_intent(block.name, block.input)
+
+    # 2. Inspect the result before it goes back to Claude.
+    #    Cached — your tools still execute exactly once.
+    response = runner.generate_tool_call_response()
+    if response is not None:
+        audit(response)</pre>
+<table>
+  <tr><th style="width:40%">Method</th><th>Use</th></tr>
+  <tr><td><code>generate_tool_call_response()</code></td><td>Read or modify the result before Claude sees it. Cached — tools run once</td></tr>
+  <tr><td><code>set_messages_params()</code></td><td>Override the pending request — deny an action, inject context</td></tr>
+  <tr><td><code>append_messages()</code></td><td>Push extra messages into the conversation mid-loop</td></tr>
+  <tr><td><code>until_done()</code></td><td>Run the whole loop in one call when you need no hooks</td></tr>
+</table>
+<p>
+Your tools execute automatically <strong>only if you do not intervene</strong>. So a gate can
+live inside the tool function (simple) or out here (better when the policy is cross-cutting —
+every write requires approval, and you would rather not duplicate that check in six functions).
+</p>
+
+<h3>Return contracts by tool class</h3>
+<table>
+  <tr><th style="width:24%">Tool class</th><th style="width:16%">Confirm?</th><th>Return should contain</th></tr>
+  <tr><td><strong>Read</strong> — queries, listings</td><td>No</td><td>Slim projection, ids, explicit truncation note</td></tr>
+  <tr><td><strong>Write</strong> — create, update</td><td>Yes</td><td>New state, id, and <em>whether anything actually changed</em></td></tr>
+  <tr><td><strong>External call</strong> — email, HTTP</td><td>Yes</td><td>Outcome, whether retry is safe, redacted identifiers</td></tr>
+  <tr><td><strong>Destructive</strong> — delete, refund</td><td>Always</td><td>What was removed, and how to reverse it if possible</td></tr>
+</table>
+<div class="note">
+  <span class="callout-label">The row people leave out</span>
+  &ldquo;Whether anything actually changed.&rdquo; <code>"Task already exists; nothing
+  created"</code> and <code>"Created task a1b2c3"</code> must be distinguishable, or Claude
+  reports a duplicate request as a fresh success — and your idempotency check becomes invisible
+  to the user it was protecting.
+</div>
+</div>
+
+<!-- ============ 6 ============ -->
+<div class="chapter">
+<h1>6. Evaluating prompts objectively</h1>
+
+<h2>6.1 Dataset design</h2>
+<p>
+An eval dataset is a JSONL file — one JSON object per line, no commas between lines. Each case
+carries something to send and something to check:
+</p>
+<pre>{"input": {"message": "we are down"}, "expected": {"urgency": "HIGH"}}
+{"input": {"message": "quick question"}, "expected": {"urgency": "LOW"}}</pre>
+
+<h3>The categories a good set covers</h3>
+<table>
+  <tr><th style="width:32%">Category</th><th>Why it's there</th></tr>
+  <tr><td>Clear ends of the scale</td><td>Baseline — if these fail, everything is broken</td></tr>
+  <tr><td>Multiple issues in one input</td><td>Tests the tie-break rule</td></tr>
+  <tr><td>Category collision</td><td>Tests the override rule (e.g. technical fault <em>and</em> billing complaint)</td></tr>
+  <tr><td>Too vague to place</td><td>Tests the documented default</td></tr>
+  <tr><td>Out-of-band input</td><td>An auto-reply, a bare &ldquo;thanks&rdquo; — tests that it declines to act</td></tr>
+  <tr><td><strong>Prompt injection</strong></td><td>&ldquo;IGNORE ALL PREVIOUS INSTRUCTIONS&rdquo; embedded in the data — tests that data stays data</td></tr>
+  <tr><td>Degenerate input</td><td>Empty string — tests it doesn't invent a request</td></tr>
+</table>
+<div class="key">
+  <span class="callout-label">Grade only what the case is about</span>
+  If a case exists to test owner routing and the urgency is genuinely arguable, assert
+  <em>only</em> the owner. Grading fields you are uncertain about bakes your own uncertainty
+  into the score as noise.
+</div>
+
+<h3>Four things that are usually missing</h3>
+<ul>
+  <li><strong>Volume.</strong> Ten cases means each is worth 0.10 — you cannot tell a real improvement from one case flipping. For a multi-way classification, ~40&ndash;50 cases is where the number starts holding still, weighted toward boundaries rather than obvious cases.</li>
+  <li><strong>Coverage of every output field.</strong> It is common to grade two of four required fields and never notice. Some free-text constraints are mechanically checkable without a judge:
+<pre>len(summary.split()) &lt;= 20
+re.search(r"\b(today|24 hours|by \d|within \d+ ?(min|hour|day))", next_action, re.I)</pre></li>
+  <li><strong>A held-out split.</strong> Iterating prompt versions against the same cases is fitting to the test set. Keep a portion you touch only to confirm.</li>
+  <li><strong>Labelling discipline.</strong> Write the expected value from the <em>rule</em>, not from what the model produced. The failure mode is subtle: you disagree with a label, look at the output, decide the model's answer was reasonable, and update the expectation. Do that a few times and your eval measures agreement with the model rather than correctness.</li>
+</ul>
+
+<h3>Datasets for tool-using assistants</h3>
+<p>
+An agent needs a different notion of correct. Extend the same JSONL shape with new keys:
+</p>
+<pre>{"input": "add a task for Ali to fix the nightly ETL, high priority",
+ "expect_tools": ["list_tasks", "create_task"],
+ "forbid_tools": ["complete_task"],
+ "expect_state": [{"title_contains": "ETL", "owner": "Ali",
+                   "priority": "high", "status": "open"}]}
+
+{"input": "add a task for Ali to fix the nightly ETL",
+ "seed_state": [{"id": "aaa11111", "title": "Fix nightly ETL",
+                 "owner": "Ali", "priority": "high", "status": "open"}],
+ "expect_state_unchanged": true,
+ "expect_no_confirmation_prompt": true}</pre>
+<table>
+  <tr><th style="width:34%">Dimension</th><th>Assertion</th></tr>
+  <tr><td>Tool selection</td><td>Tool names called match <code>expect_tools</code></td></tr>
+  <tr><td>Argument correctness</td><td><code>create_task</code> received the right owner and priority</td></tr>
+  <tr><td>Restraint</td><td>Nothing in <code>forbid_tools</code> was called</td></tr>
+  <tr><td>End state</td><td>The data file matches <code>expect_state</code></td></tr>
+  <tr><td><strong>Idempotency</strong></td><td>Re-running leaves state unchanged and prompts nobody</td></tr>
+</table>
+<div class="key">
+  <span class="callout-label">Grade the end state, not the path</span>
+  For an agent you do not need to grade reasoning or trajectory. The objective truth is what
+  the system looks like afterward — a deterministic assertion, no judge, no ambiguity.
+</div>
+<p class="fine">
+Two implementation notes: capture the trajectory by recording <code>block.name</code> and
+<code>block.input</code> for each <code>tool_use</code> block as you iterate the runner; and
+stub <code>_confirm()</code> to auto-approve during evals, or every case blocks on
+<code>input()</code> forever.
+</p>
+
+<h2>6.2 Grading in three tiers</h2>
+<p>Use the cheapest tier that can answer the question. Most people reach for tier 2 when tier 1 would do.</p>
+
+<h3>Tier 1 — Deterministic (default)</h3>
+<p>
+Exact match, numeric tolerance, regex, set comparison, end-state assertion. Free, instant,
+perfectly repeatable. <strong>Everything with a finite set of correct answers belongs
+here</strong> — labels, enums, ids, counts, word limits, state.
+</p>
+
+<h3>Tier 2 — LLM judge (open text only)</h3>
+<p>Use structured outputs so the verdict is parseable rather than prose:</p>
+<pre>from pydantic import BaseModel
+
+class Verdict(BaseModel):
+    passes: bool
+    reason: str          # one sentence, cited to the rule
+
+RUBRIC = """You are grading one field of a record against its rule.
+
+Rule: {rule}
+Field value produced: {value}
+Source input: {source}
+
+Pass only if the value satisfies the rule. Judge the rule as written — not
+whether you would have phrased it differently. If uncertain, fail it."""
+
+verdict = client.messages.parse(
+    model="claude-opus-5",
+    max_tokens=2000,
+    messages=[{"role": "user", "content": RUBRIC.format(...)}],
+    output_format=Verdict,
+).parsed_output</pre>
+<p>Four rules for judges:</p>
+<ul>
+  <li><strong>One dimension per call.</strong> &ldquo;Accurate, concise, and free of invented facts?&rdquo; gives a blurred average. Three calls give three signals — and tell you which one broke.</li>
+  <li><strong>Do not show the judge a gold answer</strong> when grading open text. It anchors on wording and penalises valid alternatives. Show it the <em>rule</em>.</li>
+  <li><strong>Bias it toward failing</strong> when uncertain. An optimistic judge inflates every score equally, hiding regressions.</li>
+  <li><strong>Calibrate before trusting.</strong> Hand-label 20 cases, run the judge, measure agreement. Below ~90% the judge is a noise source, not a measurement. This step is almost universally skipped, and it is the difference between a metric and a vibe.</li>
+</ul>
+
+<h3>Tier 3 — Human spot-check</h3>
+<p>
+Read ten outputs yourself after every prompt change. Not for scoring — for noticing the
+failure mode you never wrote a case for. No automated tier invents the prompt-injection case;
+a human reading outputs does.
+</p>
+
+<h2>6.3 Making the number trustworthy</h2>
+<table>
+  <tr><th style="width:30%">Change</th><th>Why</th></tr>
+  <tr><td><strong>Run each case N times</strong> and report mean plus min&ndash;max</td><td>Highest-value change available. Without it you cannot distinguish a real improvement from a coin flip. On 10 cases, a 0.10 difference <em>is one case</em> — treat it as noise</td></tr>
+  <tr><td><strong>Per-field accuracy and a confusion matrix</strong></td><td>Keep strict pass/fail per case, but add the breakdown. Direction of error is the whole story</td></tr>
+  <tr><td><strong>Persist every run</strong> to a JSONL</td><td>Prompt path, version, model, effort, date, per-case results. Otherwise &ldquo;did v1.1 help?&rdquo; is unanswerable afterward</td></tr>
+  <tr><td><strong>Turn the effort down</strong></td><td>Cuts cost and latency substantially on fixed-format classification work</td></tr>
+</table>
+<pre>urgency accuracy: 8/10          owner accuracy: 9/10
+  expected HIGH   -> got MEDIUM  x1     &lt;- a missed outage
+  expected MEDIUM -> got LOW     x1</pre>
+<p>
+Those two errors cost the same 0.10 and mean completely different things operationally. One is
+a customer waiting on a stopped system. Aggregate scores hide that.
+</p>
+<pre>response = client.messages.create(
+    model=MODEL,
+    max_tokens=MAX_TOKENS,
+    output_config={"effort": "low"},
+    messages=[{"role": "user", "content": filled_prompt}],
+)</pre>
+<div class="warn">
+  <span class="callout-label">Lower the effort; don't disable thinking</span>
+  Thinking is on by default on Opus 5, and turning it off has a known side effect of leaking
+  internal tags into the visible response — which would land straight in whatever regex parses
+  your output. Effort is the safe lever. Record it in the run log: a score is only comparable
+  to another score at the same effort.
+</div>
+</div>
+
+<!-- ============ 7 ============ -->
+<div class="chapter">
+<h1>7. Findings in this repository</h1>
+<p class="fine">
+Recorded 25 August 2026 against <code>scripts/score_prompt.py</code>,
+<code>evals/triage.jsonl</code>, and the three prompt files.
+</p>
+
+<h2>7.1 The documented command scores a stale prompt</h2>
+<table>
+  <tr><th style="width:34%">File</th><th style="width:12%">Lines</th><th style="width:18%">Has <code>NONE</code></th><th>Awkward-situations block</th></tr>
+  <tr><td><code>prompts/triage.md</code></td><td>30</td><td><strong>No</strong></td><td><strong>No</strong></td></tr>
+  <tr><td><code>prompts/triage/v1.0.0.md</code></td><td>74</td><td>Yes</td><td>Yes</td></tr>
+  <tr><td><code>prompts/triage/v1.1.0.md</code></td><td>79</td><td>Yes</td><td>Yes</td></tr>
+</table>
+<p>
+<code>prompts/triage.md</code> is a stale copy predating v1.0.0; it caps urgency at
+&ldquo;HIGH, MEDIUM, or LOW.&rdquo; The command documented at
+<code>score_prompt.py</code> line&nbsp;12 points at exactly that file. Cases 7 (auto-reply)
+and 9 (empty message) both expect <code>"urgency": "NONE"</code> — a value the stale prompt
+cannot emit.
+</p>
+<div class="warn">
+  <span class="callout-label">Effect</span>
+  The documented command has a hard ceiling of <strong>0.80</strong>, and two of ten cases fail
+  for a reason unrelated to prompt quality.
+</div>
+<p>
+<strong>Fix:</strong> point the documented command at <code>prompts/triage/v1.1.0.md</code> and
+delete the unversioned copy. Explicit versions mean you always know what you scored; the drift
+already happened once, which is the argument against keeping a second source of truth.
+</p>
+
+<h2>7.2 Half the output contract is untested</h2>
+<p>
+The prompt requires four fields — <code>Urgency</code>, <code>Summary</code>,
+<code>Next action</code>, <code>Owner</code>. The eval set checks only urgency and owner.
+<code>Summary</code> (&le;20 words) and <code>Next action</code> (must include a time
+commitment) have no coverage at all, and both are partly checkable deterministically
+(see &sect;6.1).
+</p>
+
+<h2>7.3 Single-run scores on a ten-case set</h2>
+<p>
+Each case runs once. The script's own docstring correctly notes that Claude is not perfectly
+repeatable, then reports a single number as though it were. One flip moves the score 0.10 —
+larger than most genuine prompt improvements.
+</p>
+
+<h2>7.4 Priority order</h2>
+<ol>
+  <li>Repoint the documented command at a versioned prompt; delete <code>prompts/triage.md</code>. Recovers the 0.20 ceiling. Five minutes.</li>
+  <li>Add <code>--runs N</code> with mean and range, plus per-field accuracy and an urgency confusion matrix.</li>
+  <li>Add the two deterministic checks for <code>Summary</code> word count and <code>Next action</code> time commitment.</li>
+  <li>Grow the dataset toward 40 cases, keeping ten held out.</li>
+  <li>Add the tool-trajectory format, starting with the idempotency case.</li>
+</ol>
+<p class="fine">
+Items 1&ndash;3 touch <code>scripts/</code>, so this repository's <code>PROGRESS.md</code> gate
+applies: session ID, entry with verification evidence, regenerated session changelog.
+</p>
+</div>
+
+<!-- ============ 8 ============ -->
+<div class="chapter">
+<h1>8. Quick reference</h1>
+
+<h2>Models</h2>
+<p class="fine">Pricing per million tokens. Figures cached mid-2026 — confirm current rates before relying on them for budgeting.</p>
+<table>
+  <tr><th>Model</th><th>ID</th><th>Context</th><th>Input</th><th>Output</th></tr>
+  <tr><td>Claude Fable 5</td><td><code>claude-fable-5</code></td><td>1M</td><td>$10.00</td><td>$50.00</td></tr>
+  <tr><td>Claude Opus 5</td><td><code>claude-opus-5</code></td><td>1M</td><td>$5.00</td><td>$25.00</td></tr>
+  <tr><td>Claude Sonnet 5</td><td><code>claude-sonnet-5</code></td><td>1M</td><td>$3.00</td><td>$15.00</td></tr>
+  <tr><td>Claude Haiku 4.5</td><td><code>claude-haiku-4-5</code></td><td>200K</td><td>$1.00</td><td>$5.00</td></tr>
+</table>
+<p class="fine">
+Use the exact ID strings — never append date suffixes. Default to Opus 5 unless you have a
+specific reason; do not downgrade purely for cost without deciding that deliberately.
+</p>
+
+<h2>Parameters worth knowing</h2>
+<table>
+  <tr><th style="width:34%">Parameter</th><th>Note</th></tr>
+  <tr><td><code>max_tokens</code></td><td>A ceiling, not an instruction — unused capacity costs nothing. Default ~16000 non-streaming, ~64000 streaming. Hitting the cap truncates mid-thought</td></tr>
+  <tr><td><code>output_config={"effort": ...}</code></td><td><code>low</code> &hellip; <code>max</code>; default <code>high</code>. Nested inside <code>output_config</code>, not top-level</td></tr>
+  <tr><td><code>thinking={"type": "adaptive"}</code></td><td>On by default on Opus 5. Add <code>"display": "summarized"</code> to see the reasoning; the default returns empty thinking text</td></tr>
+  <tr><td><code>cache_control={"type": "ephemeral"}</code></td><td>Prefix match. Minimum cacheable prefix ~1024 tokens; shorter silently won't cache</td></tr>
+  <tr><td><code>timeout</code> / <code>max_retries</code></td><td>Default 10 minutes and 2 retries. Python takes <em>seconds</em>; TypeScript takes milliseconds</td></tr>
+  <tr><td><code>max_iterations</code></td><td>On <code>tool_runner</code> — your circuit breaker against a self-triggering tool loop</td></tr>
+</table>
+
+<h2>Mistakes to avoid</h2>
+<ul>
+  <li>Hardcoding a key instead of using the zero-argument client constructor</li>
+  <li>Reading <code>response.content[0].text</code> instead of filtering on <code>block.type</code></li>
+  <li>Appending only text to history, dropping thinking and <code>tool_use</code> blocks</li>
+  <li>Splitting parallel <code>tool_result</code> blocks across multiple messages</li>
+  <li>String-matching a tool's serialised <code>input</code> instead of <code>json.loads()</code></li>
+  <li>Returning <code>"OK"</code> from a tool instead of the resulting state</li>
+  <li>Letting a tool dump unbounded output into context</li>
+  <li>Reporting a single eval run as though it were a stable measurement</li>
+  <li>Trusting an LLM judge that has never been calibrated against human labels</li>
+</ul>
+
+<hr>
+<p class="fine">
+Every code sample here was written against <code>anthropic</code> 0.122.0 on Python 3.12.10,
+with SDK signatures and runner method names introspected from the installed package rather
+than recalled. Where behaviour is model-dependent or version-dependent, that is stated inline.
+</p>
+</div>
+
+</body>
+</html>
