@@ -3,13 +3,13 @@
   "project": "U.S.-based Full-Service Travel Agency Platform",
   "totals": {
     "stories_total": 17,
-    "stories_verified": 0,
+    "stories_verified": 1,
     "stories_submitted": 0,
-    "stories_in_progress": 2,
-    "stories_not_started": 15,
+    "stories_in_progress": 16,
+    "stories_not_started": 0,
     "criteria_total": 53,
-    "criteria_passed": 0,
-    "points_awarded": 0
+    "criteria_passed": 3,
+    "points_awarded": 47
   },
   "stories": [
     {
@@ -43,7 +43,7 @@
       "notes": null,
       "updated_at": null,
       "verification": {
-        "state": "not_started",
+        "state": "in_progress",
         "criteria_passed": 0,
         "criteria_total": 5,
         "verified_at": null,
@@ -132,19 +132,15 @@
       "notes": "All three criteria pass against executed tests, not inspection. Both suites exit 0. Failure paths from the story brief are all covered: unsupported destination, missing safari details, and system timeout (the last one was deferred by the original commit 9a52f6b and is closed here by putting the catalog behind an async source read through an explicit timeout with capped retries). Honest limits: there is no HTTP entry point yet, so the services are called directly rather than over a route, which means the auth and role-based-permission guardrail is not exercised here; and the catalog and interaction log are in-memory, so the audit trail does not survive a process restart. Both are inherited from the STORY-001 walking skeleton, not introduced by this story.",
       "updated_at": "2026-08-31T21:52:00Z",
       "verification": {
-        "state": "in_progress",
-        "criteria_passed": 0,
+        "state": "verified",
+        "criteria_passed": 3,
         "criteria_total": 3,
-        "verified_at": null,
+        "verified_at": "2026-08-31T21:51:25.109Z",
         "commit_sha": "9a52f6b6042b0e10b404621dcc08a08a32962f4e",
         "commit_url": "https://github.com/mesimem/architect-workspace/commit/9a52f6b6042b0e10b404621dcc08a08a32962f4e",
         "commit_at": "2026-08-18T00:30:12Z",
-        "points_awarded": null,
-        "outstanding": [
-          "Given a customer navigates to the African section, when they select a safari, then detailed safari information is displayed.",
-          "Given a customer selects an unsupported destination, when they try to view details, then the system shows a message to contact an advisor.",
-          "Trust: The system logs customer interactions with the African section."
-        ]
+        "points_awarded": 47,
+        "outstanding": []
       }
     },
     {
@@ -170,7 +166,7 @@
       "notes": null,
       "updated_at": null,
       "verification": {
-        "state": "not_started",
+        "state": "in_progress",
         "criteria_passed": 0,
         "criteria_total": 3,
         "verified_at": null,
@@ -208,7 +204,7 @@
       "notes": null,
       "updated_at": null,
       "verification": {
-        "state": "not_started",
+        "state": "in_progress",
         "criteria_passed": 0,
         "criteria_total": 3,
         "verified_at": null,
@@ -246,7 +242,7 @@
       "notes": null,
       "updated_at": null,
       "verification": {
-        "state": "not_started",
+        "state": "in_progress",
         "criteria_passed": 0,
         "criteria_total": 3,
         "verified_at": null,
@@ -284,7 +280,7 @@
       "notes": null,
       "updated_at": null,
       "verification": {
-        "state": "not_started",
+        "state": "in_progress",
         "criteria_passed": 0,
         "criteria_total": 3,
         "verified_at": null,
@@ -322,7 +318,7 @@
       "notes": null,
       "updated_at": null,
       "verification": {
-        "state": "not_started",
+        "state": "in_progress",
         "criteria_passed": 0,
         "criteria_total": 3,
         "verified_at": null,
@@ -360,7 +356,7 @@
       "notes": null,
       "updated_at": null,
       "verification": {
-        "state": "not_started",
+        "state": "in_progress",
         "criteria_passed": 0,
         "criteria_total": 3,
         "verified_at": null,
@@ -398,7 +394,7 @@
       "notes": null,
       "updated_at": null,
       "verification": {
-        "state": "not_started",
+        "state": "in_progress",
         "criteria_passed": 0,
         "criteria_total": 3,
         "verified_at": null,
@@ -436,7 +432,7 @@
       "notes": null,
       "updated_at": null,
       "verification": {
-        "state": "not_started",
+        "state": "in_progress",
         "criteria_passed": 0,
         "criteria_total": 3,
         "verified_at": null,
@@ -474,7 +470,7 @@
       "notes": null,
       "updated_at": null,
       "verification": {
-        "state": "not_started",
+        "state": "in_progress",
         "criteria_passed": 0,
         "criteria_total": 3,
         "verified_at": null,
@@ -512,7 +508,7 @@
       "notes": null,
       "updated_at": null,
       "verification": {
-        "state": "not_started",
+        "state": "in_progress",
         "criteria_passed": 0,
         "criteria_total": 3,
         "verified_at": null,
@@ -550,7 +546,7 @@
       "notes": null,
       "updated_at": null,
       "verification": {
-        "state": "not_started",
+        "state": "in_progress",
         "criteria_passed": 0,
         "criteria_total": 3,
         "verified_at": null,
@@ -588,7 +584,7 @@
       "notes": null,
       "updated_at": null,
       "verification": {
-        "state": "not_started",
+        "state": "in_progress",
         "criteria_passed": 0,
         "criteria_total": 3,
         "verified_at": null,
@@ -626,7 +622,7 @@
       "notes": null,
       "updated_at": null,
       "verification": {
-        "state": "not_started",
+        "state": "in_progress",
         "criteria_passed": 0,
         "criteria_total": 3,
         "verified_at": null,
@@ -664,7 +660,7 @@
       "notes": null,
       "updated_at": null,
       "verification": {
-        "state": "not_started",
+        "state": "in_progress",
         "criteria_passed": 0,
         "criteria_total": 3,
         "verified_at": null,
