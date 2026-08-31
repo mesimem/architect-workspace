@@ -1,0 +1,773 @@
+{
+  "schema_version": 2,
+  "project_name": "U.S.-based Full-Service Travel Agency Platform",
+  "descriptor": "A platform specializing in African travel, offering a comprehensive range of travel services and AI-assisted features.",
+  "requirements": [
+    {
+      "id": "REQ-001",
+      "kind": "FUNC",
+      "cluster": "Booking Services",
+      "priority": "must",
+      "statement": "The system must allow customers to book flights, hotels, and safaris as part of a single trip.",
+      "fulfilled_by": [
+        "STORY-001"
+      ]
+    },
+    {
+      "id": "REQ-002",
+      "kind": "FUNC",
+      "cluster": "African Travel Specialty",
+      "priority": "must",
+      "statement": "The system must support a major section dedicated to African travel, including safaris and cultural experiences.",
+      "fulfilled_by": [
+        "STORY-002"
+      ]
+    },
+    {
+      "id": "REQ-003",
+      "kind": "FUNC",
+      "cluster": "Custom Trips",
+      "priority": "must",
+      "statement": "The system must enable travel advisors to create customized trip proposals within 30 minutes.",
+      "fulfilled_by": [
+        "STORY-013"
+      ]
+    },
+    {
+      "id": "REQ-004",
+      "kind": "CONSTRAINT",
+      "cluster": "Payments and Finance",
+      "priority": "must",
+      "statement": "The system must integrate with accounting software for financial tracking.",
+      "fulfilled_by": [
+        "STORY-004"
+      ]
+    },
+    {
+      "id": "REQ-005",
+      "kind": "SAFE",
+      "cluster": "Customer Support",
+      "priority": "must",
+      "statement": "The system must flag uncertain customer requests for travel advisor review.",
+      "fulfilled_by": [
+        "STORY-003"
+      ]
+    },
+    {
+      "id": "REQ-006",
+      "kind": "FUNC",
+      "cluster": "Customer Relationship Management",
+      "priority": "must",
+      "statement": "The system must provide a CRM to track leads, customers, and booking history.",
+      "fulfilled_by": [
+        "STORY-014"
+      ]
+    },
+    {
+      "id": "REQ-007",
+      "kind": "FUNC",
+      "cluster": "Customer Portal",
+      "priority": "must",
+      "statement": "The system must allow customers to view and manage their itineraries through a secure portal.",
+      "fulfilled_by": [
+        "STORY-005"
+      ]
+    },
+    {
+      "id": "REQ-008",
+      "kind": "SAFE",
+      "cluster": "Security and Privacy",
+      "priority": "must",
+      "statement": "The system must support secure authentication and role-based permissions.",
+      "fulfilled_by": [
+        "STORY-006"
+      ]
+    },
+    {
+      "id": "REQ-009",
+      "kind": "FUNC",
+      "cluster": "Quotation System",
+      "priority": "must",
+      "statement": "The system must generate professional quotes and itineraries for customers.",
+      "fulfilled_by": [
+        "STORY-007"
+      ]
+    },
+    {
+      "id": "REQ-010",
+      "kind": "FUNC",
+      "cluster": "Group Travel",
+      "priority": "must",
+      "statement": "The system must handle group travel bookings with shared itinerary information.",
+      "fulfilled_by": [
+        "STORY-008"
+      ]
+    },
+    {
+      "id": "REQ-011",
+      "kind": "FUNC",
+      "cluster": "AI Features",
+      "priority": "should",
+      "statement": "The system must support AI capabilities to assist customers in exploring destinations and generating trip ideas.",
+      "fulfilled_by": [
+        "STORY-009"
+      ]
+    },
+    {
+      "id": "REQ-012",
+      "kind": "FUNC",
+      "cluster": "Supplier Management",
+      "priority": "must",
+      "statement": "The system must track supplier information including contracts and rates.",
+      "fulfilled_by": [
+        "STORY-010"
+      ]
+    },
+    {
+      "id": "REQ-013",
+      "kind": "FUNC",
+      "cluster": "Payments and Finance",
+      "priority": "must",
+      "statement": "The system must allow customers to make payments and track their remaining balances.",
+      "fulfilled_by": [
+        "STORY-011"
+      ]
+    },
+    {
+      "id": "REQ-014",
+      "kind": "FUNC",
+      "cluster": "African Travel Specialty",
+      "priority": "must",
+      "statement": "The system must support the creation of detailed safari products with itineraries and pricing.",
+      "fulfilled_by": [
+        "STORY-015"
+      ]
+    },
+    {
+      "id": "REQ-015",
+      "kind": "FUNC",
+      "cluster": "Analytics",
+      "priority": "should",
+      "statement": "The system must provide analytics on revenue, bookings, and customer data.",
+      "fulfilled_by": [
+        "STORY-012"
+      ]
+    },
+    {
+      "id": "REQ-016",
+      "kind": "FUNC",
+      "cluster": "Marketing",
+      "priority": "should",
+      "statement": "The system must support marketing capabilities such as email campaigns and customer segmentation.",
+      "fulfilled_by": []
+    },
+    {
+      "id": "REQ-017",
+      "kind": "SAFE",
+      "cluster": "Security and Privacy",
+      "priority": "must",
+      "statement": "The system must maintain audit logs for all transactions and changes.",
+      "fulfilled_by": [
+        "STORY-004"
+      ]
+    },
+    {
+      "id": "REQ-018",
+      "kind": "NFR",
+      "cluster": "Scalability",
+      "priority": "must",
+      "statement": "The system must support scalability to accommodate multiple advisors and thousands of customers.",
+      "fulfilled_by": [
+        "STORY-016"
+      ]
+    }
+  ],
+  "releases": [
+    {
+      "key": "r0",
+      "demo": "Demonstrate booking a flight, hotel, and safari as a single trip with CRM tracking.",
+      "goal": "Establish core booking and CRM functionalities with a focus on African travel.",
+      "name": "Initial MVP",
+      "week_end": 1,
+      "week_start": 1,
+      "story_ids": [
+        "STORY-001",
+        "STORY-002",
+        "STORY-003",
+        "STORY-004"
+      ],
+      "starts_on": "2026-08-22",
+      "ends_on": "2026-08-27",
+      "is_demo_target": false
+    },
+    {
+      "key": "r1",
+      "demo": "Show customer managing itinerary and secure login process.",
+      "goal": "Implement customer portal and security features.",
+      "name": "Customer Portal and Security",
+      "week_end": 2,
+      "week_start": 2,
+      "story_ids": [
+        "STORY-005",
+        "STORY-006",
+        "STORY-014"
+      ],
+      "starts_on": "2026-08-29",
+      "ends_on": "2026-09-03",
+      "is_demo_target": true
+    },
+    {
+      "key": "r2",
+      "demo": "Generate a professional quote and book a group trip.",
+      "goal": "Enable quotation system and group travel bookings.",
+      "name": "Quotation and Group Travel",
+      "week_end": 3,
+      "week_start": 3,
+      "story_ids": [
+        "STORY-007",
+        "STORY-008",
+        "STORY-013",
+        "STORY-015"
+      ],
+      "starts_on": "2026-09-05",
+      "ends_on": "2026-09-10",
+      "is_demo_target": false
+    },
+    {
+      "key": "r3",
+      "demo": "AI suggests trip ideas and supplier data is managed.",
+      "goal": "Introduce AI features and manage supplier information.",
+      "name": "AI Assistance and Supplier Management",
+      "week_end": 4,
+      "week_start": 4,
+      "story_ids": [
+        "STORY-009",
+        "STORY-010",
+        "STORY-016"
+      ],
+      "starts_on": "2026-09-12",
+      "ends_on": "2026-09-17",
+      "is_demo_target": false
+    },
+    {
+      "key": "r4",
+      "demo": "Process a payment and display analytics dashboard.",
+      "goal": "Complete payment processing and analytics capabilities.",
+      "name": "Payments and Analytics",
+      "week_end": 6,
+      "week_start": 5,
+      "story_ids": [
+        "STORY-011",
+        "STORY-012"
+      ],
+      "starts_on": "2026-09-24",
+      "ends_on": "2026-10-01",
+      "is_demo_target": false
+    }
+  ],
+  "stories": [
+    {
+      "id": "STORY-001",
+      "title": "Book a complete trip including flight, hotel, and safari",
+      "release": "r0",
+      "fulfills": [
+        "REQ-001"
+      ],
+      "narrative": "As a customer, I want to book a complete trip including flight, hotel, and safari, so that I can manage my travel in one place.",
+      "acceptance": [
+        "Given a customer selects a flight, hotel, and safari, when they proceed to checkout, then the system confirms the booking as one trip.",
+        "Given a customer selects unavailable dates, when they try to book, then the system shows an error message.",
+        "Trust: The system logs the booking transaction in the CRM."
+      ],
+      "blocked_by": [],
+      "owner_agent": "Travel Advisor",
+      "failure_paths": [
+        "Unavailable dates",
+        "Payment failure",
+        "Invalid customer details"
+      ],
+      "task_guidance": "Implement booking flow for flights, hotels, and safaris. Ensure CRM integration for transaction logging.",
+      "due_on": "2026-08-22",
+      "due_baseline_on": "2026-08-22"
+    },
+    {
+      "id": "STORY-002",
+      "title": "Create a dedicated African travel section",
+      "release": "r0",
+      "fulfills": [
+        "REQ-002"
+      ],
+      "narrative": "As a customer, I want to explore African travel options, so that I can plan a specialized trip to Africa.",
+      "acceptance": [
+        "Given a customer navigates to the African section, when they select a safari, then detailed safari information is displayed.",
+        "Given a customer selects an unsupported destination, when they try to view details, then the system shows a message to contact an advisor.",
+        "Trust: The system logs customer interactions with the African section."
+      ],
+      "blocked_by": [],
+      "owner_agent": "Travel Advisor",
+      "failure_paths": [
+        "Unsupported destination",
+        "Missing safari details",
+        "System timeout"
+      ],
+      "task_guidance": "Develop African travel section with safari details and CRM logging for interactions.",
+      "due_on": "2026-08-24",
+      "due_baseline_on": "2026-08-24"
+    },
+    {
+      "id": "STORY-003",
+      "title": "Flag uncertain requests for advisor review",
+      "release": "r0",
+      "fulfills": [
+        "REQ-005"
+      ],
+      "narrative": "As a travel advisor, I want uncertain customer requests flagged, so that I can review and assist them.",
+      "acceptance": [
+        "Given a customer makes an unclear request, when the system processes it, then it flags the request for advisor review.",
+        "Given a customer provides complete information, when the system processes it, then it does not flag the request.",
+        "Trust: The system logs all flagged requests for audit."
+      ],
+      "blocked_by": [],
+      "owner_agent": "Travel Advisor",
+      "failure_paths": [
+        "Unclear request not flagged",
+        "Flagged request not logged",
+        "Advisor notification failure"
+      ],
+      "task_guidance": "Implement request processing logic to identify and flag unclear requests for review.",
+      "due_on": "2026-08-25",
+      "due_baseline_on": "2026-08-25"
+    },
+    {
+      "id": "STORY-004",
+      "title": "Enable integration with accounting software for transaction logging",
+      "release": "r0",
+      "fulfills": [
+        "REQ-004",
+        "REQ-017"
+      ],
+      "narrative": "As a travel advisor, I want the system to integrate with accounting software, so that all transactions are logged and auditable.",
+      "acceptance": [
+        "Given a completed transaction, when it is processed, then it should be logged in the accounting software.",
+        "Given a failed transaction, when it is attempted, then it should not be logged in the accounting software.",
+        "Trust: Given any transaction, when it is processed, then an audit log entry must be created."
+      ],
+      "blocked_by": [],
+      "owner_agent": "Development Team",
+      "failure_paths": [
+        "API connection failure",
+        "Incorrect transaction data format",
+        "Unauthorized access attempt"
+      ],
+      "task_guidance": "Ensure integration with the specified accounting software API for transaction logging and audit trail creation.",
+      "due_on": "2026-08-27",
+      "due_baseline_on": "2026-08-27"
+    },
+    {
+      "id": "STORY-005",
+      "title": "Implement secure customer portal",
+      "release": "r1",
+      "fulfills": [
+        "REQ-007"
+      ],
+      "narrative": "As a customer, I want a secure portal to manage my trips, so that I can access my travel details safely.",
+      "acceptance": [
+        "Given a customer logs in, when they enter correct credentials, then they access their portal.",
+        "Given a customer enters incorrect credentials, when they try to log in, then the system denies access.",
+        "Trust: The system logs all login attempts for security audit."
+      ],
+      "blocked_by": [
+        "STORY-001"
+      ],
+      "owner_agent": "Customer Support",
+      "failure_paths": [
+        "Incorrect login",
+        "Session timeout",
+        "Unauthorized access"
+      ],
+      "task_guidance": "Develop secure login and portal access for customers to view and manage trips.",
+      "due_on": "2026-08-29",
+      "due_baseline_on": "2026-08-29"
+    },
+    {
+      "id": "STORY-006",
+      "title": "Implement role-based permissions",
+      "release": "r1",
+      "fulfills": [
+        "REQ-008"
+      ],
+      "narrative": "As an admin, I want role-based permissions, so that users have appropriate access levels.",
+      "acceptance": [
+        "Given a user logs in, when they have admin rights, then they access admin features.",
+        "Given a user logs in, when they have customer rights, then they access customer features only.",
+        "Trust: The system logs all access attempts and changes in permissions."
+      ],
+      "blocked_by": [
+        "STORY-001"
+      ],
+      "owner_agent": "System Administrator",
+      "failure_paths": [
+        "Unauthorized access",
+        "Permission escalation",
+        "Role assignment error"
+      ],
+      "task_guidance": "Implement role-based access control for different user roles.",
+      "due_on": "2026-09-01",
+      "due_baseline_on": "2026-09-01"
+    },
+    {
+      "id": "STORY-007",
+      "title": "Generate professional quotes for customers",
+      "release": "r2",
+      "fulfills": [
+        "REQ-009"
+      ],
+      "narrative": "As a travel advisor, I want to generate professional quotes, so that customers receive clear and detailed pricing.",
+      "acceptance": [
+        "Given a quote is generated, when a customer views it, then it displays without internal costs.",
+        "Given a quote is modified, when it is saved, then the system updates the customer view.",
+        "Trust: The system logs all quote generations and modifications."
+      ],
+      "blocked_by": [
+        "STORY-005"
+      ],
+      "owner_agent": "Travel Advisor",
+      "failure_paths": [
+        "Incorrect pricing",
+        "Quote not saved",
+        "Customer view error"
+      ],
+      "task_guidance": "Develop quote generation system with customer-friendly output and internal logging.",
+      "due_on": "2026-09-05",
+      "due_baseline_on": "2026-09-05"
+    },
+    {
+      "id": "STORY-008",
+      "title": "Support group travel bookings",
+      "release": "r2",
+      "fulfills": [
+        "REQ-010"
+      ],
+      "narrative": "As a group organizer, I want to book travel for multiple people, so that I can manage a group trip efficiently.",
+      "acceptance": [
+        "Given a group booking is initiated, when details are complete, then the system confirms the booking for all members.",
+        "Given a group booking is incomplete, when submitted, then the system prompts for missing information.",
+        "Trust: The system logs all group booking transactions."
+      ],
+      "blocked_by": [
+        "STORY-005"
+      ],
+      "owner_agent": "Travel Advisor",
+      "failure_paths": [
+        "Incomplete group details",
+        "Payment issues",
+        "Booking confirmation failure"
+      ],
+      "task_guidance": "Implement group booking functionality with shared itinerary and CRM logging.",
+      "due_on": "2026-09-07",
+      "due_baseline_on": "2026-09-07"
+    },
+    {
+      "id": "STORY-009",
+      "title": "AI suggests trip ideas to customers",
+      "release": "r3",
+      "fulfills": [
+        "REQ-011"
+      ],
+      "narrative": "As a customer, I want AI to suggest trip ideas, so that I can explore travel options easily.",
+      "acceptance": [
+        "Given a customer provides preferences, when AI processes them, then it suggests relevant trips.",
+        "Given a customer provides no preferences, when AI processes, then it suggests popular trips.",
+        "Trust: The system logs all AI suggestions for review."
+      ],
+      "blocked_by": [
+        "STORY-007"
+      ],
+      "owner_agent": "AI Developer",
+      "failure_paths": [
+        "No suggestions generated",
+        "Irrelevant suggestions",
+        "AI processing error"
+      ],
+      "task_guidance": "Develop AI module to process customer preferences and suggest trips.",
+      "due_on": "2026-09-12",
+      "due_baseline_on": "2026-09-12"
+    },
+    {
+      "id": "STORY-010",
+      "title": "Manage supplier information",
+      "release": "r3",
+      "fulfills": [
+        "REQ-012"
+      ],
+      "narrative": "As a travel advisor, I want to manage supplier information, so that I can maintain accurate records.",
+      "acceptance": [
+        "Given a supplier is added, when details are saved, then it appears in the supplier list.",
+        "Given a supplier is updated, when changes are saved, then the system reflects the updates.",
+        "Trust: The system logs all supplier data changes."
+      ],
+      "blocked_by": [
+        "STORY-007"
+      ],
+      "owner_agent": "Travel Advisor",
+      "failure_paths": [
+        "Supplier not added",
+        "Data mismatch",
+        "Update failure"
+      ],
+      "task_guidance": "Develop supplier management module for adding and updating supplier details.",
+      "due_on": "2026-09-15",
+      "due_baseline_on": "2026-09-15"
+    },
+    {
+      "id": "STORY-011",
+      "title": "Process customer payments and track balances",
+      "release": "r4",
+      "fulfills": [
+        "REQ-013"
+      ],
+      "narrative": "As a customer, I want to make payments and track my balance, so that I can manage my travel expenses.",
+      "acceptance": [
+        "Given a payment is made, when processed, then the system updates the balance.",
+        "Given a payment fails, when retried, then the system processes it again or shows an error.",
+        "Trust: The system logs all payment transactions."
+      ],
+      "blocked_by": [
+        "STORY-009"
+      ],
+      "owner_agent": "Finance Manager",
+      "failure_paths": [
+        "Payment failure",
+        "Balance not updated",
+        "Transaction not logged"
+      ],
+      "task_guidance": "Implement payment processing and balance tracking with integration to accounting software.",
+      "due_on": "2026-09-24",
+      "due_baseline_on": "2026-09-24"
+    },
+    {
+      "id": "STORY-012",
+      "title": "Provide analytics on revenue and bookings",
+      "release": "r4",
+      "fulfills": [
+        "REQ-015"
+      ],
+      "narrative": "As a manager, I want analytics on revenue and bookings, so that I can make informed business decisions.",
+      "acceptance": [
+        "Given data is available, when analytics are generated, then they display revenue and booking trends.",
+        "Given data is incomplete, when analytics are generated, then the system highlights missing data.",
+        "Trust: The system logs all analytics generation activities."
+      ],
+      "blocked_by": [
+        "STORY-009"
+      ],
+      "owner_agent": "Business Analyst",
+      "failure_paths": [
+        "Data mismatch",
+        "Analytics not generated",
+        "Dashboard error"
+      ],
+      "task_guidance": "Develop analytics dashboard for revenue and booking data visualization.",
+      "due_on": "2026-10-01",
+      "due_baseline_on": "2026-08-23"
+    },
+    {
+      "id": "STORY-013",
+      "title": "Create customized trip proposals for travel advisors",
+      "release": "r2",
+      "fulfills": [
+        "REQ-003"
+      ],
+      "narrative": "As a travel advisor, I want to create customized trip proposals within 30 minutes, so that I can efficiently serve my clients.",
+      "acceptance": [
+        "Given a new trip request, when a travel advisor creates a proposal, then it should be completed within 30 minutes.",
+        "Given a trip proposal, when it exceeds 30 minutes, then the advisor should be notified of the delay.",
+        "Trust: Given any trip proposal, when it is created, then an audit log entry must be created."
+      ],
+      "blocked_by": [
+        "STORY-008"
+      ],
+      "owner_agent": "Development Team",
+      "failure_paths": [
+        "Proposal generation timeout",
+        "Incorrect trip details",
+        "System crash during proposal creation"
+      ],
+      "task_guidance": "Develop a user interface for travel advisors to input trip details and generate proposals quickly.",
+      "due_on": "2026-09-08",
+      "due_baseline_on": "2026-09-08"
+    },
+    {
+      "id": "STORY-014",
+      "title": "Implement CRM for tracking leads, customers, and booking history",
+      "release": "r1",
+      "fulfills": [
+        "REQ-006"
+      ],
+      "narrative": "As a sales manager, I want a CRM to track leads, customers, and booking history, so that I can manage relationships effectively.",
+      "acceptance": [
+        "Given a new lead, when it is added to the CRM, then it should be visible in the lead list.",
+        "Given a customer booking, when it is completed, then it should update the customer's booking history.",
+        "Trust: Given any CRM entry, when it is modified, then an audit log entry must be created."
+      ],
+      "blocked_by": [
+        "STORY-005"
+      ],
+      "owner_agent": "Development Team",
+      "failure_paths": [
+        "Data entry error",
+        "Lead duplication",
+        "Unauthorized data access"
+      ],
+      "task_guidance": "Develop CRM features to manage leads, customers, and booking history with audit logging.",
+      "due_on": "2026-09-03",
+      "due_baseline_on": "2026-09-03"
+    },
+    {
+      "id": "STORY-015",
+      "title": "Support creation of detailed safari products with itineraries and pricing",
+      "release": "r2",
+      "fulfills": [
+        "REQ-014"
+      ],
+      "narrative": "As a product manager, I want to create detailed safari products with itineraries and pricing, so that I can offer comprehensive travel packages.",
+      "acceptance": [
+        "Given a new safari product, when it is created, then it should include itineraries and pricing.",
+        "Given an existing safari product, when its itinerary is updated, then the changes should be reflected immediately.",
+        "Trust: Given any safari product, when it is created or updated, then an audit log entry must be created."
+      ],
+      "blocked_by": [
+        "STORY-007"
+      ],
+      "owner_agent": "Development Team",
+      "failure_paths": [
+        "Incorrect pricing data",
+        "Itinerary conflicts",
+        "Unauthorized product modification"
+      ],
+      "task_guidance": "Develop a module for creating and managing safari products with detailed itineraries and pricing.",
+      "due_on": "2026-09-10",
+      "due_baseline_on": "2026-09-10"
+    },
+    {
+      "id": "STORY-016",
+      "title": "Ensure system scalability for multiple advisors and thousands of customers",
+      "release": "r3",
+      "fulfills": [
+        "REQ-018"
+      ],
+      "narrative": "As a system architect, I want the system to support scalability, so that it can accommodate multiple advisors and thousands of customers.",
+      "acceptance": [
+        "Given an increase in user load, when multiple advisors access the system, then it should maintain performance.",
+        "Given a surge in customer activity, when thousands of customers interact with the system, then it should not crash.",
+        "Trust: Given any system load, when it scales, then performance metrics must be logged."
+      ],
+      "blocked_by": [
+        "STORY-010"
+      ],
+      "owner_agent": "Development Team",
+      "failure_paths": [
+        "Server overload",
+        "Database bottleneck",
+        "Network latency"
+      ],
+      "task_guidance": "Implement load balancing and performance monitoring to ensure system scalability.",
+      "due_on": "2026-09-17",
+      "due_baseline_on": "2026-09-17"
+    }
+  ],
+  "agents": [],
+  "project": {
+    "name": "U.S.-based Full-Service Travel Agency Platform",
+    "descriptor": "A platform specializing in African travel, offering a comprehensive range of travel services and AI-assisted features.",
+    "repo_url": "https://github.com/mesimem/architect-workspace",
+    "plan_version": 2,
+    "plan_sha256": "06f93a7e11689a590fc1bcaa07b066563ef5b60a526e9e4aeb8b80df63dcd936"
+  },
+  "schedule": {
+    "build_start": "2026-08-20",
+    "build_end": "2026-10-01",
+    "demo_day": "2026-10-08",
+    "build_weeks": 6,
+    "demo_release_key": "r1",
+    "roadmap_release_keys": [
+      "r2",
+      "r3",
+      "r4"
+    ],
+    "prep": [
+      {
+        "key": "PREP-1",
+        "title": "Write the demo narrative: the problem, the one moment, the guardrail",
+        "due_on": "2026-10-02"
+      },
+      {
+        "key": "PREP-2",
+        "title": "Record a first run-through and watch it back",
+        "due_on": "2026-10-03"
+      },
+      {
+        "key": "PREP-3",
+        "title": "Build the slides — what it does, who for, the number it moves",
+        "due_on": "2026-10-05"
+      },
+      {
+        "key": "PREP-4",
+        "title": "Rehearse with one other person and take their notes",
+        "due_on": "2026-10-06"
+      },
+      {
+        "key": "PREP-5",
+        "title": "Record the final demo video",
+        "due_on": "2026-10-07"
+      },
+      {
+        "key": "PREP-6",
+        "title": "Present at Demo Day",
+        "due_on": "2026-10-08"
+      }
+    ]
+  },
+  "derived": {
+    "measures": [],
+    "guardrails": [
+      {
+        "id": "REQ-005",
+        "statement": "The system must flag uncertain customer requests for travel advisor review."
+      },
+      {
+        "id": "REQ-008",
+        "statement": "The system must support secure authentication and role-based permissions."
+      },
+      {
+        "id": "REQ-017",
+        "statement": "The system must maintain audit logs for all transactions and changes."
+      }
+    ],
+    "systems": [],
+    "roles": [
+      "customer",
+      "travel advisor",
+      "admin",
+      "group organizer",
+      "manager",
+      "sales manager",
+      "product manager",
+      "system architect"
+    ],
+    "counts": {
+      "requirements_total": 18,
+      "requirements_by_kind": {
+        "CONSTRAINT": 1,
+        "FUNC": 13,
+        "NFR": 1,
+        "SAFE": 3
+      },
+      "stories_total": 16,
+      "releases_total": 5,
+      "agents_total": 0,
+      "failure_paths_total": 45,
+      "agents_by_autonomy": {}
+    }
+  }
+}

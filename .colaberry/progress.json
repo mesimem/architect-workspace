@@ -1,0 +1,672 @@
+{
+  "schema_version": 2,
+  "project": "U.S.-based Full-Service Travel Agency Platform",
+  "totals": {
+    "stories_total": 17,
+    "stories_verified": 0,
+    "stories_submitted": 0,
+    "stories_in_progress": 2,
+    "stories_not_started": 15,
+    "criteria_total": 53,
+    "criteria_passed": 0,
+    "points_awarded": 0
+  },
+  "stories": [
+    {
+      "id": "STORY-000",
+      "release": null,
+      "acceptance_total": 5,
+      "criteria": [
+        {
+          "text": "Given the Command Center, when it is opened, then every tab is reachable and every card drills down one level.",
+          "passed": false
+        },
+        {
+          "text": "Given sample mode, when any tab is shown, then the sample data is visibly labelled as sample.",
+          "passed": false
+        },
+        {
+          "text": "Given the Command Center, when any tab renders, then .colaberry/plan.json and .colaberry/progress.json are both committed in this repo and every tab reads its content from them at runtime rather than from hard-coded values.",
+          "passed": false
+        },
+        {
+          "text": "Given the Command Center, when any tab is shown, then .colaberry/manifest.json is committed in this repo and every tab shows how old that data is and warns when the age exceeds a week.",
+          "passed": false
+        },
+        {
+          "text": "Trust — no tab shows a number, a connection or a result the project has not actually produced.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": {
+        "state": "not_started",
+        "criteria_passed": 0,
+        "criteria_total": 5,
+        "verified_at": null,
+        "commit_sha": null,
+        "commit_url": null,
+        "commit_at": null,
+        "points_awarded": null,
+        "outstanding": [
+          "Given the Command Center, when it is opened, then every tab is reachable and every card drills down one level.",
+          "Given sample mode, when any tab is shown, then the sample data is visibly labelled as sample.",
+          "Given the Command Center, when any tab renders, then .colaberry/plan.json and .colaberry/progress.json are both committed in this repo and every tab reads its content from them at runtime rather than from hard-coded values.",
+          "Given the Command Center, when any tab is shown, then .colaberry/manifest.json is committed in this repo and every tab shows how old that data is and warns when the age exceeds a week.",
+          "Trust — no tab shows a number, a connection or a result the project has not actually produced."
+        ]
+      }
+    },
+    {
+      "id": "STORY-001",
+      "release": "r0",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given a customer selects a flight, hotel, and safari, when they proceed to checkout, then the system confirms the booking as one trip.",
+          "passed": false
+        },
+        {
+          "text": "Given a customer selects unavailable dates, when they try to book, then the system shows an error message.",
+          "passed": false
+        },
+        {
+          "text": "Trust: The system logs the booking transaction in the CRM.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": {
+        "state": "in_progress",
+        "criteria_passed": 0,
+        "criteria_total": 3,
+        "verified_at": null,
+        "commit_sha": "bf4ca67f56bd2af145271e48acad2cdd567d8a22",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/bf4ca67f56bd2af145271e48acad2cdd567d8a22",
+        "commit_at": "2026-08-18T00:20:00Z",
+        "points_awarded": null,
+        "outstanding": [
+          "Given a customer selects a flight, hotel, and safari, when they proceed to checkout, then the system confirms the booking as one trip.",
+          "Given a customer selects unavailable dates, when they try to book, then the system shows an error message.",
+          "Trust: The system logs the booking transaction in the CRM."
+        ]
+      }
+    },
+    {
+      "id": "STORY-002",
+      "release": "r0",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given a customer navigates to the African section, when they select a safari, then detailed safari information is displayed.",
+          "passed": false
+        },
+        {
+          "text": "Given a customer selects an unsupported destination, when they try to view details, then the system shows a message to contact an advisor.",
+          "passed": false
+        },
+        {
+          "text": "Trust: The system logs customer interactions with the African section.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": {
+        "state": "in_progress",
+        "criteria_passed": 0,
+        "criteria_total": 3,
+        "verified_at": null,
+        "commit_sha": "9a52f6b6042b0e10b404621dcc08a08a32962f4e",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/9a52f6b6042b0e10b404621dcc08a08a32962f4e",
+        "commit_at": "2026-08-18T00:30:12Z",
+        "points_awarded": null,
+        "outstanding": [
+          "Given a customer navigates to the African section, when they select a safari, then detailed safari information is displayed.",
+          "Given a customer selects an unsupported destination, when they try to view details, then the system shows a message to contact an advisor.",
+          "Trust: The system logs customer interactions with the African section."
+        ]
+      }
+    },
+    {
+      "id": "STORY-003",
+      "release": "r0",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given a customer makes an unclear request, when the system processes it, then it flags the request for advisor review.",
+          "passed": false
+        },
+        {
+          "text": "Given a customer provides complete information, when the system processes it, then it does not flag the request.",
+          "passed": false
+        },
+        {
+          "text": "Trust: The system logs all flagged requests for audit.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": {
+        "state": "not_started",
+        "criteria_passed": 0,
+        "criteria_total": 3,
+        "verified_at": null,
+        "commit_sha": null,
+        "commit_url": null,
+        "commit_at": null,
+        "points_awarded": null,
+        "outstanding": [
+          "Given a customer makes an unclear request, when the system processes it, then it flags the request for advisor review.",
+          "Given a customer provides complete information, when the system processes it, then it does not flag the request.",
+          "Trust: The system logs all flagged requests for audit."
+        ]
+      }
+    },
+    {
+      "id": "STORY-004",
+      "release": "r0",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given a completed transaction, when it is processed, then it should be logged in the accounting software.",
+          "passed": false
+        },
+        {
+          "text": "Given a failed transaction, when it is attempted, then it should not be logged in the accounting software.",
+          "passed": false
+        },
+        {
+          "text": "Trust: Given any transaction, when it is processed, then an audit log entry must be created.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": {
+        "state": "not_started",
+        "criteria_passed": 0,
+        "criteria_total": 3,
+        "verified_at": null,
+        "commit_sha": null,
+        "commit_url": null,
+        "commit_at": null,
+        "points_awarded": null,
+        "outstanding": [
+          "Given a completed transaction, when it is processed, then it should be logged in the accounting software.",
+          "Given a failed transaction, when it is attempted, then it should not be logged in the accounting software.",
+          "Trust: Given any transaction, when it is processed, then an audit log entry must be created."
+        ]
+      }
+    },
+    {
+      "id": "STORY-005",
+      "release": "r1",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given a customer logs in, when they enter correct credentials, then they access their portal.",
+          "passed": false
+        },
+        {
+          "text": "Given a customer enters incorrect credentials, when they try to log in, then the system denies access.",
+          "passed": false
+        },
+        {
+          "text": "Trust: The system logs all login attempts for security audit.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": {
+        "state": "not_started",
+        "criteria_passed": 0,
+        "criteria_total": 3,
+        "verified_at": null,
+        "commit_sha": null,
+        "commit_url": null,
+        "commit_at": null,
+        "points_awarded": null,
+        "outstanding": [
+          "Given a customer logs in, when they enter correct credentials, then they access their portal.",
+          "Given a customer enters incorrect credentials, when they try to log in, then the system denies access.",
+          "Trust: The system logs all login attempts for security audit."
+        ]
+      }
+    },
+    {
+      "id": "STORY-006",
+      "release": "r1",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given a user logs in, when they have admin rights, then they access admin features.",
+          "passed": false
+        },
+        {
+          "text": "Given a user logs in, when they have customer rights, then they access customer features only.",
+          "passed": false
+        },
+        {
+          "text": "Trust: The system logs all access attempts and changes in permissions.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": {
+        "state": "not_started",
+        "criteria_passed": 0,
+        "criteria_total": 3,
+        "verified_at": null,
+        "commit_sha": null,
+        "commit_url": null,
+        "commit_at": null,
+        "points_awarded": null,
+        "outstanding": [
+          "Given a user logs in, when they have admin rights, then they access admin features.",
+          "Given a user logs in, when they have customer rights, then they access customer features only.",
+          "Trust: The system logs all access attempts and changes in permissions."
+        ]
+      }
+    },
+    {
+      "id": "STORY-007",
+      "release": "r2",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given a quote is generated, when a customer views it, then it displays without internal costs.",
+          "passed": false
+        },
+        {
+          "text": "Given a quote is modified, when it is saved, then the system updates the customer view.",
+          "passed": false
+        },
+        {
+          "text": "Trust: The system logs all quote generations and modifications.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": {
+        "state": "not_started",
+        "criteria_passed": 0,
+        "criteria_total": 3,
+        "verified_at": null,
+        "commit_sha": null,
+        "commit_url": null,
+        "commit_at": null,
+        "points_awarded": null,
+        "outstanding": [
+          "Given a quote is generated, when a customer views it, then it displays without internal costs.",
+          "Given a quote is modified, when it is saved, then the system updates the customer view.",
+          "Trust: The system logs all quote generations and modifications."
+        ]
+      }
+    },
+    {
+      "id": "STORY-008",
+      "release": "r2",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given a group booking is initiated, when details are complete, then the system confirms the booking for all members.",
+          "passed": false
+        },
+        {
+          "text": "Given a group booking is incomplete, when submitted, then the system prompts for missing information.",
+          "passed": false
+        },
+        {
+          "text": "Trust: The system logs all group booking transactions.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": {
+        "state": "not_started",
+        "criteria_passed": 0,
+        "criteria_total": 3,
+        "verified_at": null,
+        "commit_sha": null,
+        "commit_url": null,
+        "commit_at": null,
+        "points_awarded": null,
+        "outstanding": [
+          "Given a group booking is initiated, when details are complete, then the system confirms the booking for all members.",
+          "Given a group booking is incomplete, when submitted, then the system prompts for missing information.",
+          "Trust: The system logs all group booking transactions."
+        ]
+      }
+    },
+    {
+      "id": "STORY-009",
+      "release": "r3",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given a customer provides preferences, when AI processes them, then it suggests relevant trips.",
+          "passed": false
+        },
+        {
+          "text": "Given a customer provides no preferences, when AI processes, then it suggests popular trips.",
+          "passed": false
+        },
+        {
+          "text": "Trust: The system logs all AI suggestions for review.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": {
+        "state": "not_started",
+        "criteria_passed": 0,
+        "criteria_total": 3,
+        "verified_at": null,
+        "commit_sha": null,
+        "commit_url": null,
+        "commit_at": null,
+        "points_awarded": null,
+        "outstanding": [
+          "Given a customer provides preferences, when AI processes them, then it suggests relevant trips.",
+          "Given a customer provides no preferences, when AI processes, then it suggests popular trips.",
+          "Trust: The system logs all AI suggestions for review."
+        ]
+      }
+    },
+    {
+      "id": "STORY-010",
+      "release": "r3",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given a supplier is added, when details are saved, then it appears in the supplier list.",
+          "passed": false
+        },
+        {
+          "text": "Given a supplier is updated, when changes are saved, then the system reflects the updates.",
+          "passed": false
+        },
+        {
+          "text": "Trust: The system logs all supplier data changes.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": {
+        "state": "not_started",
+        "criteria_passed": 0,
+        "criteria_total": 3,
+        "verified_at": null,
+        "commit_sha": null,
+        "commit_url": null,
+        "commit_at": null,
+        "points_awarded": null,
+        "outstanding": [
+          "Given a supplier is added, when details are saved, then it appears in the supplier list.",
+          "Given a supplier is updated, when changes are saved, then the system reflects the updates.",
+          "Trust: The system logs all supplier data changes."
+        ]
+      }
+    },
+    {
+      "id": "STORY-011",
+      "release": "r4",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given a payment is made, when processed, then the system updates the balance.",
+          "passed": false
+        },
+        {
+          "text": "Given a payment fails, when retried, then the system processes it again or shows an error.",
+          "passed": false
+        },
+        {
+          "text": "Trust: The system logs all payment transactions.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": {
+        "state": "not_started",
+        "criteria_passed": 0,
+        "criteria_total": 3,
+        "verified_at": null,
+        "commit_sha": null,
+        "commit_url": null,
+        "commit_at": null,
+        "points_awarded": null,
+        "outstanding": [
+          "Given a payment is made, when processed, then the system updates the balance.",
+          "Given a payment fails, when retried, then the system processes it again or shows an error.",
+          "Trust: The system logs all payment transactions."
+        ]
+      }
+    },
+    {
+      "id": "STORY-012",
+      "release": "r4",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given data is available, when analytics are generated, then they display revenue and booking trends.",
+          "passed": false
+        },
+        {
+          "text": "Given data is incomplete, when analytics are generated, then the system highlights missing data.",
+          "passed": false
+        },
+        {
+          "text": "Trust: The system logs all analytics generation activities.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": {
+        "state": "not_started",
+        "criteria_passed": 0,
+        "criteria_total": 3,
+        "verified_at": null,
+        "commit_sha": null,
+        "commit_url": null,
+        "commit_at": null,
+        "points_awarded": null,
+        "outstanding": [
+          "Given data is available, when analytics are generated, then they display revenue and booking trends.",
+          "Given data is incomplete, when analytics are generated, then the system highlights missing data.",
+          "Trust: The system logs all analytics generation activities."
+        ]
+      }
+    },
+    {
+      "id": "STORY-013",
+      "release": "r2",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given a new trip request, when a travel advisor creates a proposal, then it should be completed within 30 minutes.",
+          "passed": false
+        },
+        {
+          "text": "Given a trip proposal, when it exceeds 30 minutes, then the advisor should be notified of the delay.",
+          "passed": false
+        },
+        {
+          "text": "Trust: Given any trip proposal, when it is created, then an audit log entry must be created.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": {
+        "state": "not_started",
+        "criteria_passed": 0,
+        "criteria_total": 3,
+        "verified_at": null,
+        "commit_sha": null,
+        "commit_url": null,
+        "commit_at": null,
+        "points_awarded": null,
+        "outstanding": [
+          "Given a new trip request, when a travel advisor creates a proposal, then it should be completed within 30 minutes.",
+          "Given a trip proposal, when it exceeds 30 minutes, then the advisor should be notified of the delay.",
+          "Trust: Given any trip proposal, when it is created, then an audit log entry must be created."
+        ]
+      }
+    },
+    {
+      "id": "STORY-014",
+      "release": "r1",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given a new lead, when it is added to the CRM, then it should be visible in the lead list.",
+          "passed": false
+        },
+        {
+          "text": "Given a customer booking, when it is completed, then it should update the customer's booking history.",
+          "passed": false
+        },
+        {
+          "text": "Trust: Given any CRM entry, when it is modified, then an audit log entry must be created.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": {
+        "state": "not_started",
+        "criteria_passed": 0,
+        "criteria_total": 3,
+        "verified_at": null,
+        "commit_sha": null,
+        "commit_url": null,
+        "commit_at": null,
+        "points_awarded": null,
+        "outstanding": [
+          "Given a new lead, when it is added to the CRM, then it should be visible in the lead list.",
+          "Given a customer booking, when it is completed, then it should update the customer's booking history.",
+          "Trust: Given any CRM entry, when it is modified, then an audit log entry must be created."
+        ]
+      }
+    },
+    {
+      "id": "STORY-015",
+      "release": "r2",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given a new safari product, when it is created, then it should include itineraries and pricing.",
+          "passed": false
+        },
+        {
+          "text": "Given an existing safari product, when its itinerary is updated, then the changes should be reflected immediately.",
+          "passed": false
+        },
+        {
+          "text": "Trust: Given any safari product, when it is created or updated, then an audit log entry must be created.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": {
+        "state": "not_started",
+        "criteria_passed": 0,
+        "criteria_total": 3,
+        "verified_at": null,
+        "commit_sha": null,
+        "commit_url": null,
+        "commit_at": null,
+        "points_awarded": null,
+        "outstanding": [
+          "Given a new safari product, when it is created, then it should include itineraries and pricing.",
+          "Given an existing safari product, when its itinerary is updated, then the changes should be reflected immediately.",
+          "Trust: Given any safari product, when it is created or updated, then an audit log entry must be created."
+        ]
+      }
+    },
+    {
+      "id": "STORY-016",
+      "release": "r3",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given an increase in user load, when multiple advisors access the system, then it should maintain performance.",
+          "passed": false
+        },
+        {
+          "text": "Given a surge in customer activity, when thousands of customers interact with the system, then it should not crash.",
+          "passed": false
+        },
+        {
+          "text": "Trust: Given any system load, when it scales, then performance metrics must be logged.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": {
+        "state": "not_started",
+        "criteria_passed": 0,
+        "criteria_total": 3,
+        "verified_at": null,
+        "commit_sha": null,
+        "commit_url": null,
+        "commit_at": null,
+        "points_awarded": null,
+        "outstanding": [
+          "Given an increase in user load, when multiple advisors access the system, then it should maintain performance.",
+          "Given a surge in customer activity, when thousands of customers interact with the system, then it should not crash.",
+          "Trust: Given any system load, when it scales, then performance metrics must be logged."
+        ]
+      }
+    }
+  ]
+}
