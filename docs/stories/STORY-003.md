@@ -27,8 +27,8 @@ the same criteria out of `.colaberry/progress.json`, which Claude Code keeps in
 step (see the managed block in CLAUDE.md). Ticking something you have not
 actually met only misleads you.
 
-- [ ] Given a customer makes an unclear request, when the system processes it, then it flags the request for advisor review.
-- [ ] Given a customer provides complete information, when the system processes it, then it does not flag the request.
-- [ ] Trust: The system logs all flagged requests for audit.
+- [x] Given a customer makes an unclear request, when the system processes it, then it flags the request for advisor review.
+- [x] Given a customer provides complete information, when the system processes it, then it does not flag the request.
+- [x] Trust: The system logs all flagged requests for audit.
 
 When every box above is ticked, stop and show the demo.

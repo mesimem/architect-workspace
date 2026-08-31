@@ -150,21 +150,32 @@
       "criteria": [
         {
           "text": "Given a customer makes an unclear request, when the system processes it, then it flags the request for advisor review.",
-          "passed": false
+          "passed": true
         },
         {
           "text": "Given a customer provides complete information, when the system processes it, then it does not flag the request.",
-          "passed": false
+          "passed": true
         },
         {
           "text": "Trust: The system logs all flagged requests for audit.",
-          "passed": false
+          "passed": true
         }
       ],
-      "files_touched": [],
-      "tests_added": [],
-      "notes": null,
-      "updated_at": null,
+      "files_touched": [
+        "backend/src/services/advisor/requestTriageService.js",
+        "backend/src/services/advisor/requestTriageService.test.js",
+        "backend/src/services/advisor/advisorReviewQueue.js",
+        "backend/src/services/advisor/advisorNotifier.js",
+        "backend/src/services/advisor/advisorNotifier.test.js",
+        "backend/src/services/shared/callWithRetry.js",
+        "backend/src/services/africa/catalogRead.js"
+      ],
+      "tests_added": [
+        "backend/src/services/advisor/requestTriageService.test.js (11 groups: complete request not flagged, unclear request flagged, flag written to the audit queue, all 8 clarity rules firing individually, party-size boundaries 1 and 12 accepted, replay does not double-queue, 8 unusable inputs refused and never reported clear, audit rows are copies, queue rejects an unusable requestId, a rule that throws flags instead of passing, a failed audit write reported as flag_not_recorded with no advisor paged)",
+        "backend/src/services/advisor/advisorNotifier.test.js (7 groups: flagging notifies an advisor, replay does not page twice, notification timeout does not lose the flag, a throwing notifier is not retried and the flag survives, a failed notification can be retried later and succeed, a clear request pages nobody, an unusable review is refused)"
+      ],
+      "notes": "All three criteria pass against executed tests. Triage is DETERMINISTIC by design - no model is consulted, because CLAUDE.md's core principle is that probabilistic components do not decide production outcomes and a safety requirement is the last place to put a coin flip. Governing bias is when-in-doubt-flag: unusable input returns invalid_request (deliberately NOT clear), and a clarity rule that throws counts as fired rather than passed, so a broken rule can never be the reason an unclear request slips through. All three named failure paths are covered: unclear-request-not-flagged (fail-safe defaults plus a test that makes a rule throw), flagged-request-not-logged (a failed audit write returns flag_not_recorded, pages nobody, and puts the reasons in the error log so the decision still leaves a trace), and advisor-notification-failure (the review row is written BEFORE any notification is attempted, so a failed page marks the row and never loses the flag; a failed page is not recorded as delivered, so a later retry can still reach the advisor). Honest limits: nothing sends a real message - the default notifier writes to an in-memory outbox, since a real channel needs credentials this repo does not hold and CLAUDE.md forbids test sends; there is no HTTP entry point, so the auth and role-based-permission guardrail is not exercised here; the review queue is in-memory and does not survive a restart; and the triage rules judge whether a request is WELL-FORMED, not whether it is sensible - a plausible but wrong destination reads as clear.",
+      "updated_at": "2026-08-31T22:10:00Z",
       "verification": {
         "state": "in_progress",
         "criteria_passed": 0,
