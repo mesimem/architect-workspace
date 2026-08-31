@@ -105,21 +105,32 @@
       "criteria": [
         {
           "text": "Given a customer navigates to the African section, when they select a safari, then detailed safari information is displayed.",
-          "passed": false
+          "passed": true
         },
         {
           "text": "Given a customer selects an unsupported destination, when they try to view details, then the system shows a message to contact an advisor.",
-          "passed": false
+          "passed": true
         },
         {
           "text": "Trust: The system logs customer interactions with the African section.",
-          "passed": false
+          "passed": true
         }
       ],
-      "files_touched": [],
-      "tests_added": [],
-      "notes": null,
-      "updated_at": null,
+      "files_touched": [
+        "backend/src/services/africa/africanSectionService.js",
+        "backend/src/services/africa/africanSectionService.test.js",
+        "backend/src/services/africa/safariDetailsService.js",
+        "backend/src/services/africa/safariDetailsService.test.js",
+        "backend/src/services/africa/catalogSource.js",
+        "backend/src/services/africa/catalogRead.js",
+        "backend/src/services/africa/interactionLog.js"
+      ],
+      "tests_added": [
+        "backend/src/services/africa/safariDetailsService.test.js (9 assertions: happy path, unsupported destination, logging idempotency, missing safari details, system timeout capped at 2 attempts, timeout-then-retry recovery, throwing source not retried, invalid interaction key refused before any read, logInteraction rejects a bad key)",
+        "backend/src/services/africa/africanSectionService.test.js (10 assertions: browse the section, incomplete destination flagged not hidden, list flag agrees with the detail view, returned rows are copies, logging idempotency, empty-catalog boundary, system timeout, throwing source not retried, non-array source rejected as a contract violation, invalid interaction key refused)"
+      ],
+      "notes": "All three criteria pass against executed tests, not inspection. Both suites exit 0. Failure paths from the story brief are all covered: unsupported destination, missing safari details, and system timeout (the last one was deferred by the original commit 9a52f6b and is closed here by putting the catalog behind an async source read through an explicit timeout with capped retries). Honest limits: there is no HTTP entry point yet, so the services are called directly rather than over a route, which means the auth and role-based-permission guardrail is not exercised here; and the catalog and interaction log are in-memory, so the audit trail does not survive a process restart. Both are inherited from the STORY-001 walking skeleton, not introduced by this story.",
+      "updated_at": "2026-08-31T21:52:00Z",
       "verification": {
         "state": "in_progress",
         "criteria_passed": 0,

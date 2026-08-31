@@ -27,8 +27,8 @@ the same criteria out of `.colaberry/progress.json`, which Claude Code keeps in
 step (see the managed block in CLAUDE.md). Ticking something you have not
 actually met only misleads you.
 
-- [ ] Given a customer navigates to the African section, when they select a safari, then detailed safari information is displayed.
-- [ ] Given a customer selects an unsupported destination, when they try to view details, then the system shows a message to contact an advisor.
-- [ ] Trust: The system logs customer interactions with the African section.
+- [x] Given a customer navigates to the African section, when they select a safari, then detailed safari information is displayed.
+- [x] Given a customer selects an unsupported destination, when they try to view details, then the system shows a message to contact an advisor.
+- [x] Trust: The system logs customer interactions with the African section.
 
 When every box above is ticked, stop and show the demo.
