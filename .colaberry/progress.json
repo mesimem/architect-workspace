@@ -3,13 +3,13 @@
   "project": "U.S.-based Full-Service Travel Agency Platform",
   "totals": {
     "stories_total": 17,
-    "stories_verified": 1,
+    "stories_verified": 2,
     "stories_submitted": 0,
-    "stories_in_progress": 16,
+    "stories_in_progress": 15,
     "stories_not_started": 0,
     "criteria_total": 53,
-    "criteria_passed": 3,
-    "points_awarded": 47
+    "criteria_passed": 6,
+    "points_awarded": 94
   },
   "stories": [
     {
@@ -193,19 +193,15 @@
       "notes": "All three criteria pass against executed tests. Triage is DETERMINISTIC by design - no model is consulted, because CLAUDE.md's core principle is that probabilistic components do not decide production outcomes and a safety requirement is the last place to put a coin flip. Governing bias is when-in-doubt-flag: unusable input returns invalid_request (deliberately NOT clear), and a clarity rule that throws counts as fired rather than passed, so a broken rule can never be the reason an unclear request slips through. All three named failure paths are covered: unclear-request-not-flagged (fail-safe defaults plus a test that makes a rule throw), flagged-request-not-logged (a failed audit write returns flag_not_recorded, pages nobody, and puts the reasons in the error log so the decision still leaves a trace), and advisor-notification-failure (the review row is written BEFORE any notification is attempted, so a failed page marks the row and never loses the flag; a failed page is not recorded as delivered, so a later retry can still reach the advisor). FOLLOW-UP WORK, done in the same session after the three criteria passed, closing the gaps this entry originally declared: (1) triage now validates the destination against the real catalog, so a well-formed request naming somewhere we do not sell is flagged instead of reading as clear - the 'plausible but wrong' hole is closed, and an unreadable catalog also flags rather than passing; (2) the advisor queue is now fed by the real customer journeys through advisorRouting.js - an unsupported destination, an unfinished catalog record and an unavailable booking leg all reach an advisor, while declined payments, invalid customer details and infrastructure failures deliberately do NOT, because a queue full of tasks no human can action is a queue advisors stop reading; (3) all three audit stores are durable via shared/jsonFileStore.js (atomic temp-then-rename write, opt-in through COLABERRY_DATA_DIR, corrupt file is fatal rather than silently empty), proven across real process restarts; and (4) there is now an HTTP boundary (backend/src/http, node:http only, no dependency added) with bearer-token authentication, role-based permissions, ownership checks, and input validation that rejects malformed bodies before they reach business logic. Remaining honest limits: nothing sends a real message - the default notifier writes to an in-memory outbox, since a real channel needs credentials this repo does not hold and CLAUDE.md forbids test sends; the file store rewrites the whole file per write and has no locking, so it is a bridge to Postgres and not a replacement; the auth layer is a token table from the environment, NOT the real authentication REQ-008 / STORY-006 owns, and that story's criteria are deliberately left unticked; and the triage rules still judge whether a request is well-formed and sold-by-us, not whether it is wise.",
       "updated_at": "2026-08-31T22:35:00Z",
       "verification": {
-        "state": "in_progress",
-        "criteria_passed": 0,
+        "state": "verified",
+        "criteria_passed": 3,
         "criteria_total": 3,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
-        "outstanding": [
-          "Given a customer makes an unclear request, when the system processes it, then it flags the request for advisor review.",
-          "Given a customer provides complete information, when the system processes it, then it does not flag the request.",
-          "Trust: The system logs all flagged requests for audit."
-        ]
+        "verified_at": "2026-08-31T22:12:10.399Z",
+        "commit_sha": "fef1916ebb788c4aaf1c5d5a464c4c9e58e6ee32",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/fef1916ebb788c4aaf1c5d5a464c4c9e58e6ee32",
+        "commit_at": "2026-08-31T22:11:08Z",
+        "points_awarded": 47,
+        "outstanding": []
       }
     },
     {
