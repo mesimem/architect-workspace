@@ -238,10 +238,10 @@
       "notes": "Two stores, deliberately: the audit log records every transaction (criterion 3), the accounting client receives only completed ones (criteria 1 and 2). The audit entry is written BEFORE the accounting call and does not depend on it, so a transaction stays on record when the API is down. NOTHING MAKES A REAL HTTP CALL - the default transport is an in-memory ledger behind an injected post argument, same pattern as advisorNotifier.js, because no accounting vendor or credential exists for this repo. Booking now carries a price (AVAILABILITY Sets became Maps with priceCents; FL-100 + HT-200 + SF-300 = 4490.00 USD), agreed with the user rather than inventing a placeholder amount. Known limits: single currency, no refund/reversal path, single-process dedup (needs a Postgres unique constraint), and mcp/booking-desk/booking.py has not been ported and is now behind on pricing.",
       "updated_at": "2026-08-31T22:55:15.733Z",
       "verification": {
-        "state": "complete",
+        "state": "submitted",
         "criteria_passed": 3,
         "criteria_total": 3,
-        "verified_at": "2026-08-31T22:55:15.733Z",
+        "verified_at": null,
         "commit_sha": null,
         "commit_url": null,
         "commit_at": null,
