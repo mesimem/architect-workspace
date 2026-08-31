@@ -17,10 +17,16 @@
 // available - it looks healthy and is quietly wrong. Bounds mirror that module
 // and bookTripService.js so all three agree.
 
+const { createJsonFileStore } = require("../shared/jsonFileStore");
+
 const MIN_ID_LENGTH = 8;
 const MAX_ID_LENGTH = 128;
 
-const REVIEWS = new Map();
+// Durable when COLABERRY_DATA_DIR is set, in-memory otherwise. Same Map-shaped
+// API either way, so nothing below had to change when this stopped being a
+// `new Map()`. An advisor's queue surviving a restart is the difference
+// between an audit trail and a rumour.
+const REVIEWS = createJsonFileStore("advisor-reviews");
 
 class InvalidRequestIdError extends Error {
   constructor(requestId) {
@@ -89,6 +95,9 @@ function recordNotification(requestId, notificationStatus, detail) {
   entry.notificationStatus = notificationStatus;
   entry.notificationDetail = detail || null;
   entry.notificationUpdatedAt = new Date().toISOString();
+  // Mutated in place, so the store has to be told; without this the row would
+  // be correct in memory and stale on disk.
+  REVIEWS.flush();
   return findReview(requestId);
 }
 

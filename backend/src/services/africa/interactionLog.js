@@ -18,10 +18,13 @@
 // so the services check the key BEFORE doing any work. The throw here is the
 // last line of defence, for a caller that skipped that check.
 
+const { createJsonFileStore } = require("../shared/jsonFileStore");
+
 const MIN_KEY_LENGTH = 8;
 const MAX_KEY_LENGTH = 128;
 
-const INTERACTIONS = new Map();
+// Durable when COLABERRY_DATA_DIR is set, in-memory otherwise (STORY-003).
+const INTERACTIONS = createJsonFileStore("africa-interactions");
 
 class InvalidInteractionKeyError extends Error {
   constructor(interactionKey) {

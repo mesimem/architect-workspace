@@ -251,6 +251,60 @@ async function main() {
   assert.strictEqual(findReview("REQ-STORE-BROKEN"), undefined);
 
   console.log("requestTriage: a failed audit write is reported, not passed off as success");
+
+  // A request can be perfectly well-formed and still be one we cannot serve.
+  // Before the catalog check this read as `clear`, which is the "plausible but
+  // wrong" hole: every field present, destination nobody sells.
+  const narnia = await triageRequest(
+    completeRequest({ requestId: "REQ-DEST-UNKNOWN", destination: "Narnia" })
+  );
+  assert.strictEqual(narnia.status, "flagged");
+  assert.ok(narnia.reasons.includes("unsupported_destination"));
+
+  console.log("requestTriage: a destination we do not sell is flagged, not passed as clear");
+
+  // The catalog is matched on id, name OR country, so a customer does not have
+  // to know our internal identifiers to be understood.
+  const byId = await triageRequest(
+    completeRequest({ requestId: "REQ-DEST-BYID001", destination: "SF-300" })
+  );
+  const byName = await triageRequest(
+    completeRequest({ requestId: "REQ-DEST-BYNAME1", destination: "serengeti migration safari" })
+  );
+  assert.strictEqual(byId.status, "clear");
+  assert.strictEqual(byName.status, "clear"); // case-insensitive
+
+  console.log("requestTriage: destination matches on id, name or country");
+
+  // When the catalog cannot be read we do not know whether we sell the place.
+  // "We do not know" is the definition of a request that needs a human, so it
+  // flags rather than passing.
+  const unverified = await triageRequest(
+    completeRequest({ requestId: "REQ-DEST-NOCHECK" }),
+    {
+      destinationSource: function () {
+        return new Promise(function () {}); // catalog hangs
+      },
+      timeoutMs: 20,
+      maxAttempts: 2,
+    }
+  );
+  assert.strictEqual(unverified.status, "flagged");
+  assert.ok(unverified.reasons.includes("destination_unverified"));
+
+  const brokenCatalog = await triageRequest(
+    completeRequest({ requestId: "REQ-DEST-BROKEN1" }),
+    {
+      destinationSource: function () {
+        return Promise.reject(new Error("catalog connection refused"));
+      },
+      timeoutMs: 20,
+    }
+  );
+  assert.strictEqual(brokenCatalog.status, "flagged");
+  assert.ok(brokenCatalog.reasons.includes("destination_unverified"));
+
+  console.log("requestTriage: an unreadable catalog flags rather than passing the request");
 }
 
 main().catch(function (error) {

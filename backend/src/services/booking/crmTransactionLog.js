@@ -2,7 +2,12 @@
 // CRM integration exists. Idempotent by tripId: logging the same trip twice
 // must not create a duplicate entry.
 
-const TRANSACTIONS = new Map();
+const { createJsonFileStore } = require("../shared/jsonFileStore");
+
+// Durable when COLABERRY_DATA_DIR is set, in-memory otherwise (STORY-003).
+// A CRM transaction log that forgets every booking on restart is the clearest
+// case of the audit guardrail going unmet.
+const TRANSACTIONS = createJsonFileStore("crm-transactions");
 
 function logTransaction(record) {
   if (TRANSACTIONS.has(record.tripId)) {

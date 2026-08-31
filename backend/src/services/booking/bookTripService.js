@@ -38,6 +38,11 @@
 
 const { logTransaction } = require("./crmTransactionLog");
 const { processPayment } = require("./paymentService");
+// STORY-003: an unavailable selection is handed to a travel advisor, who can
+// find the alternative the customer cannot. Declined payments and invalid
+// customer details are deliberately NOT routed - see the inclusion test in
+// advisorRouting.js.
+const { routeOutcomeToAdvisor } = require("../advisor/advisorRouting");
 
 const AVAILABILITY = {
   flights: new Set(["FL-100"]),
@@ -69,7 +74,10 @@ function isUsableKey(idempotencyKey) {
   );
 }
 
-function bookTrip({ customerId, flightId, hotelId, safariId, idempotencyKey }) {
+// ASYNC as of STORY-003: an unavailable selection is now handed to a travel
+// advisor, and notifying one is an external call. Everything before that point
+// is still synchronous logic; the await is only on the routing hop.
+async function bookTrip({ customerId, flightId, hotelId, safariId, idempotencyKey }) {
   if (!isUsableKey(idempotencyKey)) {
     return {
       status: "invalid_idempotency_key",
@@ -116,10 +124,22 @@ function bookTrip({ customerId, flightId, hotelId, safariId, idempotencyKey }) {
     !AVAILABILITY.safaris.has(safariId);
 
   if (unavailable) {
+    // STORY-003: this is the one booking outcome a human can actually change -
+    // a full-service agency finds the other lodge when the first is full. The
+    // review is keyed on the idempotencyKey, so a retried booking attempt
+    // produces one advisor task, not one per retry.
+    const advisor = await routeOutcomeToAdvisor({
+      source: "booking",
+      outcome: "unavailable",
+      requestId: idempotencyKey,
+      customerId: customerId,
+      context: { flightId: flightId, hotelId: hotelId, safariId: safariId },
+    });
     return {
       status: "unavailable",
       message: "One or more selections are not available.",
       replayed: false,
+      advisor: advisor,
     };
   }
 

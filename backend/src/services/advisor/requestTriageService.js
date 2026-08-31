@@ -36,6 +36,13 @@
 
 const { queueForReview, isValidRequestId } = require("./advisorReviewQueue");
 const { notifyAdvisor, defaultAdvisorNotifier } = require("./advisorNotifier");
+// Read-only use of the catalog's raw list source, deliberately NOT
+// africanSectionService.listAfricanDestinations(): that function logs a
+// customer interaction with the African section, and triaging a request is
+// not the customer browsing it. Borrowing it would put fictional rows in an
+// audit log.
+const { defaultCatalogListSource } = require("../africa/catalogSource");
+const { callWithRetry, classifyFailure } = require("../shared/callWithRetry");
 
 const MIN_PARTY_SIZE = 1;
 // 12 is not invented here - it is the party-size ceiling mcp/trip-quotes
@@ -170,6 +177,64 @@ const RULES = [
   },
 ];
 
+// Is this somewhere we actually sell? Exact, case-insensitive match against a
+// catalog row's id, name or country.
+//
+// WHY EXACT AND NOT FUZZY: a substring match would let "a" match everything,
+// and a clever similarity score would reintroduce exactly the guessing this
+// service exists to avoid. A customer who writes "Tanzania" matches the
+// country; one who writes "Africa" does not, and being asked which country is
+// a reasonable thing for an advisor to do.
+function matchesCatalogRow(row, needle) {
+  return [row.destinationId, row.name, row.country]
+    .filter(isNonEmptyString)
+    .some(function (field) {
+      return field.trim().toLowerCase() === needle;
+    });
+}
+
+// The rule that closes the "well-formed but not sensible" hole: before this,
+// a request naming a destination we do not sell read as `clear`, because every
+// structured field was present. Async because it reads the catalog, so it is
+// separate from the synchronous rule list above.
+//
+// Both failure modes flag rather than pass. If the catalog cannot be reached
+// we do not know whether we sell the place, and "we do not know" is the
+// definition of a request that needs a human.
+async function checkDestination(request, source, timeoutMs, maxAttempts) {
+  if (!isNonEmptyString(request.destination)) {
+    return []; // already covered by missing_required_details; do not say it twice
+  }
+
+  const read = await callWithRetry(source, undefined, timeoutMs, maxAttempts);
+
+  if (!read.ok) {
+    const failure = classifyFailure(read);
+    logTriageEvent("error", "destination_check_failed", {
+      requestId: request.requestId,
+      error_class: failure.errorClass,
+      attempts: read.attempts,
+    });
+    return ["destination_unverified"];
+  }
+
+  if (!Array.isArray(read.value)) {
+    logTriageEvent("error", "destination_check_failed", {
+      requestId: request.requestId,
+      error_class: "ContractViolation",
+      attempts: read.attempts,
+    });
+    return ["destination_unverified"];
+  }
+
+  const needle = request.destination.trim().toLowerCase();
+  const known = read.value.some(function (row) {
+    return row && matchesCatalogRow(row, needle);
+  });
+
+  return known ? [] : ["unsupported_destination"];
+}
+
 // Runs every rule. A rule that throws counts as FIRED, not as passed - a
 // broken rule must never be the reason a request slips through unflagged.
 function collectReasons(request) {
@@ -200,6 +265,7 @@ async function triageRequest(request, {
   timeoutMs,
   maxAttempts,
   queue = queueForReview,
+  destinationSource = defaultCatalogListSource,
 } = {}) {
   // A request we cannot identify cannot be audited, and an audit row is the
   // whole point of flagging. Refuse loudly rather than inventing an id -
@@ -216,7 +282,12 @@ async function triageRequest(request, {
     };
   }
 
-  const reasons = collectReasons(request);
+  // Synchronous rules first, then the catalog check. Reasons keep a stable
+  // order - shape problems, then "we do not sell that" - so an advisor reading
+  // two flags side by side sees them in the same sequence every time.
+  const reasons = collectReasons(request).concat(
+    await checkDestination(request, destinationSource, timeoutMs, maxAttempts)
+  );
 
   if (reasons.length === 0) {
     logTriageEvent("info", "request_triaged_clear", { requestId: request.requestId });

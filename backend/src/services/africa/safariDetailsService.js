@@ -25,6 +25,11 @@
 //     harmless today because the source is read-only.
 
 const { logInteraction, isValidInteractionKey } = require("./interactionLog");
+// STORY-003: an outcome a human advisor could actually change is handed to
+// them, instead of the customer being told "contact an advisor" and nothing
+// existing on the advisor's side. Only `unsupported` and `incomplete` route;
+// see the inclusion test in advisorRouting.js.
+const { routeOutcomeToAdvisor } = require("../advisor/advisorRouting");
 const { SAFARI_CATALOG, isCompleteRecord, defaultCatalogSource } = require("./catalogSource");
 const {
   CatalogTimeoutError,
@@ -44,6 +49,20 @@ const ADVISOR_MESSAGE = Object.assign(
   },
   READ_FAILURE_MESSAGE
 );
+
+// The review is keyed on the same interactionKey the audit log uses, so one
+// customer interaction produces at most one advisor review no matter how many
+// times a retry replays it. Never throws: routing is something we do FOR the
+// customer's answer, not a precondition of it.
+function routeToAdvisor(outcome, customerId, destinationId, interactionKey) {
+  return routeOutcomeToAdvisor({
+    source: "safari-details",
+    outcome: outcome,
+    requestId: interactionKey,
+    customerId: customerId,
+    context: { destinationId: destinationId },
+  });
+}
 
 async function getSafariDetails({
   customerId,
@@ -90,7 +109,8 @@ async function getSafariDetails({
       destinationId,
       outcome: "unsupported",
     });
-    return { status: "unsupported", message: ADVISOR_MESSAGE.unsupported };
+    const advisor = await routeToAdvisor("unsupported", customerId, destinationId, interactionKey);
+    return { status: "unsupported", message: ADVISOR_MESSAGE.unsupported, advisor: advisor };
   }
 
   if (!isCompleteRecord(details)) {
@@ -99,7 +119,8 @@ async function getSafariDetails({
       destinationId,
       outcome: "incomplete",
     });
-    return { status: "incomplete", message: ADVISOR_MESSAGE.incomplete };
+    const advisor = await routeToAdvisor("incomplete", customerId, destinationId, interactionKey);
+    return { status: "incomplete", message: ADVISOR_MESSAGE.incomplete, advisor: advisor };
   }
 
   logInteraction(interactionKey, {
