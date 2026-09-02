@@ -36,17 +36,29 @@ import inspect
 from collections.abc import Callable
 from typing import Any
 
+from mcp.server.mcpserver.utilities.context_injection import find_context_parameter
 from mcp.shared.exceptions import MCPError
 from mcp.types import INVALID_PARAMS
 
 
 def declared_arguments(func: Callable[..., Any]) -> set[str]:
-    """The argument names a tool function accepts, from its signature."""
+    """The argument names a tool function accepts FROM A CLIENT, from its signature.
+
+    The `Context` parameter is excluded. It is injected by the SDK, never sent
+    over the wire, and is absent from the published input schema -- so treating
+    it as an accepted argument would reopen this module's whole reason for
+    existing for that one name (a client could smuggle `ctx` past the check)
+    and would advertise it in the rejection message below. Detected with the
+    SDK's own `find_context_parameter` rather than by matching on the name, so
+    renaming the parameter cannot silently reintroduce the hole.
+    """
+    context_param = find_context_parameter(func)
     return {
         name
         for name, param in inspect.signature(func).parameters.items()
         if param.kind
         not in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)
+        and name != context_param
     }
 
 
