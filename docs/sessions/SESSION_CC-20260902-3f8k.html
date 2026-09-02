@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session CC-20260902-3f8k — Change Report</title>
+<style>
+  :root {
+    --cherry: #FB2832;
+    --berry: #367895;
+    --leaf: #5BA63C;
+    --ink: #16202a;
+    --muted: #5c6b7a;
+    --rule: #dfe5ea;
+    --surface: #ffffff;
+    --canvas: #f4f6f8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: Roboto, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    line-height: 1.6;
+  }
+  code {
+    font-family: "Roboto Mono", ui-monospace, Consolas, "Courier New", monospace;
+    font-size: 0.9em;
+    background: #eef2f5;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.05em 0.35em;
+    word-break: break-word;
+  }
+  header.masthead {
+    background: var(--surface);
+    border-bottom: 3px solid var(--cherry);
+    padding: 2rem 1.5rem 1.5rem;
+  }
+  .wrap { max-width: 60rem; margin: 0 auto; }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--berry);
+    margin: 0 0 0.35rem;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 0.5rem; font-weight: 700; letter-spacing: -0.01em; }
+  .meta { color: var(--muted); font-size: 0.88rem; margin: 0; }
+  main { padding: 1.75rem 1.5rem 3rem; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--berry);
+    border-radius: 4px;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1.1rem;
+  }
+  .card-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    padding-bottom: 0.7rem;
+    margin-bottom: 0.9rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .card-index {
+    font-family: "Roboto Mono", ui-monospace, Consolas, monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    flex: none;
+  }
+  .card-head h2 { font-size: 1.06rem; margin: 0; font-weight: 600; flex: 1 1 auto; }
+  .badge {
+    flex: none;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .badge-done { background: #eaf5e4; color: #3d7327; border: 1px solid var(--leaf); }
+  .badge-open { background: #fdf1e3; color: #8a5810; border: 1px solid #E8920C; }
+  .field { display: grid; grid-template-columns: 9.5rem 1fr; gap: 1rem; padding: 0.4rem 0; }
+  .field + .field { border-top: 1px dotted var(--rule); }
+  .field-label {
+    font-size: 0.73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    padding-top: 0.2rem;
+  }
+  .field-value { font-size: 0.93rem; overflow-wrap: anywhere; }
+  footer { color: var(--muted); font-size: 0.8rem; padding: 0 1.5rem 2.5rem; }
+  @media (max-width: 40rem) {
+    .field { grid-template-columns: 1fr; gap: 0.15rem; }
+  }
+  @media print {
+    body { background: #fff; }
+    .card { break-inside: avoid; border-left-color: #999; }
+  }
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Claude Code session report</p>
+    <h1>Session CC-20260902-3f8k</h1>
+    <p class="meta">2 changes logged &middot; generated 2026-09-02T15:50:48.689Z</p>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">01</span>
+    <h2>mcp/destination-catalog: progress notifications on search_destinations</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-09-02</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value"><code>search_destinations</code> now emits <code>notifications/progress</code> while it scores the catalog. It reads the client's token from <code>ctx.request_context.meta[&quot;progress_token&quot;]</code> and, only when one is present, sends one notification per catalog entry with a running count, a real total of <code>len(CATALOG)</code> (9), and a message naming the entry being scored. The tool became <code>async def</code> because <code>report_progress</code> is a coroutine; <code>ctx: Context | None = None</code> is SDK-injected and stays out of the published input schema.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value">input schema, output schema and return value byte-compared before and after the change - all three IDENTICAL (same 3 rows, SF-300/SF-302/SF-301). Driven by a real stdio client with a <code>progress_callback</code>: 9 notifications, 1/9 through 9/9, each naming its own entry; with no token, 0 notifications and a result identical to the baseline. Regression through the Inspector's own spawn path: <code>isError: false</code>, same 3 rows. Verification harness was scratch under <code>tmp/</code> and is deliberately not committed (CLAUDE.md defines /tmp as never committed), so the evidence is reproducible in principle but the scripts are disposable.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">no artificial delay was added, so all 9 notifications land sub-millisecond and the Inspector's progress toast jumps straight to 9/9 rather than climbing. That is the honest behaviour of a 9-entry in-memory scan; padding it would have made the demo look better and lie about the workload. One diagnostic worth recording: a raw piped-stdin probe reported <code>Connection closed</code> after the first notification, which was the probe's own stdin EOF racing the newly-added awaits, NOT a defect - a client that holds the connection open completes all 9 and returns the result.</div></div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">02</span>
+    <h2>mcp/booking-desk: structured log notifications with per-invocation correlation ids</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-09-02</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value">booking-desk now DECLARES the <code>logging</code> capability and emits structured <code>notifications/message</code> lines. Nine stable event names across three namespaces - <code>tool.*</code> for handler lifecycle, <code>dependency.*</code> for the two supplier boundaries (each with <code>duration_ms</code>), <code>booking.*</code> for domain outcomes - with one uuid4 correlation id per invocation stamped on every line. Payloads are always objects carrying <code>event</code> and <code>correlation_id</code>, never formatted sentences, and carry identifiers, counts and durations only; the idempotency_key appears as an 8-hex SHA-256 fingerprint and never in full. <code>booking.py</code> gained an optional <code>emit(event, fields)</code> callback so the domain layer can report the availability and payment boundaries without importing MCP. <code>strict_arguments.declared_arguments</code> now excludes the Context parameter.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value"><code>initialize</code> capabilities are now <code>['experimental','logging','prompts','resources','tools']</code> - <code>logging</code> was ABSENT before this change, confirmed against the pre-change server. All 5 business paths exercised over a real stdio client (confirmed, replay, unavailable inventory, payment declined, idempotency conflict), each with exactly 1 distinct correlation id. Caught-error path: <code>tool.book_trip.failed</code> with <code>error_class: &quot;TimeoutError&quot;</code>, re-raised, <code>isError: true</code>. <code>logging/setLevel</code> filters for real - 5 lines at info, 1 line after <code>setLevel(&quot;warning&quot;)</code>. Secret audit over 11 captured payloads: raw idempotency key absent, every payload an object with <code>event</code> + <code>correlation_id</code>, value types limited to str/bool/float/None. Input schema unchanged (5 properties, no <code>ctx</code>); <code>{&quot;ctx&quot;: &quot;x&quot;}</code> rejected; resources, prompt and tools/list all still pass. Harness was scratch under <code>tmp/</code> and is not committed.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">TWO CAVEATS, both documented in the code. (1) The MCP logging capability is DEPRECATED as of protocol 2026-07-28 (SEP-2577) and this SDK marks <code>Context.log</code> and every level helper with MCPDeprecationWarning. There is no non-deprecated replacement for log notifications, and at 2026-07-28+ delivery became a per-request opt-in, so a client must send <code>io.modelcontextprotocol/logLevel</code> in the request <code>_meta</code> or the server MUST NOT send - it fails SILENTLY, which is exactly the trap the capability declaration also guards. (2) <code>server._lowlevel_server.add_request_handler</code> is NOT public API; MCPServer exposes no supported hook for a <code>logging/setLevel</code> handler in mcp 2.1.0, and registering that handler is the only thing that makes the SDK declare the capability, so the alternative was advertising a capability we do not serve. Same provisional-API caveat as the existing <code>server.middleware</code> use in strict_arguments.py. ONE FIX NOT ASKED FOR BUT REQUIRED: <code>declared_arguments</code> reads the tool signature to build the strict-argument allowlist, so adding <code>ctx</code> to <code>book_trip</code> would have made <code>ctx</code> a client-passable argument name and reopened the hole that module exists to close - on the one tool that charges a client. It now excludes the Context parameter via the SDK's own <code>find_context_parameter</code>, so renaming the parameter cannot silently reintroduce the gap. Also recorded: the roots-enforcement work requested this session was NOT done, because an audit found zero filesystem access anywhere in <code>mcp/</code> (no <code>open()</code>, no os/pathlib/io/shutil/glob imports in any of the four servers), so there was nothing to guard and a helper wired into nothing would have been a security control that protects nothing. User chose to stop at the audit.</div></div>
+</article>
+  </div>
+</main>
+<footer>
+  <div class="wrap">
+    Generated from PROGRESS.md by scripts/generateSessionChangelog.js. Only entries
+    tagged <code>Session: CC-20260902-3f8k</code> appear here.
+  </div>
+</footer>
+</body>
+</html>
