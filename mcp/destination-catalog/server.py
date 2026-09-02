@@ -16,6 +16,7 @@ diagnostics to stderr.
 from typing import Annotated
 
 from mcp.server import MCPServer
+from mcp.server.mcpserver import Context
 from pydantic import BaseModel, Field
 
 server = MCPServer("destination-catalog")
@@ -160,7 +161,7 @@ def _score(entry: dict, terms: list[str]) -> tuple[int, list[str]]:
 
 
 @server.tool()
-def search_destinations(
+async def search_destinations(
     query: Annotated[
         str,
         Field(
@@ -178,6 +179,11 @@ def search_destinations(
         int,
         Field(ge=1, le=10, description="Maximum rows to return. Default 5."),
     ] = 5,
+    # Injected by the SDK, which recognizes it by the `Context` annotation and
+    # keeps it OUT of the published input schema -- so this is not a change to
+    # the tool's client-visible contract. Defaults to None so the function is
+    # still directly callable in a test without a live request.
+    ctx: Context | None = None,
 ) -> list[DestinationRow]:
     """Search the agency's destination catalog and return matching trips as rows.
 
@@ -201,11 +207,30 @@ def search_destinations(
     if not terms:
         terms = [query.strip().lower()]
 
+    # The client opts in to progress by sending a token on the request; absent
+    # one there is nothing to report against, so this stays None and the loop
+    # below runs exactly as it always did.
+    progress_token = None
+    if ctx is not None:
+        meta = ctx.request_context.meta
+        progress_token = meta.get("progress_token") if meta else None
+
+    # The real total: every catalog entry is scored, regardless of `limit`,
+    # which caps the rows RETURNED and not the work done.
+    total = len(CATALOG)
+
     scored = []
-    for entry in CATALOG:
+    for position, entry in enumerate(CATALOG, start=1):
         score, matched = _score(entry, terms)
         if score > 0:
             scored.append((score, entry, matched))
+        # Only with a token: a progress notification must name the one the client sent.
+        if progress_token is not None:
+            await ctx.report_progress(
+                progress=position,
+                total=total,
+                message=f"Scoring {entry['name']} ({position} of {total})",
+            )
 
     # Highest score first; ties broken by destination_id so results are stable.
     scored.sort(key=lambda row: (-row[0], row[1]["destination_id"]))
