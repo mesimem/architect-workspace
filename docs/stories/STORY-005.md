@@ -27,8 +27,8 @@ the same criteria out of `.colaberry/progress.json`, which Claude Code keeps in
 step (see the managed block in CLAUDE.md). Ticking something you have not
 actually met only misleads you.
 
-- [ ] Given a customer logs in, when they enter correct credentials, then they access their portal.
-- [ ] Given a customer enters incorrect credentials, when they try to log in, then the system denies access.
-- [ ] Trust: The system logs all login attempts for security audit.
+- [x] Given a customer logs in, when they enter correct credentials, then they access their portal.
+- [x] Given a customer enters incorrect credentials, when they try to log in, then the system denies access.
+- [x] Trust: The system logs all login attempts for security audit.
 
 When every box above is ticked, stop and show the demo.

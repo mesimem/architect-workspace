@@ -8,6 +8,21 @@
 // node:http and nothing else. CLAUDE.md classifies introducing a dependency as
 // a decision to escalate, and Express would buy routing sugar for four routes.
 //
+// WHAT THIS FILE OWNS, AS OF STORY-005. It grew past CLAUDE.md's 500-line hard
+// ceiling when the portal routes landed, and the rule is that the next change
+// to an oversize file splits it before adding code. The endpoints moved to
+// routes/ and this file kept the MECHANICS:
+//
+//   here            reading and bounding a body, correlation ids, resolving a
+//                   credential, checking a role, one error envelope, the
+//                   structured request log, the catch-all
+//   routes/*        what each endpoint actually does
+//
+// The test for whether something belongs here: does it touch the socket, or
+// apply to EVERY request? If not, it is a route module's business. A handler
+// returns { status, body, headers? } and never sees `res`, which is what keeps
+// this pipeline the only place a response can be shaped.
+//
 // FAILURE-FIRST (CLAUDE.md requires these four answers in writing):
 //  1. What happens if a handler fails? The request gets a 500 with a
 //     correlation id and no internal detail; the full error is logged server
@@ -17,20 +32,25 @@
 //     client-side retry safe.
 //  3. Recovery path? Every route reads or writes a durable store, so a crash
 //     loses nothing that was already acknowledged.
-//  4. Handled here: no credential, bad credential, wrong role, another
-//     customer's data, malformed JSON, oversized body, unknown route, wrong
-//     method, and a handler throwing. NOT handled: TLS (terminated by nginx in
-//     front), rate limiting, CORS, and sessions/refresh - those belong to
-//     REQ-008 / STORY-005 and STORY-006, not to this story.
+//  4. Handled here: no credential, bad credential, EXPIRED SESSION, wrong
+//     role, another customer's data, malformed JSON, oversized body, unknown
+//     route, wrong method, and a handler throwing. NOT handled: TLS
+//     (terminated by nginx in front), per-IP rate limiting, CORS, and refresh
+//     tokens. Sessions were deferred by this note when STORY-003 wrote it;
+//     STORY-005 has since added them. Role-based permissions beyond the two
+//     roles here remain REQ-008 / STORY-006's work.
 
 const http = require("http");
 const crypto = require("crypto");
 
-const { loadPrincipals, authenticate, hasRole } = require("./auth");
-const { triageRequest } = require("../services/advisor/requestTriageService");
-const { getQueuedReviews } = require("../services/advisor/advisorReviewQueue");
-const { listAfricanDestinations } = require("../services/africa/africanSectionService");
-const { getSafariDetails } = require("../services/africa/safariDetailsService");
+const { loadPrincipals, authenticate, bearerTokenFrom, hasRole } = require("./auth");
+const {
+  loadPortalCredentials,
+  PortalCredentialError,
+} = require("../services/portal/portalCredentials");
+// The route table. Each area lives in its own module under routes/; this file
+// no longer knows what any endpoint does, only how to run one.
+const { ROUTES } = require("./routes");
 
 const MAX_BODY_BYTES = 64 * 1024;
 const SERVICE_NAME = "http-api";
@@ -48,13 +68,19 @@ function log(level, event, context) {
   );
 }
 
-function send(res, status, body, correlationId) {
+function send(res, status, body, correlationId, extraHeaders) {
   const payload = JSON.stringify(body);
-  res.writeHead(status, {
-    "Content-Type": "application/json",
-    "Content-Length": Buffer.byteLength(payload),
-    "X-Correlation-ID": correlationId,
-  });
+  res.writeHead(
+    status,
+    Object.assign(
+      {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(payload),
+        "X-Correlation-ID": correlationId,
+      },
+      extraHeaders || {}
+    )
+  );
   res.end(payload);
 }
 
@@ -118,108 +144,6 @@ function readJsonBody(req) {
   });
 }
 
-// Envelope validation only: is this the right SHAPE to hand to the service?
-// Whether the request is clear enough to act on is the triage service's
-// judgement, not the router's, and duplicating those rules here would give us
-// two sets that drift.
-function validateTriageBody(body) {
-  const problems = [];
-  if (body === null || typeof body !== "object" || Array.isArray(body)) {
-    return ["body must be a JSON object"];
-  }
-  if (typeof body.requestId !== "string" || body.requestId.length < 8 || body.requestId.length > 128) {
-    problems.push("requestId must be a string of 8-128 characters");
-  }
-  if (typeof body.customerId !== "string" || body.customerId.trim() === "") {
-    problems.push("customerId must be a non-empty string");
-  }
-  if (body.travelDates !== undefined && (body.travelDates === null || typeof body.travelDates !== "object")) {
-    problems.push("travelDates must be an object when supplied");
-  }
-  if (body.partySize !== undefined && typeof body.partySize !== "number") {
-    problems.push("partySize must be a number when supplied");
-  }
-  if (body.notes !== undefined && typeof body.notes !== "string") {
-    problems.push("notes must be a string when supplied");
-  }
-  return problems;
-}
-
-const ROUTES = [
-  {
-    method: "POST",
-    pattern: /^\/api\/requests\/triage$/,
-    roles: ["customer", "advisor"],
-    handler: async function (context) {
-      const problems = validateTriageBody(context.body);
-      if (problems.length > 0) {
-        return { status: 400, body: { error: "invalid_request_body", problems: problems } };
-      }
-
-      // A customer may only submit requests as themselves. An advisor acts on
-      // behalf of customers, so they may name any. This is CLAUDE.md's
-      // "the resource belongs to them" rule at the only place it can be
-      // enforced.
-      if (context.principal.role === "customer" && context.body.customerId !== context.principal.userId) {
-        return {
-          status: 403,
-          body: {
-            error: "forbidden",
-            message: "A customer may only submit requests for themselves.",
-          },
-        };
-      }
-
-      const result = await triageRequest(context.body);
-      return { status: 200, body: result };
-    },
-  },
-  {
-    method: "GET",
-    pattern: /^\/api\/advisor\/reviews$/,
-    roles: ["advisor"], // the queue is advisor-only; a customer gets 403
-    handler: async function () {
-      const reviews = getQueuedReviews();
-      return { status: 200, body: { count: reviews.length, reviews: reviews } };
-    },
-  },
-  {
-    method: "GET",
-    pattern: /^\/api\/africa\/destinations$/,
-    roles: ["customer", "advisor"],
-    handler: async function (context) {
-      const result = await listAfricanDestinations({
-        customerId: context.principal.userId,
-        interactionKey: "HTTP-BROWSE-" + context.correlationId,
-      });
-      return { status: result.status === "ok" ? 200 : 503, body: result };
-    },
-  },
-  {
-    method: "GET",
-    pattern: /^\/api\/africa\/destinations\/([A-Za-z0-9-]{1,64})$/,
-    roles: ["customer", "advisor"],
-    handler: async function (context) {
-      const result = await getSafariDetails({
-        customerId: context.principal.userId,
-        destinationId: context.params[0],
-        interactionKey: "HTTP-DETAIL-" + context.correlationId,
-      });
-      // "We do not sell that" is a 404 to a client, not a server error. A
-      // catalog we could not read is a 503 - it may work in a moment.
-      const statusByOutcome = {
-        ok: 200,
-        unsupported: 404,
-        incomplete: 409,
-        timeout: 503,
-        unavailable: 503,
-        invalid_request: 400,
-      };
-      return { status: statusByOutcome[result.status] || 500, body: result };
-    },
-  },
-];
-
 function matchRoute(method, pathname) {
   let pathMatchedWrongMethod = false;
 
@@ -238,7 +162,41 @@ function matchRoute(method, pathname) {
   return { route: null, params: [], wrongMethod: pathMatchedWrongMethod };
 }
 
-function createServer({ principals = loadPrincipals() } = {}) {
+// STORY-005: the portal credential table is loaded once, here, rather than per
+// request - hashing is the expensive part of a login and re-reading the
+// environment on every attempt would add nothing but latency.
+//
+// WHY A MISSING TABLE DOES NOT STOP THE SERVER, when a missing API-token table
+// does. They are not the same kind of absence. COLABERRY_API_TOKENS protects
+// EVERY route, so without it the correct behaviour is to refuse to start -
+// anything else would serve an unauthenticated API. COLABERRY_PORTAL_CREDENTIALS
+// backs ONE feature, customer sign-in. An advisor deployment that has no
+// portal customers yet should not be unable to boot, and a typo in it must not
+// take the advisor API down with it.
+//
+// The distinction that keeps this honest: absent means every login is REFUSED
+// (503, see the login route), never allowed. This is fail-closed with a
+// reduced feature set, not an auth layer degrading to "allow everyone".
+function loadPortalCredentialsOrWarn() {
+  try {
+    return loadPortalCredentials();
+  } catch (error) {
+    if (!(error instanceof PortalCredentialError)) {
+      throw error; // not our problem to swallow
+    }
+    log("error", "portal_login_unconfigured", {
+      // The message names the variable and the fix, and contains no hash.
+      reason: error.message,
+      effect: "POST /api/portal/login will refuse every attempt with 503.",
+    });
+    return null;
+  }
+}
+
+function createServer({
+  principals = loadPrincipals(),
+  credentials = loadPortalCredentialsOrWarn(),
+} = {}) {
   return http.createServer(async function (req, res) {
     // Honour an inbound correlation id so a trace can span services, but only
     // if it looks like one - an unvalidated header ends up in log lines.
@@ -258,16 +216,44 @@ function createServer({ principals = loadPrincipals() } = {}) {
     }
 
     try {
-      const principal = authenticate(req.headers.authorization, principals);
-      if (!principal) {
-        // No detail about WHY: missing, malformed and wrong all look identical
-        // from outside.
-        log("error", "request_unauthenticated", { correlationId, pathname, method: req.method });
-        sendError(res, 401, "unauthorized", "A valid bearer token is required.", correlationId);
-        return;
+      // STORY-005 reordered this: the route is matched BEFORE authenticating,
+      // because one route (login) must be reachable without a credential.
+      //
+      // The property that reordering could easily have lost, and does not: an
+      // unauthenticated request to a path that does not exist still gets 401,
+      // not 404. `!route` falls into the branch below and is rejected there,
+      // so an anonymous caller cannot map which endpoints exist by reading
+      // status codes.
+      const { route, params, wrongMethod } = matchRoute(req.method, pathname);
+
+      let principal = null;
+      if (!route || !route.public) {
+        const auth = authenticate(req.headers.authorization, principals);
+        if (!auth.ok) {
+          // One reason is distinguished - an expired session, so the customer
+          // is told to sign in again rather than left guessing. Every other
+          // rejection reports the same thing: missing, malformed, unknown and
+          // revoked all look identical from outside.
+          log("error", "request_unauthenticated", {
+            correlationId,
+            pathname,
+            method: req.method,
+            reason: auth.reason,
+          });
+          sendError(
+            res,
+            401,
+            auth.reason,
+            auth.reason === "session_expired"
+              ? "Your session has expired. Please sign in again."
+              : "A valid bearer token is required.",
+            correlationId
+          );
+          return;
+        }
+        principal = auth.principal;
       }
 
-      const { route, params, wrongMethod } = matchRoute(req.method, pathname);
       if (!route) {
         const status = wrongMethod ? 405 : 404;
         sendError(
@@ -280,7 +266,7 @@ function createServer({ principals = loadPrincipals() } = {}) {
         return;
       }
 
-      if (!hasRole(principal, route.roles)) {
+      if (!route.public && !hasRole(principal, route.roles)) {
         log("error", "request_forbidden", {
           correlationId,
           pathname,
@@ -318,18 +304,25 @@ function createServer({ principals = loadPrincipals() } = {}) {
         params: params,
         principal: principal,
         correlationId: correlationId,
+        // The presented token, for the one route that has to revoke it. Never
+        // logged, never echoed - see the log line below, which records the
+        // session ID instead.
+        bearerToken: bearerTokenFrom(req.headers.authorization),
+        credentials: credentials,
       });
 
       log("info", "request_handled", {
         correlationId,
         pathname,
         method: req.method,
-        role: principal.role,
+        role: principal ? principal.role : "anonymous",
+        credential: principal ? principal.credential : "none",
+        sessionId: principal ? principal.sessionId : null,
         status: result.status,
         duration_ms: Date.now() - started,
       });
 
-      send(res, result.status, result.body, correlationId);
+      send(res, result.status, result.body, correlationId, result.headers);
     } catch (error) {
       // The catch-all. A handler that throws must not take the process down or
       // leak a stack trace; the caller gets a code they can quote back.

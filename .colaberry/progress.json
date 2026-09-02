@@ -256,35 +256,51 @@
       "criteria": [
         {
           "text": "Given a customer logs in, when they enter correct credentials, then they access their portal.",
-          "passed": false
+          "passed": true
         },
         {
           "text": "Given a customer enters incorrect credentials, when they try to log in, then the system denies access.",
-          "passed": false
+          "passed": true
         },
         {
           "text": "Trust: The system logs all login attempts for security audit.",
-          "passed": false
+          "passed": true
         }
       ],
-      "files_touched": [],
-      "tests_added": [],
-      "notes": null,
-      "updated_at": null,
+      "files_touched": [
+        "backend/src/services/portal/portalCredentials.js",
+        "backend/src/services/portal/portalSessions.js",
+        "backend/src/services/portal/portalLoginService.js",
+        "backend/src/services/portal/itineraryService.js",
+        "backend/src/http/auth.js",
+        "backend/src/http/server.js",
+        "backend/src/http/routes/index.js",
+        "backend/src/http/routes/portalRoutes.js",
+        "backend/src/http/routes/triageRoutes.js",
+        "backend/src/http/routes/advisorRoutes.js",
+        "backend/src/http/routes/africaRoutes.js",
+        "scripts/hashPortalPassword.js",
+        "docs/stories/STORY-005.md"
+      ],
+      "tests_added": [
+        "backend/src/services/portal/portalCredentials.test.js",
+        "backend/src/services/portal/portalSessions.test.js",
+        "backend/src/services/portal/portalLoginService.test.js",
+        "backend/src/services/portal/itineraryService.test.js",
+        "backend/src/http/portal.test.js"
+      ],
+      "notes": "Login is scrypt (node crypto, no new dependency) with a per-user salt; the plaintext is never stored and the credential module has no logging surface at all. Sessions store only the token's SHA-256 digest, so the session file is not a list of working credentials - proven by a child-process test that reads the real portal-sessions.json off disk. Two clocks: 30-minute sliding idle timeout and a 12-hour absolute lifetime that never slides, so a stolen token cannot be kept alive by the thief's own activity. EVERY login attempt is audited - success, wrong password, unknown account, malformed submission, and blocked-by-lockout - keyed on a server-generated UUID, never the client's correlation id: the audit log is first-write-wins, so a replayed X-Correlation-ID would otherwise silence every attempt after the first (tested). An unauditable login is REFUSED and its session revoked, so no access is granted that cannot be accounted for. All four rejection reasons are byte-identical to the customer while the trail keeps the specific reason. Unknown users pay the full scrypt cost against a decoy hash, so response timing is not a user-enumeration oracle (108ms vs 110ms measured). 5 failures in 15 minutes locks for 15 minutes, checked BEFORE the password so a locked account buys no scrypt work. DEFECT FOUND AND FIXED BY ITS OWN TEST: the first draft derived the comparison key at the stored hash's length rather than the canonical 32 bytes, so truncating a stored hash produced one that still verified while comparing fewer bytes; an unexpected key length is now a flat refusal. SCOPE: REQ-007's 'view and manage' is satisfied on the VIEW half only - read-only itineraries, agreed with the user rather than half-building a mutation path. Cancellation needs refunds and an accounting reversal; change requests are STORY-003's advisor routing. A stranger's trip returns 404, not 403, byte-identical to a nonexistent trip, so trip ids cannot be walked to map the business. server.js crossed CLAUDE.md's 500-line hard ceiling, so per the Modular Composition Rule it was split before the new routes were allowed to stand: endpoints moved to backend/src/http/routes/ (portal, triage, advisor, africa), server.js kept the HTTP mechanics and dropped 561->348 lines. The split is a pure move, proven by re-running STORY-003's suite UNMODIFIED. NOT DONE, deliberately: role-based permissions beyond the two existing roles (STORY-006), advisor-on-behalf-of access, MFA, password reset/rotation, per-IP throttling (nginx's job at the edge), refresh tokens, and cross-process session locking (single-process store, same as every other store in this repo). Known trade-off: someone who knows a customer id can lock that account for 15 minutes.",
+      "updated_at": "2026-09-02T15:12:39.369995Z",
       "verification": {
-        "state": "in_progress",
-        "criteria_passed": 0,
+        "state": "submitted",
+        "criteria_passed": 3,
         "criteria_total": 3,
         "verified_at": null,
         "commit_sha": null,
         "commit_url": null,
         "commit_at": null,
         "points_awarded": null,
-        "outstanding": [
-          "Given a customer logs in, when they enter correct credentials, then they access their portal.",
-          "Given a customer enters incorrect credentials, when they try to log in, then the system denies access.",
-          "Trust: The system logs all login attempts for security audit."
-        ]
+        "outstanding": []
       }
     },
     {
