@@ -230,7 +230,8 @@ def main() -> None:
 
     request = {
         "model": MODEL,
-        "max_tokens": 16000,
+        "max_tokens": 2000,  # lowered from 16000; responses fit in ~300 tokens
+        "cache_control": {"type": "ephemeral"},  # cache the system prompt at 0.1x cost
         "system": SYSTEM,
         "tools": [LOOKUP_BOOKING_TOOL],  # the schema rides along on the request
         "messages": messages,
@@ -280,7 +281,8 @@ def main() -> None:
 
     final = client.messages.create(
         model=MODEL,
-        max_tokens=16000,
+        max_tokens=2000,  # lowered from 16000; responses fit in ~300 tokens
+        cache_control={"type": "ephemeral"},  # cache read on second request
         system=SYSTEM,
         tools=[LOOKUP_BOOKING_TOOL],  # same tool list, every turn
         messages=messages,

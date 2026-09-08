@@ -66,9 +66,12 @@ NUMBER_TOLERANCE = 0.05
 # Give up on a single request after this many seconds, rather than hanging.
 REQUEST_TIMEOUT_SECONDS = 60.0
 
-# Room for Claude's answer. Generous, because you are only billed for what
-# actually comes back, not for the ceiling.
-MAX_TOKENS = 16000
+# Room for Claude's answer. Responses are short (< 200 tokens typical);
+# lowered from 16000 to save ~5-8% of output costs while staying safe.
+MAX_TOKENS = 1000
+
+# System prompt for grading — stable across all requests, cacheable.
+SYSTEM = "You are an expert at checking whether LLM outputs meet test criteria. Be strict but fair."
 
 
 def quit_with_message(message):
@@ -227,7 +230,7 @@ def build_client():
 
 def ask_claude(client, filled_prompt):
     """
-    Send one filled-in prompt and return (answer_text, fatal_error, case_error).
+    Send one filled-in prompt and return (answer_text, fatal_error, case_error, usage).
 
     fatal_error means "stop the whole run, this will fail for every case".
     case_error means "this one case failed, keep going with the others".
@@ -238,6 +241,8 @@ def ask_claude(client, filled_prompt):
         response = client.messages.create(
             model=MODEL,
             max_tokens=MAX_TOKENS,
+            cache_control={"type": "ephemeral"},  # Cache the system prompt at 0.1x cost
+            system=SYSTEM,
             messages=[{"role": "user", "content": filled_prompt}],
         )
     except anthropic.AuthenticationError:
@@ -246,32 +251,32 @@ def ask_claude(client, filled_prompt):
             "expired, or was revoked.\nGet a fresh one from "
             "console.anthropic.com (API keys), paste it into .env as "
             "ANTHROPIC_API_KEY=..., and run this again."
-        ), None
+        ), None, None
     except anthropic.PermissionDeniedError:
         return None, (
             "Your API key is valid but is not allowed to use the model '{}'. "
             "Check your workspace's model permissions, or change the MODEL "
             "setting near the top of this script.".format(MODEL)
-        ), None
+        ), None, None
     except anthropic.NotFoundError:
         return None, (
             "Claude does not recognise the model name '{}'. Fix the MODEL "
             "setting near the top of this script.".format(MODEL)
-        ), None
+        ), None, None
     except anthropic.APIConnectionError:
         return None, (
             "I could not reach Claude at all. Check your internet connection "
             "(and any VPN or company firewall), then run this again."
-        ), None
+        ), None, None
     except anthropic.RateLimitError:
-        return None, None, "rate limited by the API"
+        return None, None, "rate limited by the API", None
     except anthropic.APIStatusError as problem:
-        return None, None, "API error {}".format(problem.status_code)
+        return None, None, "API error {}".format(problem.status_code), None
 
     # Claude's reply arrives as a list of blocks. We want only the text ones.
     return "\n".join(
         block.text for block in response.content if block.type == "text"
-    ), None, None
+    ), None, None, response.usage
 
 
 # ---------------------------------------------------------------------------
@@ -346,14 +351,14 @@ def values_match(expected, actual):
 
 
 def score_one_case(client, prompt_text, case):
-    """Run a single test case. Returns (passed, list_of_problem_lines)."""
+    """Run a single test case. Returns (passed, list_of_problem_lines, usage)."""
     filled_prompt, leftover = fill_prompt(prompt_text, case["input"])
 
-    answer, fatal_error, case_error = ask_claude(client, filled_prompt)
+    answer, fatal_error, case_error, usage = ask_claude(client, filled_prompt)
     if fatal_error:
         quit_with_message(fatal_error)
     if case_error:
-        return False, ["could not be scored: {}".format(case_error)]
+        return False, ["could not be scored: {}".format(case_error)], None
 
     problems = []
     if leftover:
@@ -374,7 +379,7 @@ def score_one_case(client, prompt_text, case):
             )
 
     # A case only passes if nothing at all went wrong with it.
-    return (len(problems) == 0), problems
+    return (len(problems) == 0), problems, usage
 
 
 # ---------------------------------------------------------------------------
@@ -403,9 +408,18 @@ def main():
 
     failures = []
     passed_count = 0
+    total_input_tokens = 0
+    total_cache_creation_tokens = 0
+    total_cache_read_tokens = 0
+    total_output_tokens = 0
 
     for position, case in enumerate(cases, start=1):
-        passed, problems = score_one_case(client, prompt_text, case)
+        passed, problems, usage = score_one_case(client, prompt_text, case)
+        if usage:
+            total_input_tokens += usage.input_tokens
+            total_cache_creation_tokens += getattr(usage, 'cache_creation_input_tokens', 0)
+            total_cache_read_tokens += getattr(usage, 'cache_read_input_tokens', 0)
+            total_output_tokens += usage.output_tokens
         if passed:
             passed_count += 1
             print("  case {}: pass".format(position))
@@ -415,6 +429,13 @@ def main():
 
     score = passed_count / len(cases)
 
+    # Calculate costs (Opus 5: $5/$25 per 1M tokens; cache reads at 0.1x, writes at 1.25x)
+    input_cost = (total_input_tokens * 5) / 1_000_000
+    cache_write_cost = (total_cache_creation_tokens * 5 * 1.25) / 1_000_000
+    cache_read_cost = (total_cache_read_tokens * 5 * 0.1) / 1_000_000
+    output_cost = (total_output_tokens * 25) / 1_000_000
+    total_cost = input_cost + cache_write_cost + cache_read_cost + output_cost
+
     print("\n" + "=" * 60)
     print("SCORE:  {:.2f}   ({} of {} cases matched on every field)".format(
         score, passed_count, len(cases)
@@ -422,6 +443,19 @@ def main():
     print("Model:  {}".format(MODEL))
     print("Cases:  {}   from {}".format(len(cases), eval_path))
     print("Prompt: {}".format(prompt_path))
+    print("=" * 60)
+    print("\nToken usage & cost (Opus 5 pricing):")
+    print("  Input tokens:           {:>6}  (~${:.4f})".format(
+        total_input_tokens, input_cost))
+    print("  Cache creation tokens:  {:>6}  (~${:.4f} @ 1.25x)".format(
+        total_cache_creation_tokens, cache_write_cost))
+    print("  Cache read tokens:      {:>6}  (~${:.4f} @ 0.1x)".format(
+        total_cache_read_tokens, cache_read_cost))
+    print("  Output tokens:          {:>6}  (~${:.4f})".format(
+        total_output_tokens, output_cost))
+    print("  " + "-" * 50)
+    print("  Total cost this run:                ~${:.4f}".format(total_cost))
+    print("  Cost per case:                      ~${:.4f}".format(total_cost / len(cases)))
     print("=" * 60)
 
     if failures:
