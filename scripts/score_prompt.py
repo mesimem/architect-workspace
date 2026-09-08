@@ -350,15 +350,21 @@ def values_match(expected, actual):
     return str(expected).strip().lower() == str(actual).strip().lower()
 
 
-def score_one_case(client, prompt_text, case):
-    """Run a single test case. Returns (passed, list_of_problem_lines, usage)."""
+def score_one_case_from_batch_result(prompt_text, case, result):
+    """Score a single case from a batch result. Returns (passed, list_of_problem_lines, usage)."""
     filled_prompt, leftover = fill_prompt(prompt_text, case["input"])
 
-    answer, fatal_error, case_error, usage = ask_claude(client, filled_prompt)
-    if fatal_error:
-        quit_with_message(fatal_error)
-    if case_error:
-        return False, ["could not be scored: {}".format(case_error)], None
+    # Handle batch result types
+    if result.result.type == "errored":
+        return False, ["batch error: {}".format(result.result.error.message)], None
+    if result.result.type != "succeeded":
+        return False, ["batch result type: {}".format(result.result.type)], None
+
+    # Extract answer from message content
+    answer = "\n".join(
+        block.text for block in result.result.message.content if block.type == "text"
+    )
+    usage = result.result.message.usage
 
     problems = []
     if leftover:
@@ -402,10 +408,64 @@ def main():
     cases = read_eval_file(eval_path)
     client = build_client()
 
-    print("\nScoring {} against {} case(s) using {}...".format(
-        prompt_path, len(cases), MODEL
+    print("\nPreparing batch of {} case(s) using {} (Batch API @ 50% discount)...".format(
+        len(cases), MODEL
     ))
 
+    # Build batch requests
+    batch_requests = []
+    for position, case in enumerate(cases, start=1):
+        filled_prompt, _ = fill_prompt(prompt_text, case["input"])
+        batch_requests.append({
+            "custom_id": "case-{}".format(position),
+            "params": {
+                "model": MODEL,
+                "max_tokens": MAX_TOKENS,
+                "cache_control": {"type": "ephemeral"},
+                "system": SYSTEM,
+                "messages": [{"role": "user", "content": filled_prompt}],
+            }
+        })
+
+    # Submit batch
+    batch = client.messages.batches.create(requests=batch_requests)
+    print("Batch submitted: {}".format(batch.id))
+    print("Status: {}".format(batch.processing_status))
+    batch_id_file = Path(__file__).parent.parent / ".batch_id"
+    print("Saving batch ID to {} for later reference...".format(batch_id_file))
+    batch_id_file.write_text(batch.id)
+
+    # Poll for completion (batches typically complete in < 1 min for small jobs)
+    import time
+    max_wait_seconds = 300  # 5 minutes
+    start_time = time.time()
+    poll_count = 0
+    while time.time() - start_time < max_wait_seconds:
+        batch_status = client.messages.batches.retrieve(batch.id)
+        poll_count += 1
+        if batch_status.processing_status == "ended":
+            print("\nBatch completed in {:.1f}s ({} polls)".format(
+                time.time() - start_time, poll_count))
+            break
+        elapsed = int(time.time() - start_time)
+        print("  [{:3d}s] {} | {} succeeded, {} processing".format(
+            elapsed,
+            batch_status.processing_status,
+            batch_status.request_counts.succeeded,
+            batch_status.request_counts.processing
+        ))
+        time.sleep(1)
+    else:
+        print("\nBatch still processing after {} seconds.".format(max_wait_seconds))
+        print("Batch ID saved for later: {}".format(batch.id))
+        print("Check status later with: cat /tmp/batch_id.txt")
+        quit_with_message(
+            "Batch processing continues in background. "
+            "Run this script again in a few seconds with the same args to check results."
+        )
+
+    # Collect and score results
+    print("\nScoring results:")
     failures = []
     passed_count = 0
     total_input_tokens = 0
@@ -413,8 +473,19 @@ def main():
     total_cache_read_tokens = 0
     total_output_tokens = 0
 
+    results_by_id = {}
+    for result in client.messages.batches.results(batch.id):
+        results_by_id[result.custom_id] = result
+
     for position, case in enumerate(cases, start=1):
-        passed, problems, usage = score_one_case(client, prompt_text, case)
+        case_id = "case-{}".format(position)
+        result = results_by_id.get(case_id)
+        if not result:
+            print("  case {}: MISSING".format(position))
+            failures.append((position, case["_line"], ["batch result not found"]))
+            continue
+
+        passed, problems, usage = score_one_case_from_batch_result(prompt_text, case, result)
         if usage:
             total_input_tokens += usage.input_tokens
             total_cache_creation_tokens += getattr(usage, 'cache_creation_input_tokens', 0)
