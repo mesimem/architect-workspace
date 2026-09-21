@@ -22,22 +22,41 @@ set -uo pipefail
 
 payload=$(cat)
 
-# Extract .tool_input.command and collapse whitespace so the pattern below only
-# has to reason about single spaces. node, because jq is not installed here.
+# Extract .tool_input.command, then normalise in two steps:
+#   1. newline -> ";"  A multi-line command is several commands. Collapsing
+#      newlines into spaces first is what let `VAR=x\ngit commit` slip past
+#      this guard: the "git" ended up preceded by ")" instead of a separator.
+#   2. collapse remaining whitespace, so the pattern below only has to reason
+#      about single spaces.
+# node, because jq is not installed here.
 cmd=$(node -e '
   let raw = "";
   try { raw = JSON.parse(process.argv[1])?.tool_input?.command ?? ""; } catch {}
-  process.stdout.write(String(raw).replace(/\s+/g, " ").trim());
+  process.stdout.write(
+    String(raw).replace(/[\r\n]+/g, "; ").replace(/\s+/g, " ").trim()
+  );
 ' "$payload" 2>/dev/null) || exit 0
 
 # --- 1. not a git commit: be invisible ---------------------------------------
 [ -z "$cmd" ] && exit 0
 
 # Anchored to command position so a mention is less likely to trip it.
-#   Matches: git commit / git commit -m x / cd x && git commit / git -c k=v commit
-#   Ignores: git commit-tree (trailing space-or-end is required)
+#   Matches: git commit            git commit -m x        git -c k=v commit
+#            cd x && git commit    true; git commit       FOO=1 git commit
+#            VAR=$(x)\ngit commit  (newline became a separator above)
+#   Ignores: git commit-tree       (trailing space-or-end is required)
+#            echo "git commit"     (preceded by a quote, not a separator)
 #            npm test, git diff, git add, anything else
-commit_re='(^|[;&|] )git ([^;&|]* )?commit( |$)'
+#
+# KNOWN RESIDUAL, and it is a text matcher not a shell parser: a single-line
+# assignment whose value contains a space -- VAR=$(date +%s) git commit --
+# still slips past, because the assignment prefix below stops at the first
+# space. The newline rule above covers the multi-line form, which is the shape
+# that actually occurs. Closing the rest needs real shell parsing; the honest
+# belt-and-braces is a deny rule in settings.json, which cannot be out-regexed.
+sep='[;&|)]'
+assign='([A-Za-z_][A-Za-z0-9_]*=[^ ]* )*'
+commit_re="(^|${sep} )${assign}git ([^;&|]* )?commit( |\$)"
 [[ $cmd =~ $commit_re ]] || exit 0
 
 # --- 2. explicit operator override -------------------------------------------
