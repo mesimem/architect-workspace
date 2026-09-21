@@ -225,7 +225,7 @@ async def search_destinations(
         if score > 0:
             scored.append((score, entry, matched))
         # Only with a token: a progress notification must name the one the client sent.
-        if progress_token is not None:
+        if progress_token is not None and ctx is not None:
             await ctx.report_progress(
                 progress=position,
                 total=total,
