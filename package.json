@@ -1,0 +1,22 @@
+{
+  "name": "architect-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Colaberry architect workspace: travel-agency platform backend, MCP servers and prompt tooling. Declares the repo's verification commands.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mesimem/architect-workspace.git"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test \"backend/**/*.test.js\" \"tests/**/*.test.js\"",
+    "typecheck": "npm run typecheck:booking-desk && npm run typecheck:destination-catalog && npm run typecheck:trip-quotes && npm run typecheck:scripts",
+    "typecheck:booking-desk": "python -m mypy --ignore-missing-imports mcp/booking-desk",
+    "typecheck:destination-catalog": "python -m mypy --ignore-missing-imports mcp/destination-catalog",
+    "typecheck:trip-quotes": "python -m mypy --ignore-missing-imports mcp/trip-quotes",
+    "typecheck:scripts": "python -m mypy --ignore-missing-imports scripts",
+    "verify": "npm test && npm run typecheck"
+  }
+}
