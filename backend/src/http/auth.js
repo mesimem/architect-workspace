@@ -39,14 +39,28 @@
 // response body. Comparison is constant-time, so a caller cannot learn a valid
 // token one character at a time by measuring how long a rejection takes.
 
+// STORY-006 ADDS A THIRD SOURCE OF TRUTH, AND IT OUTRANKS BOTH OF THE ABOVE.
+// A credential says who you are AND what role it was issued with. That second
+// claim is now only a BASELINE: resolveRole() checks the role-assignment store
+// first, so an admin can change somebody's role without reissuing their token
+// or restarting the process. The token still says "customer"; the principal
+// this module hands back may not.
+//
+// Which means the role on a principal is an ANSWER, never an input. Nothing
+// downstream may read `principal.role` from anywhere but here.
+
 const crypto = require("crypto");
 
 const {
   verifySession,
   REASONS: SESSION_REASONS,
 } = require("../services/portal/portalSessions");
-
-const ROLES = ["customer", "advisor"];
+const { resolveRole } = require("../services/authz/roleAssignments");
+// The role list comes from the permission table, not from a literal here.
+// Two lists would drift, and the drift is silent in the dangerous direction:
+// a role this file accepts but the permission table does not know grants
+// nothing, and a role the table knows but this file rejects cannot be issued.
+const { ROLES } = require("../services/authz/permissions");
 
 class AuthConfigError extends Error {
   constructor(message) {
@@ -144,9 +158,18 @@ function bearerTokenFrom(authorizationHeader) {
 // Distinguishing expiry leaks nothing: only the holder of a token we really
 // issued can see it, and they already had access.
 //
-// `verify` is injected so this module can be reasoned about, and tested,
-// without the session store's clock.
-function authenticate(authorizationHeader, principals, { verify = verifySession } = {}) {
+// `verify` and `resolve` are injected so this module can be reasoned about,
+// and tested, without the session store's clock or the assignment store's rows.
+//
+// STORY-006: `declaredRole` is what the CREDENTIAL claims; `role` is what the
+// system will actually enforce. Both are on the principal on purpose - when a
+// request is denied, an operator needs to see that the token said one thing and
+// an assignment said another, or the denial looks like a bug in the token.
+function authenticate(
+  authorizationHeader,
+  principals,
+  { verify = verifySession, resolve = resolveRole } = {}
+) {
   const presented = bearerTokenFrom(authorizationHeader);
   if (presented === null) {
     return { ok: false, reason: "unauthorized" };
@@ -158,7 +181,8 @@ function authenticate(authorizationHeader, principals, { verify = verifySession 
         ok: true,
         principal: {
           userId: principal.userId,
-          role: principal.role,
+          role: resolve(principal.userId, principal.role),
+          declaredRole: principal.role,
           credential: "api_token",
           sessionId: null,
         },
@@ -172,7 +196,13 @@ function authenticate(authorizationHeader, principals, { verify = verifySession 
       ok: true,
       principal: {
         userId: session.session.customerId,
-        role: session.session.role,
+        // A session issued before a role change still gets the CURRENT role.
+        // Resolving here rather than at login is what makes a demotion take
+        // effect on the next request instead of whenever the session happens
+        // to expire - which for a 12-hour absolute lifetime is far too late to
+        // be called a revocation.
+        role: resolve(session.session.customerId, session.session.role),
+        declaredRole: session.session.role,
         credential: "session",
         sessionId: session.session.sessionId,
       },
@@ -186,15 +216,19 @@ function authenticate(authorizationHeader, principals, { verify = verifySession 
   return { ok: false, reason: expired ? "session_expired" : "unauthorized" };
 }
 
-function hasRole(principal, allowedRoles) {
-  return Boolean(principal) && allowedRoles.includes(principal.role);
-}
+// hasRole(principal, allowedRoles) USED TO LIVE HERE and was deleted by
+// STORY-006 rather than left in place. It let a route name the roles it would
+// accept, which put the policy in six route files; `can(role, permission)` in
+// services/authz/permissions.js is now the only way to make an access
+// decision. Leaving the old function exported "in case" would mean two
+// mechanisms, and the first route that picks the wrong one is a hole nobody
+// sees - the same reasoning that keeps both credential kinds in one
+// authenticate() above.
 
 module.exports = {
   loadPrincipals,
   authenticate,
   bearerTokenFrom,
-  hasRole,
   ROLES,
   AuthConfigError,
 };

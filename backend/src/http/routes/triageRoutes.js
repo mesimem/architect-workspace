@@ -3,6 +3,7 @@
 // STORY-003's own test suite is the proof, and it was re-run unmodified.
 
 const { triageRequest } = require("../../services/advisor/requestTriageService");
+const { PERMISSIONS } = require("../../services/authz/permissions");
 
 // Envelope validation only: is this the right SHAPE to hand to the service?
 // Whether the request is clear enough to act on is the triage service's
@@ -35,7 +36,7 @@ const triageRoutes = [
   {
     method: "POST",
     pattern: /^\/api\/requests\/triage$/,
-    roles: ["customer", "advisor"],
+    permission: PERMISSIONS.REQUESTS_TRIAGE,
     handler: async function (context) {
       const problems = validateTriageBody(context.body);
       if (problems.length > 0) {

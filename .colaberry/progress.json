@@ -310,35 +310,50 @@
       "criteria": [
         {
           "text": "Given a user logs in, when they have admin rights, then they access admin features.",
-          "passed": false
+          "passed": true,
+          "evidence": "backend/src/http/admin.test.js - an admin token reaches GET /api/admin/roles, POST /api/admin/roles and GET /api/admin/audit (each a distinct permission)."
         },
         {
           "text": "Given a user logs in, when they have customer rights, then they access customer features only.",
-          "passed": false
+          "passed": true,
+          "evidence": "backend/src/http/admin.test.js - customer and advisor tokens get 403 on every admin path while keeping their own routes; admin is 403 on portal trips and the advisor queue (admin is not a superuser)."
         },
         {
           "text": "Trust: The system logs all access attempts and changes in permissions.",
-          "passed": false
+          "passed": true,
+          "evidence": "backend/src/http/admin.test.js - the role change, the denied access attempt and the refused assignment are all readable through GET /api/admin/audit with actor, resource, required permission and correlation id."
         }
       ],
-      "files_touched": [],
-      "tests_added": [],
-      "notes": null,
-      "updated_at": null,
+      "files_touched": [
+        "backend/src/services/authz/permissions.js",
+        "backend/src/services/authz/roleAssignments.js",
+        "backend/src/http/routes/adminRoutes.js",
+        "backend/src/http/auth.js",
+        "backend/src/http/server.js",
+        "backend/src/http/routes/index.js",
+        "backend/src/http/routes/portalRoutes.js",
+        "backend/src/http/routes/triageRoutes.js",
+        "backend/src/http/routes/advisorRoutes.js",
+        "backend/src/http/routes/africaRoutes.js",
+        "docs/stories/STORY-006.md"
+      ],
+      "tests_added": [
+        "backend/src/services/authz/permissions.test.js",
+        "backend/src/services/authz/roleAssignments.test.js",
+        "backend/src/http/admin.test.js"
+      ],
+      "notes": "RBAC is a permission table, not a role check. Routes used to declare `roles: [...]` in six separate files; they now declare one `permission`, and can(role, permission) in services/authz/permissions.js is the only way an access decision is made - hasRole() was DELETED rather than deprecated, because two mechanisms means the first route that picks the wrong one is a hole nobody sees. The swap is proven behaviour-preserving by STORY-003 and STORY-005's suites passing UNMODIFIED. Roles are NOT nested and admin is NOT a superuser: each role's grants are written out longhand, and admin deliberately lacks portal.trips.read and advisor.reviews.read, with tests asserting those absences so a later 'simplification' into a hierarchy fails loudly. Two sources of role: the directory (COLABERRY_API_TOKENS, which is how the bootstrap admin exists at all) and the assignment store, which overrides it. Roles resolve PER REQUEST, not at login, so a demotion bites on the next call rather than whenever a 12-hour session expires - tested end-to-end: a live session token gains the advisor queue and loses portal trips with no new login. Four assignment guards: not_permitted, self_assignment (nobody re-grades themselves, so an admin role change needs a second admin), last_admin (zero admins is a lockout nothing inside the system can undo), and unknown_role (the 'admn' typo, which reads like a grant and behaves like a lockout). Every refusal is audited, not just returned, through one refuse() helper so a sixth branch cannot forget. Assignment is write-ahead audited (pending -> success) so a crash mid-change cannot claim success. Routes are validated against the permission table at module load, so a route that forgets its permission or names one that does not exist stops the process instead of silently serving everybody or nobody - and that guard has its own test, without which it could be deleted and every other test would still pass. DELIBERATE ASYMMETRY ON AC-3: 403s get a durable audit row, 401s do not. A 401 is anonymous (no actor to attribute) and the audit store rewrites its whole file per row, so auditing them would hand any unauthenticated caller a disk-fill with quadratic write amplification; 401s are still fully recorded in the structured log stream. HONEST LIMIT: assignRole's not_permitted and last_admin refusals are UNREACHABLE over HTTP - the route's own permission check fires first for the former, and self_assignment fires first for the latter. Both are kept because assignRole is callable from a script with no boundary in front, and roleAssignments.test.js covers that path. NOT DONE, deliberately: per-resource scoping ('advisor for THESE customers'), time-bounded grants, approval workflows, bulk assignment, and audit-trail filtering by actor or date (needs query-string parsing, which the pipeline does not do yet). Advisor-on-behalf-of customer access remains unbuilt and is a separate permission when it is wanted, not a side effect of seniority.",
+      "updated_at": "2026-09-24T00:01:36.995839Z",
       "verification": {
-        "state": "in_progress",
-        "criteria_passed": 0,
+        "state": "submitted",
+        "criteria_passed": 3,
         "criteria_total": 3,
         "verified_at": null,
         "commit_sha": null,
         "commit_url": null,
         "commit_at": null,
         "points_awarded": null,
-        "outstanding": [
-          "Given a user logs in, when they have admin rights, then they access admin features.",
-          "Given a user logs in, when they have customer rights, then they access customer features only.",
-          "Trust: The system logs all access attempts and changes in permissions."
-        ]
+        "outstanding": []
       }
     },
     {

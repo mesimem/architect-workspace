@@ -32,22 +32,34 @@
 //     client-side retry safe.
 //  3. Recovery path? Every route reads or writes a durable store, so a crash
 //     loses nothing that was already acknowledged.
-//  4. Handled here: no credential, bad credential, EXPIRED SESSION, wrong
-//     role, another customer's data, malformed JSON, oversized body, unknown
-//     route, wrong method, and a handler throwing. NOT handled: TLS
+//  4. Handled here: no credential, bad credential, EXPIRED SESSION, MISSING
+//     PERMISSION, another customer's data, malformed JSON, oversized body,
+//     unknown route, wrong method, and a handler throwing. NOT handled: TLS
 //     (terminated by nginx in front), per-IP rate limiting, CORS, and refresh
 //     tokens. Sessions were deferred by this note when STORY-003 wrote it;
-//     STORY-005 has since added them. Role-based permissions beyond the two
-//     roles here remain REQ-008 / STORY-006's work.
+//     STORY-005 has since added them, and STORY-006 has since added
+//     permissions.
+//
+// STORY-006 CHANGED THE ROUTE CONTRACT. A route used to declare `roles: [...]`
+// and this file checked membership. It now declares a single `permission`, and
+// the answer comes from services/authz/permissions.js. The difference that
+// matters: the policy lived in six route files and now lives in one table, so
+// adding a role is one edit rather than six, and the six cannot disagree.
+// Routes are validated against that table at load - see
+// assertRoutesDeclarePermissions - so a route that forgets its permission, or
+// names one that does not exist, stops the process instead of silently
+// serving everybody or nobody.
 
 const http = require("http");
 const crypto = require("crypto");
 
-const { loadPrincipals, authenticate, bearerTokenFrom, hasRole } = require("./auth");
+const { loadPrincipals, authenticate, bearerTokenFrom } = require("./auth");
 const {
   loadPortalCredentials,
   PortalCredentialError,
 } = require("../services/portal/portalCredentials");
+const { can, assertKnownPermission } = require("../services/authz/permissions");
+const { recordAudit, deriveAuditKey } = require("../services/audit/auditLog");
 // The route table. Each area lives in its own module under routes/; this file
 // no longer knows what any endpoint does, only how to run one.
 const { ROUTES } = require("./routes");
@@ -144,6 +156,52 @@ function readJsonBody(req) {
   });
 }
 
+// STORY-006: every route is checked ONCE, at startup, before a socket is ever
+// opened. Three things have to hold, and each one has a specific hole behind it:
+//
+//   a route declares either `public: true` or a `permission`, never neither
+//       - neither means the permission check below has nothing to test, and the
+//         obvious implementation of "no permission required" is "let it
+//         through". A route that forgets its permission must fail loudly at
+//         boot, not quietly serve everybody.
+//   the permission it names is one the table knows
+//       - a typo or a renamed permission makes can() return false forever, so
+//         the route 403s for every caller including the right one. That is
+//         discovered by a customer, not by us.
+//   a public route names no permission
+//       - the two are contradictory, and shipping both means the reader cannot
+//         tell which one is the truth.
+//
+// Throwing here is the point. This is config, and CLAUDE.md's rule for config
+// that cannot be used is to refuse to start rather than degrade.
+function assertRoutesDeclarePermissions(routes) {
+  for (const route of routes) {
+    const name = route.method + " " + String(route.pattern);
+
+    if (route.public) {
+      if (route.permission) {
+        throw new Error(
+          name + " is marked public and also names a permission. It can only be one of the two."
+        );
+      }
+      continue;
+    }
+
+    if (!route.permission) {
+      throw new Error(
+        name + " declares no permission and is not public. Every route must say what it requires."
+      );
+    }
+
+    assertKnownPermission(route.permission, name);
+  }
+}
+
+// Run at module load, not inside createServer: an unreachable route is a
+// defect in the source, so it should stop `require`, not wait for a test to
+// happen to construct a server.
+assertRoutesDeclarePermissions(ROUTES);
+
 function matchRoute(method, pathname) {
   let pathMatchedWrongMethod = false;
 
@@ -197,6 +255,17 @@ function createServer({
   principals = loadPrincipals(),
   credentials = loadPortalCredentialsOrWarn(),
 } = {}) {
+  // STORY-006: the DIRECTORY - every user the environment declares, as
+  // { userId, role } and NOTHING ELSE. The admin routes need it to count how
+  // many admins exist (see the last-admin guard in roleAssignments.js), and a
+  // `principals` entry also carries the raw bearer token. Projecting the two
+  // safe fields here, once, means no handler is ever handed a token it could
+  // log, echo, or pass on by accident. Built at startup, not per request: the
+  // token table does not change while the process runs.
+  const directory = principals.map(function (principal) {
+    return { userId: principal.userId, role: principal.role };
+  });
+
   return http.createServer(async function (req, res) {
     // Honour an inbound correlation id so a trace can span services, but only
     // if it looks like one - an unvalidated header ends up in log lines.
@@ -266,11 +335,55 @@ function createServer({
         return;
       }
 
-      if (!route.public && !hasRole(principal, route.roles)) {
+      // STORY-006: ONE access decision, and it goes through can(). The route
+      // names an act; the permission table says whether this role may perform
+      // it. Neither this file nor the route module knows which roles are
+      // involved, which is what stopped the policy being six copies.
+      if (!route.public && !can(principal.role, route.permission)) {
+        // A FORBIDDEN REQUEST IS WRITTEN TO THE DURABLE AUDIT TRAIL, not just
+        // the log stream. This is a known caller, holding a credential we
+        // issued, reaching for something they may not have - the single most
+        // interesting event a security review looks for, and the half of AC-3
+        // that the role-assignment audit does not cover.
+        //
+        // WHY 401s DO NOT GET AN AUDIT ROW AND 403s DO. A 401 is anonymous:
+        // there is no actor to attribute it to, so the row would say little,
+        // and anyone on the internet could write one. Since the audit store
+        // rewrites its whole file per row (see jsonFileStore.js), that is an
+        // unauthenticated disk-fill with quadratic write amplification. A 403
+        // requires a valid credential, so the volume is bounded by the people
+        // we gave one to. Unauthenticated attempts are still fully recorded in
+        // the structured log stream above - logged, but not in the evidence
+        // store an auditor reads.
+        //
+        // If recordAudit throws, the catch-all turns this into a 500 and the
+        // request is still denied. Failing closed is correct: per auditLog.js,
+        // an unauditable event is a refusal to serve, and the one outcome that
+        // must be impossible is granting access we cannot account for.
+        recordAudit({
+          auditKey: deriveAuditKey("access:" + correlationId, "forbidden"),
+          event: "authz.access.denied",
+          outcome: "failure",
+          actor: principal.userId,
+          resource: pathname,
+          correlationId: correlationId,
+          context: {
+            method: req.method,
+            requiredPermission: route.permission,
+            role: principal.role,
+            // Surfaces the case where a role assignment, not the token, is
+            // what denied this. Without it the denial looks like a broken
+            // token and the operator chases the wrong thing.
+            declaredRole: principal.declaredRole,
+            credential: principal.credential,
+          },
+        });
+
         log("error", "request_forbidden", {
           correlationId,
           pathname,
           role: principal.role, // the role, never the token
+          requiredPermission: route.permission,
         });
         sendError(
           res,
@@ -309,13 +422,19 @@ function createServer({
         // session ID instead.
         bearerToken: bearerTokenFrom(req.headers.authorization),
         credentials: credentials,
+        directory: directory,
       });
 
+      // Every access attempt that gets this far is recorded here with the role
+      // it was granted under and the permission that let it through - so the
+      // log stream answers "who did what, and on what authority" for the
+      // allowed requests, while the audit store holds the denied ones.
       log("info", "request_handled", {
         correlationId,
         pathname,
         method: req.method,
         role: principal ? principal.role : "anonymous",
+        grantedPermission: route.public ? null : route.permission,
         credential: principal ? principal.credential : "none",
         sessionId: principal ? principal.sessionId : null,
         status: result.status,
@@ -345,4 +464,12 @@ function createServer({
   });
 }
 
-module.exports = { createServer, MAX_BODY_BYTES };
+module.exports = {
+  createServer,
+  MAX_BODY_BYTES,
+  // Exported for its own test. Underscored because it is not part of the
+  // operational surface: it runs once at load, above, and no caller should be
+  // invoking it. Untested, it could be deleted and every other test would
+  // still pass, since they only ever run against a route table that is valid.
+  __assertRoutesDeclarePermissions: assertRoutesDeclarePermissions,
+};
