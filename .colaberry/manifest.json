@@ -1,57 +1,11 @@
 {
-  "generated_at": "2026-08-31T23:00:14.376Z",
+  "generated_at": "2026-09-24T00:33:20.986Z",
   "plan_version": 2,
   "plan_sha256": "06f93a7e11689a590fc1bcaa07b066563ef5b60a526e9e4aeb8b80df63dcd936",
-  "correlation_id": "a11a5642-6ba0-4236-9567-5a339d75cdf8",
+  "correlation_id": "386fa7c0-596c-4f24-a304-0255b16fdf6b",
+  "project_id": "aa94af89-8d07-4ef4-96ec-ea775c53d2ed",
+  "truth_revision": null,
   "files": [
-    {
-      "path": ".colaberry/plan.json",
-      "sha256": "91c6c6b595d09f8d271cebbf1caaaf112e84441e5a7d7eece21a74bd17e1df3a"
-    },
-    {
-      "path": ".colaberry/profile.json",
-      "sha256": "5f9f9f3abfd886142d8252d38e0d768820c6faa81b913ffc406eb2d843b5a1ca"
-    },
-    {
-      "path": ".colaberry/progress.json",
-      "sha256": "d8816b2b7b5e6e22ef8cdc9d33c5ae83a1a44696c9a95ed6839aaf5e65c3a838"
-    },
-    {
-      "path": "CLAUDE.md",
-      "sha256": "9f763b575405a841b928d9257312e7db63e6dc5bef848da01d106fc6acf120fe"
-    },
-    {
-      "path": "artifacts/INDEX.md",
-      "sha256": "569788e0ac52b013f5bd3b772a44f12e5946caa7ddf5d487f46db340086d7103"
-    },
-    {
-      "path": "artifacts/week-01/claude-standards.md",
-      "sha256": "6ff8cae5637f866579eb7500dfce6a8cf7cb74098744e1933fcb82bb46dd9ce8"
-    },
-    {
-      "path": "artifacts/week-02/skill.md",
-      "sha256": "b9bd6e2d8f7c9d7aef0b9612e5f491599f5f792a896b917a1531910f1c9a9dad"
-    },
-    {
-      "path": "artifacts/week-03/setup-notes.pdf",
-      "sha256": "6788609a2dbee78a6add7d950983984d561d7be972b20bbed865666ac94bb9be"
-    },
-    {
-      "path": "artifacts/week-04/triage.md",
-      "sha256": "8655217ff87651199924ccaffe85a59d5197ae55c4441450fb473d3ca2a3c711"
-    },
-    {
-      "path": "artifacts/week-05/readme.md",
-      "sha256": "bce9213ed95cae10bc8bd244a1785cdf04075dc36036e6cfb23a5ee72de9461f"
-    },
-    {
-      "path": "artifacts/week-06/mcpserver-buildreport-2026-09-08.docx",
-      "sha256": "7564d344dfb3d0692a250be1873d899f927567bb03c8c6b74fe2f1fb3949e83f"
-    },
-    {
-      "path": "docs/DATA_CONTRACT.md",
-      "sha256": "d56e89edcfe36725945d961cf3479b646507d1fa855bba0dcdfff3f8f8a658b0"
-    },
     {
       "path": "docs/REQUIREMENTS.md",
       "sha256": "3c906629eab903c87d2af9a2d3fbeebd340f922f0573d2de96cfcfe39fe23b22"
@@ -65,8 +19,12 @@
       "sha256": "a599a5d185878602d683e5f28c18eab2c80de6617ad83b53cb76135c051cb8f6"
     },
     {
-      "path": "docs/stories/STORY-000.md",
-      "sha256": "31a516fc2ee0dd03414d59b2d46455dc73fd020567a4aa71c4a1ea4bfd04e414"
+      "path": "docs/DATA_CONTRACT.md",
+      "sha256": "d56e89edcfe36725945d961cf3479b646507d1fa855bba0dcdfff3f8f8a658b0"
+    },
+    {
+      "path": "CLAUDE.md",
+      "sha256": "9f763b575405a841b928d9257312e7db63e6dc5bef848da01d106fc6acf120fe"
     },
     {
       "path": "docs/stories/STORY-001.md",
@@ -131,6 +89,22 @@
     {
       "path": "docs/stories/STORY-016.md",
       "sha256": "604842815e8664db84c92443b0769c87e588e39a2e6d6b8241af99a9c03b11db"
+    },
+    {
+      "path": "docs/stories/STORY-000.md",
+      "sha256": "de17439ec7f965374a6aa3331916d25b64dd8911bf00427fea34818feb19c346"
+    },
+    {
+      "path": ".colaberry/plan.json",
+      "sha256": "91c6c6b595d09f8d271cebbf1caaaf112e84441e5a7d7eece21a74bd17e1df3a"
+    },
+    {
+      "path": ".colaberry/progress.json",
+      "sha256": "0aeeb0fb5fd42be0a63d37a7a2f6c838a5e5c4e0fed8ef47cbbaae15ecfe4950"
+    },
+    {
+      "path": ".colaberry/profile.json",
+      "sha256": "5f9f9f3abfd886142d8252d38e0d768820c6faa81b913ffc406eb2d843b5a1ca"
     }
   ]
 }

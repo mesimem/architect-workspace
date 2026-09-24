@@ -3,13 +3,13 @@
   "project": "U.S.-based Full-Service Travel Agency Platform",
   "totals": {
     "stories_total": 17,
-    "stories_verified": 2,
+    "stories_verified": 4,
     "stories_submitted": 0,
-    "stories_in_progress": 15,
+    "stories_in_progress": 13,
     "stories_not_started": 0,
     "criteria_total": 53,
-    "criteria_passed": 6,
-    "points_awarded": 94
+    "criteria_passed": 12,
+    "points_awarded": 188
   },
   "stories": [
     {
@@ -238,14 +238,14 @@
       "notes": "Two stores, deliberately: the audit log records every transaction (criterion 3), the accounting client receives only completed ones (criteria 1 and 2). The audit entry is written BEFORE the accounting call and does not depend on it, so a transaction stays on record when the API is down. NOTHING MAKES A REAL HTTP CALL - the default transport is an in-memory ledger behind an injected post argument, same pattern as advisorNotifier.js, because no accounting vendor or credential exists for this repo. Booking now carries a price (AVAILABILITY Sets became Maps with priceCents; FL-100 + HT-200 + SF-300 = 4490.00 USD), agreed with the user rather than inventing a placeholder amount. Known limits: single currency, no refund/reversal path, single-process dedup (needs a Postgres unique constraint), and mcp/booking-desk/booking.py has not been ported and is now behind on pricing.",
       "updated_at": "2026-08-31T22:55:15.733Z",
       "verification": {
-        "state": "submitted",
+        "state": "verified",
         "criteria_passed": 3,
         "criteria_total": 3,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
+        "verified_at": "2026-08-31T23:02:49.112Z",
+        "commit_sha": "c3c64f968adf4bdb94409c29dec13201a1ffb76b",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/c3c64f968adf4bdb94409c29dec13201a1ffb76b",
+        "commit_at": "2026-08-31T22:57:53Z",
+        "points_awarded": 47,
         "outstanding": []
       }
     },
@@ -292,14 +292,14 @@
       "notes": "Login is scrypt (node crypto, no new dependency) with a per-user salt; the plaintext is never stored and the credential module has no logging surface at all. Sessions store only the token's SHA-256 digest, so the session file is not a list of working credentials - proven by a child-process test that reads the real portal-sessions.json off disk. Two clocks: 30-minute sliding idle timeout and a 12-hour absolute lifetime that never slides, so a stolen token cannot be kept alive by the thief's own activity. EVERY login attempt is audited - success, wrong password, unknown account, malformed submission, and blocked-by-lockout - keyed on a server-generated UUID, never the client's correlation id: the audit log is first-write-wins, so a replayed X-Correlation-ID would otherwise silence every attempt after the first (tested). An unauditable login is REFUSED and its session revoked, so no access is granted that cannot be accounted for. All four rejection reasons are byte-identical to the customer while the trail keeps the specific reason. Unknown users pay the full scrypt cost against a decoy hash, so response timing is not a user-enumeration oracle (108ms vs 110ms measured). 5 failures in 15 minutes locks for 15 minutes, checked BEFORE the password so a locked account buys no scrypt work. DEFECT FOUND AND FIXED BY ITS OWN TEST: the first draft derived the comparison key at the stored hash's length rather than the canonical 32 bytes, so truncating a stored hash produced one that still verified while comparing fewer bytes; an unexpected key length is now a flat refusal. SCOPE: REQ-007's 'view and manage' is satisfied on the VIEW half only - read-only itineraries, agreed with the user rather than half-building a mutation path. Cancellation needs refunds and an accounting reversal; change requests are STORY-003's advisor routing. A stranger's trip returns 404, not 403, byte-identical to a nonexistent trip, so trip ids cannot be walked to map the business. server.js crossed CLAUDE.md's 500-line hard ceiling, so per the Modular Composition Rule it was split before the new routes were allowed to stand: endpoints moved to backend/src/http/routes/ (portal, triage, advisor, africa), server.js kept the HTTP mechanics and dropped 561->348 lines. The split is a pure move, proven by re-running STORY-003's suite UNMODIFIED. NOT DONE, deliberately: role-based permissions beyond the two existing roles (STORY-006), advisor-on-behalf-of access, MFA, password reset/rotation, per-IP throttling (nginx's job at the edge), refresh tokens, and cross-process session locking (single-process store, same as every other store in this repo). Known trade-off: someone who knows a customer id can lock that account for 15 minutes.",
       "updated_at": "2026-09-02T15:12:39.369995Z",
       "verification": {
-        "state": "submitted",
+        "state": "verified",
         "criteria_passed": 3,
         "criteria_total": 3,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
+        "verified_at": "2026-09-02T15:15:41.125Z",
+        "commit_sha": "24801c29f46de4e9923168b9f95e28f69569a13a",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/24801c29f46de4e9923168b9f95e28f69569a13a",
+        "commit_at": "2026-09-02T15:15:13Z",
+        "points_awarded": 47,
         "outstanding": []
       }
     },

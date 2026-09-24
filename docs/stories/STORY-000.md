@@ -236,6 +236,67 @@ These are the acceptance criteria the platform checks. They go into `.colaberry/
 - You are about to hard-code a KPI value, a customer name, or an integration status.
 - The guardrails tab is empty because your plan has no SAFE requirement — that is worth fixing before you build further.
 
+## When you finish: record what this story taught the project
+Before you start, read `.colaberry/plan.json` and `docs/stories/STORY-000.md` (the section
+"What the platform understands about this project"). That is the current truth. Note anything
+this story adds to it: a system it turns out to talk to, a decision you had to make, a limit you
+discovered, a role or approval point that appeared.
+
+When the acceptance criteria pass, write `.colaberry/enrichment/STORY-000.json` with exactly this shape:
+
+```
+{
+  "schemaVersion": "1",
+  "projectId": "<project_id from .colaberry/manifest.json>",
+  "storyId": "STORY-000",
+  "projectTruthBaseRevision": 0,
+  "observedAt": "<ISO timestamp>",
+  "sourceCommitSha": "<sha of your last commit, or null>",
+  "factProposals": [
+    {
+      "dimension": "integrations",
+      "value": "Reads open tickets from the Zendesk API.",
+      "evidence": "src/zendesk/client.ts"
+    }
+  ],
+  "decisions": [
+    {
+      "statement": "Poll every 5 minutes rather than subscribe to webhooks.",
+      "rationale": "no webhook access in the sandbox",
+      "evidence": "src/poll.ts"
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "Attachments over 10MB are skipped.",
+      "evidence": "src/zendesk/client.ts#L40"
+    }
+  ],
+  "demonstrationEvidence": [
+    {
+      "kind": "test",
+      "ref": "zendesk.client.test.ts"
+    }
+  ],
+  "measurementEvents": []
+}
+```
+
+Rules for that file:
+- Only what this story's work actually shows. Each entry names the file, commit or test that
+  proves it. No evidence, no entry.
+- `dimension` is one of: problem, desired_outcome, actors, current_workflow, inputs, outputs,
+  data, systems, integrations, pain_points, exceptions, approval_points, security_context,
+  ai_opportunities, human_only_decisions, assumptions, unknowns, constraints,
+  success_definition, delivery_profile.
+- Never claim a business result. What the business wanted, what hurt before, what "success"
+  means: those are the student's statements, not the build's, and the platform refuses them
+  from this file.
+- If you found something that contradicts the truth, still write it: the platform files it as
+  a question for the student rather than replacing what they confirmed.
+- `projectTruthBaseRevision` is `truth_revision` from `.colaberry/manifest.json`, or 0 if absent.
+- Commit it with the story. The platform reads it on push; pushing it twice changes nothing.
+
 ## How I want you to work
 - Build it so the data comes from one place. You will point it at your real system as you build, and you should not be rewriting tabs to do it.
 - Show me the Overview tab first and stop. Get that right before building the other eight.
@@ -285,6 +346,8 @@ That is the starting state: nothing claimed yet. Every line is `false` because n
 - **If the file already carries this story, reconcile it — do not rewrite it.** Add any **Done means** line that is missing with `"passed": false`, leave the ticks that are already there alone, and change a `false` to `true` only for a line you have just made true. A criterion added after this build started begins unticked like every other one; it does not inherit a tick from the lines around it.
 - **Bringing an older build up to the current standard is not permission to tick the new lines.** A line is ticked because it is true in the repo today — never because the rest of the story is finished, never because the build looks done, and never to make the count come out even. Leave every line you have not actually satisfied unticked, and tell me which ones and why.
 - Commit with the story id in the message — `git commit -m "STORY-000: build the Command Center"` (a `Story: STORY-000` line in the body works too) — then push.
+- **To read the file back before you commit**, open `.colaberry/progress.json` in the editor, or run `cat .colaberry/progress.json`. It is a plain JSON file in your repo and nothing else writes to it, so what you see there is exactly what the platform will read. If it will not open, or the editor reports a syntax error, fix the JSON first: a file that cannot be parsed counts as no claims at all rather than as an error.
+- **To check what the platform currently sees**, look at the story on the portal. It shows each criterion with a tick or a blank, and that view is built from the last push it read. If the portal and your file disagree, the push has not landed yet: press "Sync from GitHub" and look again before changing anything in the file.
 - Then tell me to watch the portal. If Step 1 worked, the criteria tick themselves within about ten seconds and the story flips to verified without me clicking anything. If I skipped Step 1, I press "Sync from GitHub" and the same thing happens.
 
 ## Step 4 — put it online (optional, one command)
