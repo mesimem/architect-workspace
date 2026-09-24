@@ -29,6 +29,31 @@ if [[ $cmd =~ $force_push ]]; then
   exit 2
 fi
 
+# --- destructive push forms ---------------------------------------------------
+# The blanket `Bash(git push:*)` deny in settings.json was narrowed so ordinary
+# branch pushes can happen; these are the forms it used to cover that still must
+# not. They live HERE as well as in the deny list because a deny entry is a
+# PREFIX match: "Bash(git push --delete:*)" catches `git push --delete x` and
+# sails straight past `git push origin --delete x`, which is the form anyone
+# would actually type. A regex can see the flag wherever it sits.
+#
+# Blocks:  git push --mirror          (overwrites every remote ref at once)
+#          git push origin --delete x / -d x     (deletes a remote branch)
+#          git push origin :x                    (the old deletion refspec)
+# Allows:  git push origin my-branch
+#          git push --dry-run                    (contains -d, matches nothing)
+dangerous_push='(^|[;&|] )git push ([^;&|]* )?(--mirror|--delete|-d)( |$)'
+if [[ $cmd =~ $dangerous_push ]]; then
+  echo "Blocked: this push form deletes or overwrites remote refs. Push a branch normally." >&2
+  exit 2
+fi
+
+delete_refspec='(^|[;&|] )git push [^;&|]* :[A-Za-z0-9_/.-]+( |$)'
+if [[ $cmd =~ $delete_refspec ]]; then
+  echo "Blocked: a colon-prefixed refspec deletes the remote branch. Push a branch normally." >&2
+  exit 2
+fi
+
 # --- rm against the filesystem root ------------------------------------------
 # Blocks:  rm -rf /        rm -rf /*        cd x && rm -rf / --no-preserve-root
 # Allows:  rm -rf /tmp/x   rm -rf ./build   rm -rf node_modules

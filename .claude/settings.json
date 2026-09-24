@@ -1,4 +1,46 @@
 {
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit",
+      "Bash(npm test:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ],
+    "deny": [
+      "Bash(git push --mirror:*)",
+      "Bash(git push --delete:*)",
+      "Bash(git push -d:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(rm -rf:*)",
+      "Bash(rm -fr:*)",
+      "Bash(git rebase:*)",
+      "Bash(git commit --amend:*)",
+      "Bash(git filter-branch:*)",
+      "Bash(git clean:*)",
+      "Bash(python scripts/score_prompt.py:*)",
+      "Bash(python3 scripts/score_prompt.py:*)",
+      "Bash(py scripts/score_prompt.py:*)",
+      "Bash(uv run scripts/score_prompt.py:*)",
+      "Bash(python test_anthropic.py:*)",
+      "Bash(python3 test_anthropic.py:*)",
+      "Bash(python hello_claude.py:*)",
+      "Bash(python3 hello_claude.py:*)",
+      "Bash(python round_trip.py:*)",
+      "Bash(python3 round_trip.py:*)",
+      "Bash(node backend/src/http/start.js:*)",
+      "Bash(npm start:*)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(./secrets/**)",
+      "Read(**/secrets/**)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -13,6 +55,11 @@
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/commit-guard.sh\"",
             "timeout": 180
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/progress-gate.sh\"",
+            "timeout": 20
           }
         ]
       }
