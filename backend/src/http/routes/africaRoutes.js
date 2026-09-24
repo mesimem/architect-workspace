@@ -3,12 +3,13 @@
 
 const { listAfricanDestinations } = require("../../services/africa/africanSectionService");
 const { getSafariDetails } = require("../../services/africa/safariDetailsService");
+const { PERMISSIONS } = require("../../services/authz/permissions");
 
 const africaRoutes = [
   {
     method: "GET",
     pattern: /^\/api\/africa\/destinations$/,
-    roles: ["customer", "advisor"],
+    permission: PERMISSIONS.CATALOG_READ,
     handler: async function (context) {
       const result = await listAfricanDestinations({
         customerId: context.principal.userId,
@@ -20,7 +21,7 @@ const africaRoutes = [
   {
     method: "GET",
     pattern: /^\/api\/africa\/destinations\/([A-Za-z0-9-]{1,64})$/,
-    roles: ["customer", "advisor"],
+    permission: PERMISSIONS.CATALOG_READ,
     handler: async function (context) {
       const result = await getSafariDetails({
         customerId: context.principal.userId,

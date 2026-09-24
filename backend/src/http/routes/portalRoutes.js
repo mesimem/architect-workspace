@@ -21,6 +21,7 @@ const {
   getItinerary,
   STATUSES: ITINERARY_STATUSES,
 } = require("../../services/portal/itineraryService");
+const { PERMISSIONS } = require("../../services/authz/permissions");
 
 // Envelope validation for the login body. Deliberately checks only that the
 // two fields are strings of a sane size - NOT whether the password looks
@@ -64,7 +65,6 @@ const portalRoutes = [
     // safe lives behind it - the throttle, the generic refusal, the audit
     // entry per attempt - not in front of it.
     public: true,
-    roles: [],
     handler: async function (context) {
       const problems = validateLoginBody(context.body);
       if (problems.length > 0) {
@@ -129,7 +129,10 @@ const portalRoutes = [
   {
     method: "POST",
     pattern: /^\/api\/portal\/logout$/,
-    roles: ["customer", "advisor"],
+    // Ending YOUR OWN session is not a privilege. Every role that can hold a
+    // session can end one, admin included - withholding it would mean an admin
+    // could not revoke a token they believed was compromised.
+    permission: PERMISSIONS.PORTAL_SESSION_END,
     handler: async function (context) {
       // Idempotent by construction: revoking an already-dead session reports
       // endedSession: false and is still audited. Both facts matter to an
@@ -148,11 +151,11 @@ const portalRoutes = [
   {
     method: "GET",
     pattern: /^\/api\/portal\/trips$/,
-    // Customers only. An advisor has no itineraries of their own, so this
-    // route would return them an empty list; viewing a customer's trips ON
-    // THEIR BEHALF is a permission, and permissions are STORY-006's work.
-    // Better an honest 403 now than an advisor-shaped hole opened early.
-    roles: ["customer"],
+    // Held by `customer` alone. An advisor has no itineraries of their own, and
+    // an admin administers rather than travels - neither holds this. Viewing a
+    // customer's trips ON THEIR BEHALF would be a separate permission granted
+    // deliberately, not a side effect of seniority.
+    permission: PERMISSIONS.PORTAL_TRIPS_READ,
     handler: async function (context) {
       // THE CUSTOMER ID COMES FROM THE SESSION, NEVER FROM THE REQUEST. There
       // is no query parameter to override it and no body to carry one. This is
@@ -170,7 +173,7 @@ const portalRoutes = [
     method: "GET",
     // Bounded in the pattern itself, so an absurd id never reaches a service.
     pattern: /^\/api\/portal\/trips\/([A-Za-z0-9-]{1,64})$/,
-    roles: ["customer"],
+    permission: PERMISSIONS.PORTAL_TRIPS_READ,
     handler: async function (context) {
       const result = getItinerary({
         customerId: context.principal.userId,
