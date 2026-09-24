@@ -282,12 +282,16 @@ async function main() {
     // ADMIN-RBAC-1 is the only admin, so demoting themselves would also trip
     // the last-admin guard - but self-assignment is checked first and wins.
     //
-    // WHICH MEANS last_admin IS UNREACHABLE OVER HTTP, and that is worth
-    // stating rather than leaving as a surprise: the only caller who could
-    // demote the final admin is that admin, and self-assignment stops them
-    // first. The guard still earns its place, because assignRole() is also
-    // callable from a script with no HTTP boundary in front of it - which is
-    // the path roleAssignments.test.js exercises for the 409.
+    // WHICH MEANS last_admin IS UNREACHABLE BY ANY *SEQUENTIAL* HTTP REQUEST:
+    // the only caller who could demote the final admin is that admin, and
+    // self-assignment stops them first.
+    //
+    // IT IS REACHABLE CONCURRENTLY, THOUGH - see adminConcurrency.test.js,
+    // where two admins demote each other at the same instant and the second
+    // one lands on the last-admin guard. Stated here because the sequential
+    // reasoning above is exactly the kind that invites someone to delete the
+    // guard as dead code, and it is not dead. It is also live on the
+    // direct-call path a script uses, which roleAssignments.test.js covers.
     const self = await assignCall(ADMIN_TOKEN, { userId: "ADMIN-RBAC-1", role: "customer" });
     assert.strictEqual(self.status, 403);
     assert.strictEqual((await self.json()).error, "self_assignment");

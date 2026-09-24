@@ -198,6 +198,32 @@ function refuse(reason, { actorUserId, targetUserId, role, correlationId }) {
 //
 // `directory` is the baseline principal list, needed for the last-admin count.
 // `now` is injectable so tests do not depend on the clock.
+//
+// ============================ THIS FUNCTION MUST NOT YIELD ============================
+//
+// It is SYNCHRONOUS from the first line to the last, and that is load-bearing,
+// not incidental. Everything it touches is synchronous too: resolveRole,
+// countAdmins, recordAudit, and the store's set() (fs.writeFileSync
+// underneath). Node therefore cannot interleave two calls, and the
+// read-then-write below is atomic by construction.
+//
+// WHAT BREAKS THE MOMENT SOMEONE ADDS AN `await`. The last-admin guard reads
+// the admin count and then writes; between those two points there must be no
+// suspension. With one, two concurrent mutual demotions - A demoting B while B
+// demotes A - would BOTH read a count of 2, both conclude they are not
+// removing the last admin, and both commit. The system lands on zero admins,
+// which is the one state nothing inside it can recover from: no admin means no
+// one can ever assign a role again, and the fix needs shell access to the
+// environment.
+//
+// So: do not make this async. Do not await anything inside it. Do not call
+// anything from it that might become async later without re-checking this.
+// When this repo moves to Postgres, the guard becomes a transaction with the
+// admin count read FOR UPDATE, not an await bolted onto this shape.
+//
+// Defended by adminConcurrency.test.js, which asserts this is not an
+// AsyncFunction and drives the mutual-demotion race over real HTTP.
+// =====================================================================================
 function assignRole(
   { actorUserId, actorRole, targetUserId, role, reason, correlationId },
   { directory = [], now = Date.now() } = {}
