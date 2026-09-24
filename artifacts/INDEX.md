@@ -11,5 +11,8 @@ week by week. Each row links to the artifact in this repo.
 | Week 4 | Build Your Prompt Library — triage.md | [`triage.md`](./week-04/triage.md) | U.S.-based Full-Service Travel Agency Platform | 2 KB |
 | Week 5 | MCP Server Implementation Task — README.md | [`readme.md`](./week-05/readme.md) | U.S.-based Full-Service Travel Agency Platform | 5 KB |
 | Week 6 | Build Your Production MCP Server — MCPServer_BuildReport_2026-09-08.docx | [`mcpserver-buildreport-2026-09-08.docx`](./week-06/mcpserver-buildreport-2026-09-08.docx) *(held on platform)* | U.S.-based Full-Service Travel Agency Platform | 105 KB |
+| Week 7 | Build Your Subagent Integration — AI-Team-Setup.pdf | [`ai-team-setup.pdf`](./week-07/ai-team-setup.pdf) *(held on platform)* | Sample project | 2 KB |
 
-6 artifacts.
+7 artifacts.
+
+1 of these were built against a sample project rather than this one, and are marked as such.
