@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session CC-20260923-4k7p — Change Report</title>
+<style>
+  :root {
+    --cherry: #FB2832;
+    --berry: #367895;
+    --leaf: #5BA63C;
+    --ink: #16202a;
+    --muted: #5c6b7a;
+    --rule: #dfe5ea;
+    --surface: #ffffff;
+    --canvas: #f4f6f8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: Roboto, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    line-height: 1.6;
+  }
+  code {
+    font-family: "Roboto Mono", ui-monospace, Consolas, "Courier New", monospace;
+    font-size: 0.9em;
+    background: #eef2f5;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.05em 0.35em;
+    word-break: break-word;
+  }
+  header.masthead {
+    background: var(--surface);
+    border-bottom: 3px solid var(--cherry);
+    padding: 2rem 1.5rem 1.5rem;
+  }
+  .wrap { max-width: 60rem; margin: 0 auto; }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--berry);
+    margin: 0 0 0.35rem;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 0.5rem; font-weight: 700; letter-spacing: -0.01em; }
+  .meta { color: var(--muted); font-size: 0.88rem; margin: 0; }
+  main { padding: 1.75rem 1.5rem 3rem; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--berry);
+    border-radius: 4px;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1.1rem;
+  }
+  .card-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    padding-bottom: 0.7rem;
+    margin-bottom: 0.9rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .card-index {
+    font-family: "Roboto Mono", ui-monospace, Consolas, monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    flex: none;
+  }
+  .card-head h2 { font-size: 1.06rem; margin: 0; font-weight: 600; flex: 1 1 auto; }
+  .badge {
+    flex: none;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .badge-done { background: #eaf5e4; color: #3d7327; border: 1px solid var(--leaf); }
+  .badge-open { background: #fdf1e3; color: #8a5810; border: 1px solid #E8920C; }
+  .field { display: grid; grid-template-columns: 9.5rem 1fr; gap: 1rem; padding: 0.4rem 0; }
+  .field + .field { border-top: 1px dotted var(--rule); }
+  .field-label {
+    font-size: 0.73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    padding-top: 0.2rem;
+  }
+  .field-value { font-size: 0.93rem; overflow-wrap: anywhere; }
+  footer { color: var(--muted); font-size: 0.8rem; padding: 0 1.5rem 2.5rem; }
+  @media (max-width: 40rem) {
+    .field { grid-template-columns: 1fr; gap: 0.15rem; }
+  }
+  @media print {
+    body { background: #fff; }
+    .card { break-inside: avoid; border-left-color: #999; }
+  }
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Claude Code session report</p>
+    <h1>Session CC-20260923-4k7p</h1>
+    <p class="meta">2 changes logged &middot; generated 2026-09-24T00:20:06.571Z</p>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">01</span>
+    <h2>STORY-006: role-based permissions — a permission table, an admin surface, and an audited role-assignment path</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-09-23</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value">five new files and six edited. NEW: <code>backend/src/services/authz/permissions.js</code> (the permission catalog and the role→permission table for customer/advisor/admin, with <code>can(role, permission)</code> as the single access decision), <code>backend/src/services/authz/roleAssignments.js</code> (durable assignment store, <code>resolveRole()</code>, and <code>assignRole()</code> behind four guards), <code>backend/src/http/routes/adminRoutes.js</code> (<code>GET /api/admin/roles</code>, <code>POST /api/admin/roles</code>, <code>GET /api/admin/audit</code>, each naming a DIFFERENT permission), plus their three test files. EDITED: <code>auth.js</code> now imports ROLES from the permission table instead of keeping its own literal, resolves the effective role through <code>resolveRole()</code> so an assignment overrides the credential's claim, carries <code>declaredRole</code> alongside <code>role</code>, and <strong><code>hasRole()</code> was deleted</strong>; <code>server.js</code> validates every route against the permission table at module load (<code>assertRoutesDeclarePermissions</code>), replaces the role-membership check with <code>can()</code>, writes a durable audit row on every 403, and projects the principal list down to <code>{userId, role}</code> before any handler sees it so a bearer token cannot reach a response; the four route modules swapped <code>roles: [...]</code> for one <code>permission:</code> each; <code>routes/index.js</code> registers the admin area.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value">20/20 <code>npm test</code>, <code>npm run typecheck</code> clean (mypy, 3 packages + scripts). AC-1: an admin token reaches all three admin endpoints, tested separately because each names a distinct permission. AC-2: customer and advisor tokens get 403 on every admin path while still reaching their own routes, AND an admin gets 403 on both <code>/api/portal/trips</code> and <code>/api/advisor/reviews</code>. AC-3: the role change, the denied access attempt and the refused assignment are all readable through <code>GET /api/admin/audit</code> with actor, resource, required permission and correlation id. THE SWAP IS PROVEN BEHAVIOUR-PRESERVING BY STORY-003 AND STORY-005'S SUITES PASSING UNMODIFIED — 19/19 before the new suite was added, with no test edited. Sharpest test: a customer logs in, is promoted by an admin, and on the SAME session token with no new login the advisor queue opens and their own trips close.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">FIVE POINTS. (1) <code>hasRole()</code> WAS DELETED, NOT DEPRECATED. Leaving it exported &quot;in case&quot; means two ways to make an access decision, and the first route that picks the wrong one is a hole nobody sees — the same reasoning <code>auth.js</code> already used to keep both credential kinds in one <code>authenticate()</code>. Single call site, so the deletion was clean. (2) NO ROLE INHERITANCE, AND ADMIN IS NOT A SUPERUSER. Each role's grants are written out longhand and admin deliberately lacks <code>portal.trips.read</code> and <code>advisor.reviews.read</code>; tests assert those ABSENCES so a later &quot;simplification&quot; into a hierarchy fails loudly. Inheritance is how privilege creep happens: add a permission to <code>customer</code> for a good reason and every inheriting role silently gains it. (3) ROLES RESOLVE PER REQUEST, NOT AT LOGIN. A session issued before a demotion gets the current role on its next call. Resolving at login would mean a demotion does not bite until the session expires, and with a 12-hour absolute lifetime that is not revocation. (4) DELIBERATE ASYMMETRY ON AC-3, and it is the one place the criterion was read rather than followed literally: 403s get a durable audit row, 401s do not. A 401 is anonymous — no actor to attribute it to — and the audit store rewrites its whole file per row, so auditing them hands any unauthenticated caller a disk-fill with quadratic write amplification. 401s remain fully recorded in the structured log stream; they are simply not in the evidence store. (5) TWO GUARDS ARE UNREACHABLE OVER HTTP AND WERE KEPT ANYWAY. <code>assignRole</code>'s <code>not_permitted</code> never fires through the API because the route's own permission check refuses first, and <code>last_admin</code> never fires because the only caller who could demote the final admin is that admin, whom <code>self_assignment</code> stops first. Both are live on the direct-call path a script would use, which <code>roleAssignments.test.js</code> exercises. A guard reachable by only one route must not be deleted because the other route happens to be covered — recorded here so a future reader does not &quot;clean up&quot; dead code that is not dead. SEPARATELY: the startup route guard has its own test against all three malformed shapes, because without it the guard could be deleted and every other test would still pass — it only ever runs against a route table that is already valid. NOT DONE, deliberately: per-resource scoping (&quot;advisor for THESE customers&quot;), time-bounded grants, approval workflows, bulk assignment, and audit-trail filtering by actor or date (needs query-string parsing, which the pipeline does not do). Advisor-on-behalf-of-customer access stays unbuilt and is a separate explicit permission when wanted, not a side effect of seniority. OBSERVED, NOT FIXED, OUT OF SCOPE: <code>request_handled</code> logs <code>outcome: &quot;success&quot;</code> even for a 401 or 429, because <code>log()</code> derives outcome from level rather than status — misleading to anyone reading the stream, and a one-line fix for whoever owns that next.</div></div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">02</span>
+    <h2>STORY-006 hardening: defend the assignRole atomicity invariant, and prove role changes survive a restart</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-09-23</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value">four files. <code>backend/src/services/authz/roleAssignments.js</code> gains a THIS FUNCTION MUST NOT YIELD block over assignRole explaining that its synchronicity is load-bearing and naming exactly what breaks without it (no logic change). NEW <code>backend/src/http/adminConcurrency.test.js</code> — a structural assertion that assignRole is not an AsyncFunction and does not return a promise, plus three real HTTP races: mutual demotion, ten simultaneous identical promotions, and a twenty-request contradictory burst. NEW <code>backend/src/services/authz/roleAssignments.durability.test.js</code> — seven child-process checks against a real COLABERRY_DATA_DIR. <code>backend/src/http/admin.test.js</code> has a comment CORRECTED (see notes).</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value">22/22 <code>npm test</code> (was 20/20), <code>npm run typecheck</code> clean. The mutual-demotion race asserts <code>countAdmins</code> never reaches zero and that the surviving admin still works while the demoted one is refused immediately. Ten concurrent identical promotions produce exactly one <code>assigned</code>, nine <code>unchanged</code>, exactly one <code>authz.role_assignment.changed</code> in the trail and nine <code>unchanged</code> entries. Durability is proven in a SECOND PROCESS: an assignment and its audit rows survive, idempotency survives, a demoted admin stays demoted, the last-admin guard still refuses after a restart, and deleting the store file falls back to directory roles with the audit trail intact.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">FOUR POINTS. (1) A CLAIM IN THE PREVIOUS ENTRY WAS PARTLY WRONG AND IS CORRECTED HERE. That entry records <code>last_admin</code> as unreachable over HTTP. It is unreachable SEQUENTIALLY - self_assignment always fires first - but two admins demoting each other at the same instant does reach it, which the new race test demonstrates. The comment in admin.test.js asserting unreachability has been rewritten rather than deleted, because that exact reasoning is what invites a future reader to remove the guard as dead code. (2) THE CONCURRENCY RISK I FLAGGED DID NOT EXIST, BUT THE FRAGILITY DID. assignRole is synchronous end to end (resolveRole, countAdmins, recordAudit and fs.writeFileSync are all sync), so Node cannot interleave two calls and the read-then-write is atomic by construction. That is a real guarantee held up by nothing but how the function happens to be written: one <code>await</code> inside it and two concurrent mutual demotions both read a count of 2, both commit, and the system lands on zero admins - the one state nothing inside it can recover from. Hence a structural assertion that fires the day someone makes it async, which will trip long before anyone re-reads the race test. (3) THE LOSER'S STATUS CODE IS DELIBERATELY NOT PINNED. It is 403 when the second request had not been authenticated at the moment the first committed - per-request role resolution had already stripped its admin role mid-flight, which is the feature working - and 409 when it had been authenticated and reached the handler. Both preserve the invariant. Asserting one would be asserting the socket scheduler and would go flaky on a differently-scheduled machine, so the test asserts <code>countAdmins === 1</code> and accepts either refusal. (4) THE DEMOTION DIRECTION GOT ITS OWN DURABILITY TEST FOR A REASON. A lost promotion is a nuisance someone reports within the hour; a lost demotion is a silent re-grant that the audit trail actively contradicts. Related and non-obvious: the last-admin guard is proven to count PERSISTED state rather than the directory, because a fresh process rebuilding the count from the environment alone would see two admins and demote the remaining one to zero. The documented recovery path is now proven rather than asserted in a comment - a lost store falls back to directory roles - and the test records the honest cost in its own assertion: that fallback UNDOES EVERY DEMOTION. Safe in the sense that the bootstrap admin can still log in and nothing is wedged, not safe in the sense of preserving revocations; re-applying them is what the audit trail (a separate file, proven untouched by the loss) exists for. STILL UNHANDLED, pre-existing and repo-wide: two Node processes sharing a data directory each hold their own in-memory Map and lose each other's writes. Documented in jsonFileStore.js; the real fix is Postgres. NOT VERIFIED BY CI — the push was denied by the permission layer, so every result above is local.</div></div>
+</article>
+  </div>
+</main>
+<footer>
+  <div class="wrap">
+    Generated from PROGRESS.md by scripts/generateSessionChangelog.js. Only entries
+    tagged <code>Session: CC-20260923-4k7p</code> appear here.
+  </div>
+</footer>
+</body>
+</html>
