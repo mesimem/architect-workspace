@@ -124,8 +124,35 @@ function main() {
   for (const permission of ALL_PERMISSIONS) {
     assert.ok(granted.has(permission), permission + " is granted to no role");
   }
-  assert.deepStrictEqual(ROLES.slice().sort(), ["admin", "advisor", "customer"]);
+  assert.deepStrictEqual(ROLES.slice().sort(), ["admin", "advisor", "customer", "sales"]);
   console.log("permissions: catalog and grant table agree, with no orphans on either side");
+
+  // STORY-014: the CRM grants, stated as the blast radius of a leaked token
+  // rather than as a list of features. Each negative below is a rule from this
+  // module's header that a later story could undo by accident.
+  assert.strictEqual(can("sales", PERMISSIONS.CRM_LEADS_READ), true);
+  assert.strictEqual(can("sales", PERMISSIONS.CRM_LEADS_WRITE), true);
+  assert.strictEqual(can("sales", PERMISSIONS.CRM_CUSTOMERS_READ), true);
+
+  // Nobody else reaches the CRM. Written out per role, because "no other role
+  // has it" is the claim, and a loop over ROLES would silently pass the day a
+  // fifth role is added with CRM access.
+  for (const permission of [
+    PERMISSIONS.CRM_LEADS_READ,
+    PERMISSIONS.CRM_LEADS_WRITE,
+    PERMISSIONS.CRM_CUSTOMERS_READ,
+  ]) {
+    assert.strictEqual(can("customer", permission), false, "customer must not hold " + permission);
+    assert.strictEqual(can("advisor", permission), false, "advisor must not hold " + permission);
+    assert.strictEqual(can("admin", permission), false, "admin must not hold " + permission);
+  }
+
+  // And sales does not drift into everyone else's job.
+  assert.strictEqual(can("sales", PERMISSIONS.ADMIN_AUDIT_READ), false);
+  assert.strictEqual(can("sales", PERMISSIONS.ADMIN_ROLES_ASSIGN), false);
+  assert.strictEqual(can("sales", PERMISSIONS.ADVISOR_REVIEWS_READ), false);
+  assert.strictEqual(can("sales", PERMISSIONS.PORTAL_TRIPS_READ), false);
+  console.log("permissions: the CRM is reachable by sales alone, and sales reaches nothing else");
 
   console.log("permissions: all tests passed");
 }

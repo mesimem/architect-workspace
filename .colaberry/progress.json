@@ -631,35 +631,46 @@
       "criteria": [
         {
           "text": "Given a new lead, when it is added to the CRM, then it should be visible in the lead list.",
-          "passed": false
+          "passed": true,
+          "evidence": "backend/src/services/crm/leadStore.test.js and backend/src/http/crm.test.js - POST /api/crm/leads returns 201 and the lead is then present in GET /api/crm/leads, with createdBy taken from the resolved principal rather than the request body."
         },
         {
           "text": "Given a customer booking, when it is completed, then it should update the customer's booking history.",
-          "passed": false
+          "passed": true,
+          "evidence": "backend/src/services/crm/customerRecord.test.js and backend/src/http/crm.test.js - a booking driven through the real bookTrip() appears in GET /api/crm/customers/:id with its tripId, amount and legs, and the customer moves from 404 to 200; a replayed booking does not double-count the lifetime value, and a payment_failed booking never becomes history."
         },
         {
           "text": "Trust: Given any CRM entry, when it is modified, then an audit log entry must be created.",
-          "passed": false
+          "passed": true,
+          "evidence": "backend/src/services/crm/leadStore.test.js and backend/src/http/crm.test.js - crm.lead.created, crm.lead.updated (with before/after per field), crm.lead.unchanged and crm.lead.refused are all readable afterwards through GET /api/admin/audit with actor, resource and correlation id; a SECOND edit to the same lead is asserted to produce its own distinct entry."
         }
       ],
-      "files_touched": [],
-      "tests_added": [],
-      "notes": null,
-      "updated_at": null,
+      "files_touched": [
+        "backend/src/services/authz/permissions.js",
+        "backend/src/services/crm/leadStore.js",
+        "backend/src/services/crm/customerRecord.js",
+        "backend/src/http/routes/crmRoutes.js",
+        "backend/src/http/routes/index.js",
+        "docs/stories/STORY-014.md"
+      ],
+      "tests_added": [
+        "backend/src/services/crm/leadStore.test.js",
+        "backend/src/services/crm/customerRecord.test.js",
+        "backend/src/http/crm.test.js",
+        "backend/src/services/authz/permissions.test.js"
+      ],
+      "notes": "The CRM is two halves with different owners of truth. LEADS are new state (services/crm/leadStore.js). CUSTOMERS and BOOKING HISTORY are NOT: booking/crmTransactionLog.js is already written by bookTripService at the moment a booking confirms, so services/crm/customerRecord.js is a read model over it and acceptance criterion 2 needed no new state at all - the history updates because the history IS the booking log, with no sync step to fall behind. A CRM bookings table would have been a second answer to 'what has this customer bought?', and the second answer is the one that goes stale the first time a booking is amended. The same reasoning is already written out at portal/itineraryService.js:11. A FOURTH ROLE, not a widened advisor. The story's persona is a sales manager and no such role existed. permissions.js' own header predicted this ('when a fourth role arrives ... only this table does'), and the alternative - giving advisor the CRM grants - would have required DELETING the line directly above it that says advisor gets 'NOT customer data by default'. A rule you delete to make today's story fit is not a rule. ADMIN DELIBERATELY DOES NOT GET THE CRM either: an admin can grant the sales role and that act is audited, but cannot quietly read the lead book, which keeps 'admin is not a superuser' true. crm.leads.read and crm.leads.write are split (a read exposes the whole book at once, a write corrupts one record at a time), and crm.customers.read is split from both because a booking history is more sensitive than an enquiry. permissions.test.js asserts sales holds exactly those three and that customer, advisor and admin each hold none, so a later 'simplification' into a role hierarchy fails loudly. THE SUBTLE BUG THIS STORY HAD TO AVOID. Audit entries are first-write-wins, a trap auditLog.js:213 documents explicitly. A module that keyed every edit on '<leadId>:updated' would have recorded the FIRST edit to a lead and silently discarded every later one - an audit trail that looks complete and is not, which is worse than no trail at all. Lead EDITS therefore key on the caller's per-request correlationId, while CREATES key on the freshly generated leadId (collision-free by construction). There is a regression test that makes two successive edits and asserts both entries exist and differ. The consequence is stated as a rule rather than left implicit: a mutation arriving with no correlationId is REFUSED rather than performed unaudited, because the project guardrail is that all changes are audited, so 'I cannot audit this' has to mean 'I will not do this'. Lead duplication is deduped on normalised (email + source), the key CLAUDE.md mandates for lead capture. A repeat POST returns the ORIGINAL row with replayed: true and HTTP 200 rather than 201, so a client retrying a submission it is unsure about can tell whether it captured the lead or found it already there; the first row wins, so a duplicate cannot re-attribute the lead to whoever submitted it second. The same email from a DIFFERENT source is intentionally a separate lead - a partner referral is a different commercial event from the same person filling in the web form, and sales needs both rows. The same rule is enforced on the edit path (duplicate_lead, 409), because an edit that moves a lead onto another lead's email+source is the same duplicate arriving through the other door. Validation is split on a line borrowed from adminRoutes.js:98. The ROUTE checks only the envelope ('is this a JSON object?'); the SERVICE judges the fields. Rejecting a malformed email at the boundary would have returned the same 400 to the caller while quietly losing the audit entry - a refused lead that leaves no trace. So a non-object body is invalid_request_body and never reached a decision, while a bad email is invalid_lead, audited, and reported with EVERY problem at once rather than one per round trip. Refusals are audited too, and the audit entry does not echo the rejected value back, since it arrived from outside and ends up in log lines. Unauthorized data access is not handled in the CRM code at all, on purpose: routes DECLARE a permission and http/server.js enforces it once and audits every refusal, so a second check inside the CRM would be a second policy that can disagree with the first. crm.test.js therefore tests it at the boundary, across all five routes x three wrong roles (customer, advisor, admin) for 403, plus anonymous for 401 - because each route names its own permission and passing one proves nothing about the other four. It also proves the indirection pays for itself: granting sales to a live customer token opens the CRM and revoking it closes it again, with no restart. Records handed to callers are frozen, leads and customer records alike, so the only way to change a lead is updateLead, which is the only thing that writes an audit entry. createdAt and createdBy are outside the editable allow-list - an 'update' that can rewrite who captured a lead and when is not an update, it is a way to erase the trail. Fields outside the allow-list are REFUSED by name rather than silently dropped, because silently dropping them tells the caller the save succeeded; the legal half of a mixed patch does not apply either. A malformed percent-sequence in a path id is a 400 rather than an unguarded decodeURIComponent throw, which would have been a 500 on a URL a scanner finds within the hour. NOT DONE, deliberately. No cross-customer revenue aggregate: lifetimeValueCents is a per-account relationship figure, and revenue and booking analytics is STORY-012's job - two modules computing the business's revenue ends as two different numbers on two dashboards. No customer directory: identity already belongs to portal/portalCredentials.js and a CRM copy would be both a second truth and a second place to leak a contact list from, so 'customer' here means 'someone with a confirmed booking' and a person with none is a LEAD - a coherent split rather than a gap. No lead deletion ('lost' is a status, and erasing a lead erases the audit trail's subject), no lead-to-customer conversion flow, no lead owner assignment, no merge of two leads found to be the same person, and no pagination on either list - both reads are O(n) scans, and STORY-016 is the scalability story, so an index (which is a second copy of the data that can desync) waits for a measured reason. HONEST LIMITS. Reads are not audited, only modifications and denials - the criterion is about modification, and auditing successful reads means an entry per page view, which buries the entries that record a change; if it is wanted later it belongs at the boundary, once, not scattered through read models. Mixed currencies on one account are collected into a currencies array rather than assumed, so a total summed across unlike currencies is visible as such instead of being quietly wrong, but nothing yet CONVERTS them. Persistence is still jsonFileStore (in-memory unless COLABERRY_DATA_DIR is set), so the pre-existing repo-wide limit applies unchanged: two Node processes sharing a data directory each hold their own in-memory Map and lose each other's writes. The real fix is Postgres, not something to bolt on inside this story.",
+      "updated_at": "2026-09-29T03:21:38.269Z",
       "verification": {
-        "state": "in_progress",
-        "criteria_passed": 0,
+        "state": "submitted",
+        "criteria_passed": 3,
         "criteria_total": 3,
         "verified_at": null,
         "commit_sha": null,
         "commit_url": null,
         "commit_at": null,
         "points_awarded": null,
-        "outstanding": [
-          "Given a new lead, when it is added to the CRM, then it should be visible in the lead list.",
-          "Given a customer booking, when it is completed, then it should update the customer's booking history.",
-          "Trust: Given any CRM entry, when it is modified, then an audit log entry must be created."
-        ]
+        "outstanding": []
       }
     },
     {

@@ -14,10 +14,20 @@
 // ask for is listed here, a route asking for a permission that does not exist
 // is a startup error rather than a route nobody can reach.
 //
-// THE THREE ROLES, AND WHY THEY ARE NOT NESTED.
+// THE FOUR ROLES, AND WHY THEY ARE NOT NESTED.
 //   customer  - their own trips, their own bookings. Nothing else.
 //   advisor   - the review queue and the catalog. NOT customer data by default.
 //   admin     - operates the system: sees the audit trail, assigns roles.
+//   sales     - the CRM: leads, and the booking history of customers they hold
+//               a relationship with. NOT the system, NOT the review queue.
+//
+// STORY-014 added `sales` rather than widening `advisor`, which is the change
+// this file's own header predicted ("when a fourth role arrives ... only this
+// table does"). The alternative was to give advisor the CRM grants, and the
+// line above it - "NOT customer data by default" - is exactly the rule that
+// would have had to be deleted to do it. A rule you delete to make today's
+// story fit is not a rule. Leads and booking history are customer data; the
+// role that reads them is named for that job and holds nothing else.
 //
 // Admin is deliberately NOT "advisor plus more", and advisor is not "customer
 // plus more". Role inheritance is the standard shortcut here and it is how
@@ -74,6 +84,17 @@ const PERMISSIONS = Object.freeze({
   ADMIN_ROLES_READ: "admin.roles.read",
   ADMIN_ROLES_ASSIGN: "admin.roles.assign",
   ADMIN_AUDIT_READ: "admin.audit.read",
+
+  // CRM (STORY-014). Read and write are split because they leak differently:
+  // a read exposes every lead in the book at once, a write can only corrupt
+  // one record at a time. Splitting them means a future reporting integration
+  // can be given the read without the ability to edit anything.
+  CRM_LEADS_READ: "crm.leads.read",
+  CRM_LEADS_WRITE: "crm.leads.write",
+  // Separate from CRM_LEADS_READ: a lead is someone who asked about a trip, a
+  // customer's booking history is what they have actually paid for. The second
+  // is the more sensitive of the two and does not come free with the first.
+  CRM_CUSTOMERS_READ: "crm.customers.read",
 });
 
 const ALL_PERMISSIONS = Object.freeze(Object.values(PERMISSIONS));
@@ -108,6 +129,27 @@ const ROLE_PERMISSIONS = Object.freeze({
     // Note what is absent: PORTAL_TRIPS_READ, ADVISOR_REVIEWS_READ,
     // REQUESTS_TRIAGE. An admin administers; it does not get to read customer
     // itineraries as a perk of the job. See "ADMIN IS NOT A SUPERUSER" above.
+    //
+    // STORY-014: nor does it get the CRM. An admin can GRANT the sales role
+    // (ADMIN_ROLES_ASSIGN) and that act is audited; it cannot quietly read the
+    // lead book itself. Granting yourself access leaves a record, which is the
+    // whole difference between an admin and a superuser.
+  ]),
+
+  // STORY-014. A sales manager works the relationship: takes leads in, reads
+  // the book back, looks at what a customer has already bought. Deliberately
+  // absent: ADMIN_AUDIT_READ (the audit trail records what sales did, so sales
+  // reading it is a conflict of interest), ADVISOR_REVIEWS_READ (triage is not
+  // their job), and PORTAL_TRIPS_READ (that permission means "my own trips",
+  // and a sales manager has none - CRM_CUSTOMERS_READ is the grant that lets
+  // them see someone else's).
+  sales: Object.freeze([
+    PERMISSIONS.CRM_LEADS_READ,
+    PERMISSIONS.CRM_LEADS_WRITE,
+    PERMISSIONS.CRM_CUSTOMERS_READ,
+    PERMISSIONS.CATALOG_READ,
+    // Ending your own session is not a privilege - same reasoning as advisor.
+    PERMISSIONS.PORTAL_SESSION_END,
   ]),
 });
 

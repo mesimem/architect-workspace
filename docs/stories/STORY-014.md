@@ -27,8 +27,8 @@ the same criteria out of `.colaberry/progress.json`, which Claude Code keeps in
 step (see the managed block in CLAUDE.md). Ticking something you have not
 actually met only misleads you.
 
-- [ ] Given a new lead, when it is added to the CRM, then it should be visible in the lead list.
-- [ ] Given a customer booking, when it is completed, then it should update the customer's booking history.
-- [ ] Trust: Given any CRM entry, when it is modified, then an audit log entry must be created.
+- [x] Given a new lead, when it is added to the CRM, then it should be visible in the lead list.
+- [x] Given a customer booking, when it is completed, then it should update the customer's booking history.
+- [x] Trust: Given any CRM entry, when it is modified, then an audit log entry must be created.
 
 When every box above is ticked, stop and show the demo.
