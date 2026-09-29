@@ -365,15 +365,18 @@
       "criteria": [
         {
           "text": "Given a quote is generated, when a customer views it, then it displays without internal costs.",
-          "passed": true
+          "passed": true,
+          "evidence": "backend/src/http/quotes.test.js: the customer response is read as raw text and asserted to contain no cost total (854000), margin (166000) or unit cost (420000), no internal note, and no key matching /cost|margin|internal|supplier/i at any depth. quoteView.test.js repeats the scan after adding an unanticipated internal field."
         },
         {
           "text": "Given a quote is modified, when it is saved, then the system updates the customer view.",
-          "passed": true
+          "passed": true,
+          "evidence": "backend/src/http/quotes.test.js: an advisor PATCHes to one line plus a 10% discount, then the customer's next GET /api/portal/quotes/:id returns version 2 at totalCents 900000 with the new note - read back through the API after the save, not from the write's return value."
         },
         {
           "text": "Trust: The system logs all quote generations and modifications.",
-          "passed": true
+          "passed": true,
+          "evidence": "backend/src/http/quotes.test.js: quote.generated and quote.modified are both read back through GET /api/admin/audit with actor, resource, distinct correlation ids, and totalCentsBefore/totalCentsAfter on the modification."
         }
       ],
       "files_touched": [
@@ -395,14 +398,18 @@
       "updated_at": "2026-09-29T04:54:06Z",
       "verification": {
         "state": "in_progress",
-        "criteria_passed": 3,
+        "criteria_passed": 0,
         "criteria_total": 3,
         "verified_at": null,
         "commit_sha": null,
         "commit_url": null,
         "commit_at": null,
         "points_awarded": null,
-        "outstanding": []
+        "outstanding": [
+          "Given a quote is generated, when a customer views it, then it displays without internal costs.",
+          "Given a quote is modified, when it is saved, then the system updates the customer view.",
+          "Trust: The system logs all quote generations and modifications."
+        ]
       }
     },
     {
