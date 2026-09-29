@@ -3,13 +3,13 @@
   "project": "U.S.-based Full-Service Travel Agency Platform",
   "totals": {
     "stories_total": 17,
-    "stories_verified": 2,
+    "stories_verified": 6,
     "stories_submitted": 0,
-    "stories_in_progress": 15,
+    "stories_in_progress": 11,
     "stories_not_started": 0,
     "criteria_total": 53,
-    "criteria_passed": 6,
-    "points_awarded": 94
+    "criteria_passed": 18,
+    "points_awarded": 282
   },
   "stories": [
     {
@@ -238,14 +238,14 @@
       "notes": "Two stores, deliberately: the audit log records every transaction (criterion 3), the accounting client receives only completed ones (criteria 1 and 2). The audit entry is written BEFORE the accounting call and does not depend on it, so a transaction stays on record when the API is down. NOTHING MAKES A REAL HTTP CALL - the default transport is an in-memory ledger behind an injected post argument, same pattern as advisorNotifier.js, because no accounting vendor or credential exists for this repo. Booking now carries a price (AVAILABILITY Sets became Maps with priceCents; FL-100 + HT-200 + SF-300 = 4490.00 USD), agreed with the user rather than inventing a placeholder amount. Known limits: single currency, no refund/reversal path, single-process dedup (needs a Postgres unique constraint), and mcp/booking-desk/booking.py has not been ported and is now behind on pricing.",
       "updated_at": "2026-08-31T22:55:15.733Z",
       "verification": {
-        "state": "submitted",
+        "state": "verified",
         "criteria_passed": 3,
         "criteria_total": 3,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
+        "verified_at": "2026-08-31T23:02:49.112Z",
+        "commit_sha": "c3c64f968adf4bdb94409c29dec13201a1ffb76b",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/c3c64f968adf4bdb94409c29dec13201a1ffb76b",
+        "commit_at": "2026-08-31T22:57:53Z",
+        "points_awarded": 47,
         "outstanding": []
       }
     },
@@ -292,14 +292,14 @@
       "notes": "Login is scrypt (node crypto, no new dependency) with a per-user salt; the plaintext is never stored and the credential module has no logging surface at all. Sessions store only the token's SHA-256 digest, so the session file is not a list of working credentials - proven by a child-process test that reads the real portal-sessions.json off disk. Two clocks: 30-minute sliding idle timeout and a 12-hour absolute lifetime that never slides, so a stolen token cannot be kept alive by the thief's own activity. EVERY login attempt is audited - success, wrong password, unknown account, malformed submission, and blocked-by-lockout - keyed on a server-generated UUID, never the client's correlation id: the audit log is first-write-wins, so a replayed X-Correlation-ID would otherwise silence every attempt after the first (tested). An unauditable login is REFUSED and its session revoked, so no access is granted that cannot be accounted for. All four rejection reasons are byte-identical to the customer while the trail keeps the specific reason. Unknown users pay the full scrypt cost against a decoy hash, so response timing is not a user-enumeration oracle (108ms vs 110ms measured). 5 failures in 15 minutes locks for 15 minutes, checked BEFORE the password so a locked account buys no scrypt work. DEFECT FOUND AND FIXED BY ITS OWN TEST: the first draft derived the comparison key at the stored hash's length rather than the canonical 32 bytes, so truncating a stored hash produced one that still verified while comparing fewer bytes; an unexpected key length is now a flat refusal. SCOPE: REQ-007's 'view and manage' is satisfied on the VIEW half only - read-only itineraries, agreed with the user rather than half-building a mutation path. Cancellation needs refunds and an accounting reversal; change requests are STORY-003's advisor routing. A stranger's trip returns 404, not 403, byte-identical to a nonexistent trip, so trip ids cannot be walked to map the business. server.js crossed CLAUDE.md's 500-line hard ceiling, so per the Modular Composition Rule it was split before the new routes were allowed to stand: endpoints moved to backend/src/http/routes/ (portal, triage, advisor, africa), server.js kept the HTTP mechanics and dropped 561->348 lines. The split is a pure move, proven by re-running STORY-003's suite UNMODIFIED. NOT DONE, deliberately: role-based permissions beyond the two existing roles (STORY-006), advisor-on-behalf-of access, MFA, password reset/rotation, per-IP throttling (nginx's job at the edge), refresh tokens, and cross-process session locking (single-process store, same as every other store in this repo). Known trade-off: someone who knows a customer id can lock that account for 15 minutes.",
       "updated_at": "2026-09-02T15:12:39.369995Z",
       "verification": {
-        "state": "submitted",
+        "state": "verified",
         "criteria_passed": 3,
         "criteria_total": 3,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
+        "verified_at": "2026-09-02T15:15:41.125Z",
+        "commit_sha": "24801c29f46de4e9923168b9f95e28f69569a13a",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/24801c29f46de4e9923168b9f95e28f69569a13a",
+        "commit_at": "2026-09-02T15:15:13Z",
+        "points_awarded": 47,
         "outstanding": []
       }
     },
@@ -347,14 +347,14 @@
       "notes": "RBAC is a permission table, not a role check. Routes used to declare `roles: [...]` in six separate files; they now declare one `permission`, and can(role, permission) in services/authz/permissions.js is the only way an access decision is made - hasRole() was DELETED rather than deprecated, because two mechanisms means the first route that picks the wrong one is a hole nobody sees. The swap is proven behaviour-preserving by STORY-003 and STORY-005's suites passing UNMODIFIED. Roles are NOT nested and admin is NOT a superuser: each role's grants are written out longhand, and admin deliberately lacks portal.trips.read and advisor.reviews.read, with tests asserting those absences so a later 'simplification' into a hierarchy fails loudly. Two sources of role: the directory (COLABERRY_API_TOKENS, which is how the bootstrap admin exists at all) and the assignment store, which overrides it. Roles resolve PER REQUEST, not at login, so a demotion bites on the next call rather than whenever a 12-hour session expires - tested end-to-end: a live session token gains the advisor queue and loses portal trips with no new login. Four assignment guards: not_permitted, self_assignment (nobody re-grades themselves, so an admin role change needs a second admin), last_admin (zero admins is a lockout nothing inside the system can undo), and unknown_role (the 'admn' typo, which reads like a grant and behaves like a lockout). Every refusal is audited, not just returned, through one refuse() helper so a sixth branch cannot forget. Assignment is write-ahead audited (pending -> success) so a crash mid-change cannot claim success. Routes are validated against the permission table at module load, so a route that forgets its permission or names one that does not exist stops the process instead of silently serving everybody or nobody - and that guard has its own test, without which it could be deleted and every other test would still pass. DELIBERATE ASYMMETRY ON AC-3: 403s get a durable audit row, 401s do not. A 401 is anonymous (no actor to attribute) and the audit store rewrites its whole file per row, so auditing them would hand any unauthenticated caller a disk-fill with quadratic write amplification; 401s are still fully recorded in the structured log stream. HONEST LIMIT: assignRole's not_permitted and last_admin refusals are UNREACHABLE over HTTP - the route's own permission check fires first for the former, and self_assignment fires first for the latter. Both are kept because assignRole is callable from a script with no boundary in front, and roleAssignments.test.js covers that path. NOT DONE, deliberately: per-resource scoping ('advisor for THESE customers'), time-bounded grants, approval workflows, bulk assignment, and audit-trail filtering by actor or date (needs query-string parsing, which the pipeline does not do yet). Advisor-on-behalf-of customer access remains unbuilt and is a separate permission when it is wanted, not a side effect of seniority. HARDENING PASS (same session): assignRole is synchronous end to end, so Node cannot interleave two calls and its read-then-write is atomic - but that guarantee was accidental and undefended, and one `await` inside it would silently reintroduce the race. It is now documented as load-bearing and defended two ways: a structural assertion that assignRole is not an AsyncFunction, and a real HTTP race. THE RACE CORRECTED AN EARLIER CLAIM: two admins demoting each other simultaneously DOES reach last_admin over HTTP, so this story's earlier note that it was unreachable held only for sequential requests and has been fixed in admin.test.js - the kind of note that invites someone to delete a guard as dead code. The loser's status is nondeterministic by design (403 if the second request had not yet been authenticated and per-request resolution had already stripped its admin role, 409 if it had); the test asserts the invariant - countAdmins never reaches zero - rather than pinning a code, which would be asserting the socket scheduler. Ten simultaneous identical promotions change the state once, audit the change once, and audit all nine no-ops. DURABILITY is now proven in child processes against a real COLABERRY_DATA_DIR, with the demotion direction tested separately because a lost promotion is a nuisance while a lost demotion is a silent re-grant; the last-admin guard is proven to count PERSISTED state, not the directory, or a fresh process would see two admins and demote the remaining one to zero. The documented recovery path is proven rather than asserted - a lost store falls back to directory roles, at the honest cost of undoing every demotion, with the audit trail (a separate file, proven untouched) being what tells you which changes to re-apply. STILL UNHANDLED, pre-existing and repo-wide: two Node processes sharing a data directory each hold their own in-memory Map and lose each other's writes. Documented in jsonFileStore.js; the real fix is Postgres, not something to bolt on inside this story.",
       "updated_at": "2026-09-24T00:19:15.503774Z",
       "verification": {
-        "state": "submitted",
+        "state": "verified",
         "criteria_passed": 3,
         "criteria_total": 3,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
+        "verified_at": "2026-09-24T00:53:22.462Z",
+        "commit_sha": "8c6f7282fbd1b392c27a28dd763e8e36ebfacf3b",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/8c6f7282fbd1b392c27a28dd763e8e36ebfacf3b",
+        "commit_at": "2026-09-24T00:03:05Z",
+        "points_awarded": 47,
         "outstanding": []
       }
     },
@@ -662,14 +662,14 @@
       "notes": "The CRM is two halves with different owners of truth. LEADS are new state (services/crm/leadStore.js). CUSTOMERS and BOOKING HISTORY are NOT: booking/crmTransactionLog.js is already written by bookTripService at the moment a booking confirms, so services/crm/customerRecord.js is a read model over it and acceptance criterion 2 needed no new state at all - the history updates because the history IS the booking log, with no sync step to fall behind. A CRM bookings table would have been a second answer to 'what has this customer bought?', and the second answer is the one that goes stale the first time a booking is amended. The same reasoning is already written out at portal/itineraryService.js:11. A FOURTH ROLE, not a widened advisor. The story's persona is a sales manager and no such role existed. permissions.js' own header predicted this ('when a fourth role arrives ... only this table does'), and the alternative - giving advisor the CRM grants - would have required DELETING the line directly above it that says advisor gets 'NOT customer data by default'. A rule you delete to make today's story fit is not a rule. ADMIN DELIBERATELY DOES NOT GET THE CRM either: an admin can grant the sales role and that act is audited, but cannot quietly read the lead book, which keeps 'admin is not a superuser' true. crm.leads.read and crm.leads.write are split (a read exposes the whole book at once, a write corrupts one record at a time), and crm.customers.read is split from both because a booking history is more sensitive than an enquiry. permissions.test.js asserts sales holds exactly those three and that customer, advisor and admin each hold none, so a later 'simplification' into a role hierarchy fails loudly. THE SUBTLE BUG THIS STORY HAD TO AVOID. Audit entries are first-write-wins, a trap auditLog.js:213 documents explicitly. A module that keyed every edit on '<leadId>:updated' would have recorded the FIRST edit to a lead and silently discarded every later one - an audit trail that looks complete and is not, which is worse than no trail at all. Lead EDITS therefore key on the caller's per-request correlationId, while CREATES key on the freshly generated leadId (collision-free by construction). There is a regression test that makes two successive edits and asserts both entries exist and differ. The consequence is stated as a rule rather than left implicit: a mutation arriving with no correlationId is REFUSED rather than performed unaudited, because the project guardrail is that all changes are audited, so 'I cannot audit this' has to mean 'I will not do this'. Lead duplication is deduped on normalised (email + source), the key CLAUDE.md mandates for lead capture. A repeat POST returns the ORIGINAL row with replayed: true and HTTP 200 rather than 201, so a client retrying a submission it is unsure about can tell whether it captured the lead or found it already there; the first row wins, so a duplicate cannot re-attribute the lead to whoever submitted it second. The same email from a DIFFERENT source is intentionally a separate lead - a partner referral is a different commercial event from the same person filling in the web form, and sales needs both rows. The same rule is enforced on the edit path (duplicate_lead, 409), because an edit that moves a lead onto another lead's email+source is the same duplicate arriving through the other door. Validation is split on a line borrowed from adminRoutes.js:98. The ROUTE checks only the envelope ('is this a JSON object?'); the SERVICE judges the fields. Rejecting a malformed email at the boundary would have returned the same 400 to the caller while quietly losing the audit entry - a refused lead that leaves no trace. So a non-object body is invalid_request_body and never reached a decision, while a bad email is invalid_lead, audited, and reported with EVERY problem at once rather than one per round trip. Refusals are audited too, and the audit entry does not echo the rejected value back, since it arrived from outside and ends up in log lines. Unauthorized data access is not handled in the CRM code at all, on purpose: routes DECLARE a permission and http/server.js enforces it once and audits every refusal, so a second check inside the CRM would be a second policy that can disagree with the first. crm.test.js therefore tests it at the boundary, across all five routes x three wrong roles (customer, advisor, admin) for 403, plus anonymous for 401 - because each route names its own permission and passing one proves nothing about the other four. It also proves the indirection pays for itself: granting sales to a live customer token opens the CRM and revoking it closes it again, with no restart. Records handed to callers are frozen, leads and customer records alike, so the only way to change a lead is updateLead, which is the only thing that writes an audit entry. createdAt and createdBy are outside the editable allow-list - an 'update' that can rewrite who captured a lead and when is not an update, it is a way to erase the trail. Fields outside the allow-list are REFUSED by name rather than silently dropped, because silently dropping them tells the caller the save succeeded; the legal half of a mixed patch does not apply either. A malformed percent-sequence in a path id is a 400 rather than an unguarded decodeURIComponent throw, which would have been a 500 on a URL a scanner finds within the hour. NOT DONE, deliberately. No cross-customer revenue aggregate: lifetimeValueCents is a per-account relationship figure, and revenue and booking analytics is STORY-012's job - two modules computing the business's revenue ends as two different numbers on two dashboards. No customer directory: identity already belongs to portal/portalCredentials.js and a CRM copy would be both a second truth and a second place to leak a contact list from, so 'customer' here means 'someone with a confirmed booking' and a person with none is a LEAD - a coherent split rather than a gap. No lead deletion ('lost' is a status, and erasing a lead erases the audit trail's subject), no lead-to-customer conversion flow, no lead owner assignment, no merge of two leads found to be the same person, and no pagination on either list - both reads are O(n) scans, and STORY-016 is the scalability story, so an index (which is a second copy of the data that can desync) waits for a measured reason. HONEST LIMITS. Reads are not audited, only modifications and denials - the criterion is about modification, and auditing successful reads means an entry per page view, which buries the entries that record a change; if it is wanted later it belongs at the boundary, once, not scattered through read models. Mixed currencies on one account are collected into a currencies array rather than assumed, so a total summed across unlike currencies is visible as such instead of being quietly wrong, but nothing yet CONVERTS them. Persistence is still jsonFileStore (in-memory unless COLABERRY_DATA_DIR is set), so the pre-existing repo-wide limit applies unchanged: two Node processes sharing a data directory each hold their own in-memory Map and lose each other's writes. The real fix is Postgres, not something to bolt on inside this story.",
       "updated_at": "2026-09-29T03:21:38.269Z",
       "verification": {
-        "state": "submitted",
+        "state": "verified",
         "criteria_passed": 3,
         "criteria_total": 3,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
+        "verified_at": "2026-09-29T03:32:29.606Z",
+        "commit_sha": "e83513ace267a7165bc6ef57746cb882d2178550",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/e83513ace267a7165bc6ef57746cb882d2178550",
+        "commit_at": "2026-09-29T03:23:48Z",
+        "points_awarded": 47,
         "outstanding": []
       }
     },
