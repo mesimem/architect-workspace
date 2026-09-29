@@ -27,8 +27,8 @@ the same criteria out of `.colaberry/progress.json`, which Claude Code keeps in
 step (see the managed block in CLAUDE.md). Ticking something you have not
 actually met only misleads you.
 
-- [ ] Given a group booking is initiated, when details are complete, then the system confirms the booking for all members.
-- [ ] Given a group booking is incomplete, when submitted, then the system prompts for missing information.
-- [ ] Trust: The system logs all group booking transactions.
+- [x] Given a group booking is initiated, when details are complete, then the system confirms the booking for all members.
+- [x] Given a group booking is incomplete, when submitted, then the system prompts for missing information.
+- [x] Trust: The system logs all group booking transactions.
 
 When every box above is ticked, stop and show the demo.

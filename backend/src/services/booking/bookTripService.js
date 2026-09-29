@@ -320,4 +320,11 @@ async function bookTrip({ customerId, flightId, hotelId, safariId, idempotencyKe
   });
 }
 
-module.exports = { bookTrip, AVAILABILITY, CURRENCY };
+// STORY-008: priceTrip is exported so groupBookingService.js can price a
+// group from the SAME function that prices a single booking. Additive - no
+// existing caller changes, and no behaviour here changes. The alternative was
+// a second copy of the leg sum in the group service, and two functions that
+// compute what a trip costs are two functions that disagree the first time
+// either is edited. STORY-007's notes make the same argument about why the
+// backend has no second rate card.
+module.exports = { bookTrip, priceTrip, AVAILABILITY, CURRENCY };
