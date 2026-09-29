@@ -13,7 +13,15 @@ const { triageRoutes } = require("./triageRoutes");
 const { advisorRoutes } = require("./advisorRoutes");
 const { africaRoutes } = require("./africaRoutes");
 const { adminRoutes } = require("./adminRoutes");
+const { crmRoutes } = require("./crmRoutes");
 
-const ROUTES = [].concat(portalRoutes, triageRoutes, advisorRoutes, africaRoutes, adminRoutes);
+const ROUTES = [].concat(
+  portalRoutes,
+  triageRoutes,
+  advisorRoutes,
+  africaRoutes,
+  adminRoutes,
+  crmRoutes
+);
 
 module.exports = { ROUTES };
