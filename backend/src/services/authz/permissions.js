@@ -70,12 +70,30 @@ const PERMISSIONS = Object.freeze({
   // Portal - a customer acting on their own data.
   PORTAL_TRIPS_READ: "portal.trips.read",
   PORTAL_SESSION_END: "portal.session.end",
+  // STORY-007. Separate from PORTAL_TRIPS_READ because a quote and a booking
+  // are different things: a trip is what a customer has bought, a quote is
+  // what they have been offered. Reading the second is not implied by the
+  // first, and a future read-only sharing link wants one without the other.
+  PORTAL_QUOTES_READ: "portal.quotes.read",
 
   // Requests - submitting something for triage.
   REQUESTS_TRIAGE: "requests.triage",
 
   // Advisor - the human-review queue.
   ADVISOR_REVIEWS_READ: "advisor.reviews.read",
+
+  // Quotes (STORY-007). The STAFF side of quoting - reading a quote WITH its
+  // costs and margins, and issuing or revising one. Split from the customer's
+  // PORTAL_QUOTES_READ above rather than reusing it, because the two grants
+  // reach different documents: the customer's view of a quote never contains
+  // a cost, and this one is defined by the fact that it does.
+  //
+  // Read and write are split for the same reason CRM_LEADS_READ and
+  // CRM_LEADS_WRITE are: a future reporting or margin-analysis integration
+  // needs to read the quote book without being able to change what a customer
+  // has been offered.
+  QUOTES_READ: "quotes.read",
+  QUOTES_WRITE: "quotes.write",
 
   // Catalog - destination browsing. The least sensitive thing here.
   CATALOG_READ: "catalog.read",
@@ -109,12 +127,21 @@ const ROLE_PERMISSIONS = Object.freeze({
     PERMISSIONS.PORTAL_SESSION_END,
     PERMISSIONS.REQUESTS_TRIAGE,
     PERMISSIONS.CATALOG_READ,
+    // STORY-007: their own quotes, in the customer view. Note what is absent -
+    // QUOTES_READ, the staff grant that carries costs and margins.
+    PERMISSIONS.PORTAL_QUOTES_READ,
   ]),
 
   advisor: Object.freeze([
     PERMISSIONS.ADVISOR_REVIEWS_READ,
     PERMISSIONS.REQUESTS_TRIAGE,
     PERMISSIONS.CATALOG_READ,
+    // STORY-007: quoting is the advisor's job, so both halves sit here. This
+    // does NOT widen "NOT customer data by default" above: a quote is a
+    // document the advisor writes, not a record about a customer they were
+    // never given. Reading a customer's BOOKINGS still needs the sales grant.
+    PERMISSIONS.QUOTES_READ,
+    PERMISSIONS.QUOTES_WRITE,
     // An advisor logs out of their own session like anyone else. Ending YOUR
     // OWN session is not a privilege, and withholding it would mean an advisor
     // could never revoke a token they thought was compromised.
