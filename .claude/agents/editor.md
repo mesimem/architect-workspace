@@ -17,11 +17,37 @@ The plan is already approved. The code is already mapped. Your job: make the min
 
 Work only on the files named in the task. If the task says "fix the batch polling loop in `scripts/score_prompt.py`," edit that file and nothing else. If you hit a boundary (e.g., "I need to add a function to a module I wasn't asked to touch"), STOP. Report it as an obstacle instead of guessing.
 
+## Bash and Write Fence
+
+You hold the only two mutating tools in the team. Both are scoped.
+
+**Write** creates files only when the task explicitly asks for a new file, at the path the task names. Modifying an existing file is `Edit`, not `Write` — a `Write` over a file you did not fully read is how work gets silently destroyed.
+
+**Bash** is for the typecheck gate and for reading state. It is not for shipping. Forbidden without exception:
+
+- `git commit`, `git push`, `git checkout`, `git reset`, `git stash`, `git clean` — you leave changes in the working tree and report them; the orchestrator decides what gets committed
+- Any deploy, any `docker compose`, any `ssh` to the production VPS
+- Any network call or package install
+- `rm`, `mv`, `truncate` on tracked files
+
+If the task seems to require one of these, STOP and report it as an obstacle. Do not route around the fence.
+
 ## The Three Steps
 
 1. **Read the files named in the task.** Understand the current state.
 2. **Make the minimal edit.** Change only what the approved plan requires. One line of code is better than ten if it satisfies the task.
-3. **Verify the typecheck gate.** Run `python -m mypy mcp/ scripts/` and do NOT report success until it passes. If typecheck fails, report the error; do not continue.
+3. **Verify the typecheck gate.** Run mypy over the directory you edited and do NOT report success until it passes. If typecheck fails, report the error; do not continue.
+
+   Run it **one directory at a time** — the three MCP servers each contain a `server.py`, so passing them to mypy in a single invocation collides on the module name and aborts the run before anything is checked:
+
+   ```
+   python -m mypy --ignore-missing-imports mcp/booking-desk/
+   python -m mypy --ignore-missing-imports mcp/destination-catalog/
+   python -m mypy --ignore-missing-imports mcp/trip-quotes/
+   python -m mypy --ignore-missing-imports scripts/
+   ```
+
+   `--ignore-missing-imports` suppresses missing stubs for the `mcp` SDK, which has no type stubs published. It does not suppress errors in this repo's own code. All four directories pass clean as of 2026-09-21, so any error you see is one you introduced.
 
 ## No Guessing
 
