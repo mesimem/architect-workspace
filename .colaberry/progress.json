@@ -3,13 +3,13 @@
   "project": "U.S.-based Full-Service Travel Agency Platform",
   "totals": {
     "stories_total": 17,
-    "stories_verified": 6,
+    "stories_verified": 7,
     "stories_submitted": 0,
-    "stories_in_progress": 11,
+    "stories_in_progress": 10,
     "stories_not_started": 0,
     "criteria_total": 53,
-    "criteria_passed": 18,
-    "points_awarded": 282
+    "criteria_passed": 21,
+    "points_awarded": 329
   },
   "stories": [
     {
@@ -398,19 +398,15 @@
       "notes": "Pricing is over explicit line items, not a backend rate card: mcp/trip-quotes already holds one and a JS copy would be a second source of truth for money. Customer and staff reads are separate endpoints with separate permissions and separate allow-list projections, so the customer route cannot reach the costed document at all. A quote that cannot be audited is rolled back rather than kept. Verified by npm run verify: 29/29 tests, mypy clean. Hardened after the first pass: every other suite runs in-memory, so a durability suite was added against a real COLABERRY_DATA_DIR in child processes - the quote, the revision, the audit trail, idempotency and the audit-failure rollback all verified across a restart. CI green on a clean machine. Known remaining: concurrency is atomic by construction (no await inside the write paths) but not yet asserted structurally.",
       "updated_at": "2026-09-29T05:06:14Z",
       "verification": {
-        "state": "in_progress",
-        "criteria_passed": 0,
+        "state": "verified",
+        "criteria_passed": 3,
         "criteria_total": 3,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
-        "outstanding": [
-          "Given a quote is generated, when a customer views it, then it displays without internal costs.",
-          "Given a quote is modified, when it is saved, then the system updates the customer view.",
-          "Trust: The system logs all quote generations and modifications."
-        ]
+        "verified_at": "2026-09-29T05:16:19.505Z",
+        "commit_sha": "c2a17fd2d78680fdb25780b0314ac13845c98f13",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/c2a17fd2d78680fdb25780b0314ac13845c98f13",
+        "commit_at": "2026-09-29T04:55:01Z",
+        "points_awarded": 47,
+        "outstanding": []
       }
     },
     {
