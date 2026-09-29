@@ -408,6 +408,14 @@ def main():
     cases = read_eval_file(eval_path)
     client = build_client()
 
+    batch_id_file = Path(__file__).parent.parent / ".batch_id"
+    resuming_from_saved_id = batch_id_file.exists()
+    if resuming_from_saved_id:
+        batch_id = batch_id_file.read_text().strip()
+        print("\nFound saved batch ID ({}); resuming instead of creating a new batch.".format(
+            batch_id
+        ))
+
     print("\nPreparing batch of {} case(s) using {} (Batch API @ 50% discount)...".format(
         len(cases), MODEL
     ))
@@ -428,20 +436,28 @@ def main():
         })
 
     # Submit batch
-    batch = client.messages.batches.create(requests=batch_requests)
-    print("Batch submitted: {}".format(batch.id))
-    print("Status: {}".format(batch.processing_status))
-    batch_id_file = Path(__file__).parent.parent / ".batch_id"
-    print("Saving batch ID to {} for later reference...".format(batch_id_file))
-    batch_id_file.write_text(batch.id)
+    if not resuming_from_saved_id:
+        batch = client.messages.batches.create(requests=batch_requests)
+        batch_id = batch.id
+        print("Batch submitted: {}".format(batch_id))
+        print("Status: {}".format(batch.processing_status))
+        print("Saving batch ID to {} for later reference...".format(batch_id_file))
+        batch_id_file.write_text(batch_id)
 
     # Poll for completion (batches typically complete in < 1 min for small jobs)
     import time
+    import anthropic
     max_wait_seconds = 300  # 5 minutes
     start_time = time.time()
     poll_count = 0
     while time.time() - start_time < max_wait_seconds:
-        batch_status = client.messages.batches.retrieve(batch.id)
+        try:
+            batch_status = client.messages.batches.retrieve(batch_id)
+        except anthropic.NotFoundError:
+            batch_id_file.unlink(missing_ok=True)
+            quit_with_message(
+                "Batch expired or not found. Deleted .batch_id. Run again to create a new batch."
+            )
         poll_count += 1
         if batch_status.processing_status == "ended":
             print("\nBatch completed in {:.1f}s ({} polls)".format(
@@ -457,7 +473,7 @@ def main():
         time.sleep(1)
     else:
         print("\nBatch still processing after {} seconds.".format(max_wait_seconds))
-        print("Batch ID saved for later: {}".format(batch.id))
+        print("Batch ID saved for later: {}".format(batch_id))
         print("Check status later with: cat /tmp/batch_id.txt")
         quit_with_message(
             "Batch processing continues in background. "
@@ -474,7 +490,7 @@ def main():
     total_output_tokens = 0
 
     results_by_id = {}
-    for result in client.messages.batches.results(batch.id):
+    for result in client.messages.batches.results(batch_id):
         results_by_id[result.custom_id] = result
 
     for position, case in enumerate(cases, start=1):
@@ -497,6 +513,8 @@ def main():
         else:
             print("  case {}: FAIL".format(position))
             failures.append((position, case["_line"], problems))
+
+    batch_id_file.unlink(missing_ok=True)
 
     score = passed_count / len(cases)
 
