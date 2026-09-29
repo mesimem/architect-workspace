@@ -366,12 +366,12 @@
         {
           "text": "Given a quote is generated, when a customer views it, then it displays without internal costs.",
           "passed": true,
-          "evidence": "backend/src/http/quotes.test.js: the customer response is read as raw text and asserted to contain no cost total (854000), margin (166000) or unit cost (420000), no internal note, and no key matching /cost|margin|internal|supplier/i at any depth. quoteView.test.js repeats the scan after adding an unanticipated internal field."
+          "evidence": "backend/src/http/quotes.test.js: the customer response is read as raw text and asserted to contain no cost total (854000), margin (166000) or unit cost (420000), no internal note, and no key matching /cost|margin|internal|supplier/i at any depth. quoteView.test.js repeats the scan after adding an unanticipated internal field. The same suite re-runs the scan on the REHYDRATED record, proving the allow-list filters a reparsed JSON object and not just the frozen one priceQuote returned."
         },
         {
           "text": "Given a quote is modified, when it is saved, then the system updates the customer view.",
           "passed": true,
-          "evidence": "backend/src/http/quotes.test.js: an advisor PATCHes to one line plus a 10% discount, then the customer's next GET /api/portal/quotes/:id returns version 2 at totalCents 900000 with the new note - read back through the API after the save, not from the write's return value."
+          "evidence": "backend/src/http/quotes.test.js: an advisor PATCHes to one line plus a 10% discount, then the customer's next GET /api/portal/quotes/:id returns version 2 at totalCents 900000 with the new note - read back through the API after the save, not from the write's return value. quotes.durability.test.js proves the revision survives a real restart in a separate process - a lost revision is silent, leaving a normal-looking quote at the old price."
         },
         {
           "text": "Trust: The system logs all quote generations and modifications.",
@@ -392,10 +392,11 @@
         "backend/src/services/quotes/quotePricing.test.js",
         "backend/src/services/quotes/quoteView.test.js",
         "backend/src/services/quotes/quoteStore.test.js",
-        "backend/src/http/quotes.test.js"
+        "backend/src/http/quotes.test.js",
+        "backend/src/services/quotes/quotes.durability.test.js"
       ],
-      "notes": "Pricing is over explicit line items, not a backend rate card: mcp/trip-quotes already holds one and a JS copy would be a second source of truth for money. Customer and staff reads are separate endpoints with separate permissions and separate allow-list projections, so the customer route cannot reach the costed document at all. A quote that cannot be audited is rolled back rather than kept. Verified by npm run verify: 29/29 tests, mypy clean.",
-      "updated_at": "2026-09-29T04:54:06Z",
+      "notes": "Pricing is over explicit line items, not a backend rate card: mcp/trip-quotes already holds one and a JS copy would be a second source of truth for money. Customer and staff reads are separate endpoints with separate permissions and separate allow-list projections, so the customer route cannot reach the costed document at all. A quote that cannot be audited is rolled back rather than kept. Verified by npm run verify: 29/29 tests, mypy clean. Hardened after the first pass: every other suite runs in-memory, so a durability suite was added against a real COLABERRY_DATA_DIR in child processes - the quote, the revision, the audit trail, idempotency and the audit-failure rollback all verified across a restart. CI green on a clean machine. Known remaining: concurrency is atomic by construction (no await inside the write paths) but not yet asserted structurally.",
+      "updated_at": "2026-09-29T05:06:14Z",
       "verification": {
         "state": "in_progress",
         "criteria_passed": 0,
