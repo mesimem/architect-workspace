@@ -416,21 +416,30 @@
       "criteria": [
         {
           "text": "Given a group booking is initiated, when details are complete, then the system confirms the booking for all members.",
-          "passed": false
+          "passed": true
         },
         {
           "text": "Given a group booking is incomplete, when submitted, then the system prompts for missing information.",
-          "passed": false
+          "passed": true
         },
         {
           "text": "Trust: The system logs all group booking transactions.",
-          "passed": false
+          "passed": true
         }
       ],
-      "files_touched": [],
-      "tests_added": [],
-      "notes": null,
-      "updated_at": null,
+      "files_touched": [
+        "backend/src/services/booking/groupValidation.js",
+        "backend/src/services/booking/groupBookingService.js",
+        "backend/src/services/booking/groupBookingWriteGuard.js",
+        "backend/src/services/booking/bookTripService.js"
+      ],
+      "tests_added": [
+        "backend/src/services/booking/groupValidation.test.js",
+        "backend/src/services/booking/groupBookingService.test.js",
+        "backend/src/services/booking/groupBooking.durability.test.js"
+      ],
+      "notes": "Service-layer only, no HTTP route - the booking domain is fronted over MCP, as STORY-005 is. AC-1: one group record holds the shared itinerary and all members, so all-or-nothing confirmation is structural rather than a loop that can partially succeed. AC-2: groupValidation.js returns every problem at once, naming positions and never echoing submitted values. AC-3: audit entry per confirmation AND per refusal, one booking-log row per member at their own share, one accounting entry for the group total against the organizer. 43 checks across three suites; durability proven in separate processes against a real data dir.",
+      "updated_at": "2026-09-29T05:42:19.005Z",
       "verification": {
         "state": "in_progress",
         "criteria_passed": 0,
