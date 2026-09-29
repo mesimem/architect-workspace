@@ -27,8 +27,8 @@ the same criteria out of `.colaberry/progress.json`, which Claude Code keeps in
 step (see the managed block in CLAUDE.md). Ticking something you have not
 actually met only misleads you.
 
-- [ ] Given a quote is generated, when a customer views it, then it displays without internal costs.
-- [ ] Given a quote is modified, when it is saved, then the system updates the customer view.
-- [ ] Trust: The system logs all quote generations and modifications.
+- [x] Given a quote is generated, when a customer views it, then it displays without internal costs.
+- [x] Given a quote is modified, when it is saved, then the system updates the customer view.
+- [x] Trust: The system logs all quote generations and modifications.
 
 When every box above is ticked, stop and show the demo.
