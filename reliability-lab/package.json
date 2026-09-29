@@ -1,0 +1,15 @@
+{
+  "name": "reliability-lab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Order desk + a fake vendor you can make fail on command.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "confirm": "node src/desk.js confirm",
+    "replay": "node src/desk.js replay",
+    "test": "node check-idempotency.js"
+  }
+}

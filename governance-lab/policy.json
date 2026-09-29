@@ -1,0 +1,19 @@
+{
+  "version": 1,
+
+  "default": {
+    "verdict": "deny",
+    "ruleId": "default-deny",
+    "reason": "no rule permits this action"
+  },
+
+  "rules": [
+    {
+      "id": "refund-limit",
+      "description": "Refunds up to $500 are permitted. Above that, a human decides.",
+      "appliesTo": { "field": "actionType", "op": "eq", "value": "refund" },
+      "deny": { "field": "amount", "op": "gt", "value": 500 },
+      "allowReason": "amount within the 500 refund limit"
+    }
+  ]
+}
