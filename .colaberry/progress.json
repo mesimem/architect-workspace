@@ -416,15 +416,18 @@
       "criteria": [
         {
           "text": "Given a group booking is initiated, when details are complete, then the system confirms the booking for all members.",
-          "passed": true
+          "passed": true,
+          "evidence": "backend/src/services/booking/groupBookingService.test.js: a three-member group returns status confirmed with one entry per traveller, each carrying its own tripId and status confirmed, asserted with .every() rather than on a sample. The itinerary is asserted to be ONE object on the group and each member is asserted NOT to carry a copy of it, so all-or-nothing confirmation is structural rather than a loop that can succeed four times and fail the fifth. groupBooking.durability.test.js re-reads the group in a separate process against a real COLABERRY_DATA_DIR and asserts all three members and the shared itinerary survive intact: a booking that comes back with two of its three travellers is the same partial confirmation arriving by another route."
         },
         {
           "text": "Given a group booking is incomplete, when submitted, then the system prompts for missing information.",
-          "passed": true
+          "passed": true,
+          "evidence": "backend/src/services/booking/groupValidation.test.js: 21 checks asserting the CONTENT of the prompt, not merely that it refused - a validator that rejects everything with an empty list would pass \"it refused\" and still fail this criterion. Covers a missing organizer, itinerary and members list; each itinerary leg named individually; non-object itineraries and members; group size below 2 and above 25 including the boundary itself; blank member ids and names; duplicates, including the regression where a duplicate went unreported behind an otherwise-broken member; and \"too long\" reported distinctly from \"required\". A rejected value is asserted never to appear in the prompt. groupBookingService.test.js re-checks it end to end: an incomplete submission returns at least 3 problems in one pass, charges nobody, stores no row, and leaves getCustomerRecord at not_found."
         },
         {
           "text": "Trust: The system logs all group booking transactions.",
-          "passed": true
+          "passed": true,
+          "evidence": "backend/src/services/booking/groupBookingService.test.js: group_booking.confirmed is read back from the audit trail with actor, resource, memberIds and totalCents, and asserted NOT to contain any traveller name. One booking-log row per member is asserted at their own SHARE rather than the group total - mutation-tested, since swapping perPersonCents for totalCents fails the suite with \"a member's lifetime value is their own share\", which is what stops a three-person safari reading as three safaris sold in crm/customerRecord.js. Exactly one accounting entry carries the group total against the organizer. Refusals are audited too (group_booking.refused with a reason and a problem count, and no submitted values), and a declined card is audited while asserted absent from the ledger. groupBooking.durability.test.js proves the audit entry and every member row survive a restart, and that an unauditable group is rolled back from the JSON file itself - mutation-tested against a jsonFileStore whose delete does not reach disk."
         }
       ],
       "files_touched": [
@@ -439,7 +442,7 @@
         "backend/src/services/booking/groupBooking.durability.test.js"
       ],
       "notes": "Service-layer only, no HTTP route - the booking domain is fronted over MCP, as STORY-005 is. AC-1: one group record holds the shared itinerary and all members, so all-or-nothing confirmation is structural rather than a loop that can partially succeed. AC-2: groupValidation.js returns every problem at once, naming positions and never echoing submitted values. AC-3: audit entry per confirmation AND per refusal, one booking-log row per member at their own share, one accounting entry for the group total against the organizer. 43 checks across three suites; durability proven in separate processes against a real data dir.",
-      "updated_at": "2026-09-29T05:42:19.005Z",
+      "updated_at": "2026-09-29T05:50:13.173Z",
       "verification": {
         "state": "in_progress",
         "criteria_passed": 0,
