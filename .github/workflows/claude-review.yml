@@ -1,0 +1,85 @@
+name: Claude review
+
+# Every push to the branch gets read again, not just the first one.
+#   opened      -> the PR is created
+#   synchronize -> new commits are pushed to the branch
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+# It may comment. It may not change code.
+#   contents: read        -> can read the tree, cannot write to it
+#   pull-requests: write  -> can post review comments, nothing else
+# No `contents: write`, no `actions: write`, no `id-token`.
+permissions:
+  contents: read
+  pull-requests: write
+
+# One review per branch. A new push cancels the review still running against
+# the commit it replaced, so the comments you read are about the current head.
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Review the diff
+    runs-on: ubuntu-latest
+    # Fork PRs cannot read repository secrets, so the key would be empty and the
+    # run would fail confusingly. Skip rather than fail. See the note in
+    # docs/ or the PR description for how fork contributions get reviewed.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      # A shallow clone cannot see the whole diff.
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Claude review
+        uses: anthropics/claude-code-action@v1
+        with:
+          # A key in a YAML in a repo is a key that is already stolen.
+          # This reads the repository secret at runtime; the value never
+          # appears in this file, in the log, or in the diff.
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+
+          prompt: |
+            Review this pull request for correctness, security, and compliance
+            with this repository's CLAUDE.md.
+
+            Leave inline comments on the specific lines they refer to, not a
+            single summary block. Cite the file and line.
+
+            Any committed secret or credential is flagged FIRST and as
+            CRITICAL — before correctness, before style, before anything else.
+            That includes an API key, token, password, connection string or
+            private key; a credential in a URL or query string; a credential or
+            PII reaching a log line; and a real value in a .env, a test fixture
+            or a comment "showing an example". For any secret, the fix is
+            always both halves: rotate it first, because git history is
+            permanent and it is already compromised, then move the value to the
+            environment or the secret manager.
+
+            Then review for: missing timeouts on outbound calls; uncapped or
+            unjittered retries; writes without a derived idempotency key;
+            empty catch blocks or a success response for work that did not
+            happen; unvalidated input from outside the trust boundary; missing
+            authorisation checks; and the CLAUDE.md hard gates, including the
+            PROGRESS.md entry required for changes under /backend, /frontend,
+            /scripts, /nginx or /directives.
+
+            Recommend only. Do NOT approve the pull request. Do NOT merge it.
+            Do NOT push commits or edit any file. If you believe the change is
+            good, say so in a comment and leave the decision to a human.
+
+            If you cannot tell from the diff whether something is a defect, say
+            what you would need to see rather than guessing. A speculative
+            finding trains the author to ignore you.
+
+          # It comments and structurally cannot touch the code: no Edit, no
+          # Write, no git add, no git commit, no git push. The only Bash
+          # command available is a read.
+          claude_args: |
+            --allowedTools Read,Grep,Glob,Bash(git diff:*)

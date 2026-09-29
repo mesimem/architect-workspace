@@ -1,0 +1,78 @@
+name: Verify
+
+# The merge gate. Deterministic, no AI, no network calls to any model.
+# A reviewer that can approve its own work is a rubber stamp with extra steps,
+# so the merge decision belongs to this job and nothing else.
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+# Read-only. This job decides; it never writes.
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  # Job id is `test` -- this is the exact string that appears in
+  # Settings -> Branches -> Require status checks to pass before merging.
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 24.x is the version the suite was verified against locally (v24.18.0,
+      # 17/17 passing). node --test glob discovery needs >= 21.
+      #
+      # No `cache: npm` here: caching requires a lockfile and this repo has
+      # none, so enabling it fails the step outright.
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # 3.12 is the interpreter the mypy gate was verified green on. The
+      # pyproject files ask for >=3.14, but mypy does not enforce
+      # requires-python and this job only type-checks -- it never imports the
+      # MCP SDK or runs a server.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # INSTALL, and it is deliberately Python-only.
+      #
+      # There is NO Node install step. package.json declares no dependencies
+      # and no devDependencies, and there is no lockfile -- `npm ci` fails with
+      # EUSAGE, and `npm install` would be a no-op. The test suite uses only
+      # node's built-in runner.
+      #
+      # mypy is pinned so a new release cannot turn this gate red without a
+      # commit. The MCP SDK is intentionally NOT installed: this repo has a
+      # top-level directory named mcp/ which shadows the SDK's own package
+      # name, which is why the typecheck runs with --ignore-missing-imports.
+      - name: Install (python only -- node needs nothing)
+        run: python -m pip install --disable-pip-version-check mypy==2.3.1
+
+      # Four separate invocations behind this script, on purpose:
+      # mcp/booking-desk, mcp/destination-catalog and mcp/trip-quotes each
+      # contain a server.py, and their hyphenated directory names cannot be
+      # Python packages, so one combined invocation exits 2 on
+      # "Duplicate module named server" without type-checking anything.
+      - name: Typecheck
+        run: npm run typecheck
+
+      # node --test over backend/src/**/*.test.js and tests/**/*.test.js.
+      # Runs even if typecheck failed, so one red PR reports both problems
+      # instead of hiding the second behind the first.
+      - name: Test
+        if: always()
+        run: npm test
