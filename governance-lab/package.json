@@ -1,0 +1,14 @@
+{
+  "name": "governance-lab",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A small acting agent: it proposes an action and an unguarded tool carries it out.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "act": "node act.js",
+    "propose": "node agent.js"
+  }
+}
