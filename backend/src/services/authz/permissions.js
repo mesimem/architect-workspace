@@ -95,6 +95,24 @@ const PERMISSIONS = Object.freeze({
   QUOTES_READ: "quotes.read",
   QUOTES_WRITE: "quotes.write",
 
+  // Proposals (STORY-013). The advisor's timed workspace: open a proposal,
+  // issue it, read it back with its costs and its SLA position.
+  //
+  // SEPARATE FROM QUOTES_READ / QUOTES_WRITE, even though a proposal is priced
+  // by the same code. The two grants reach different things: a quote is a
+  // document that has been issued to a customer, a proposal is a piece of work
+  // in progress with a deadline attached. A future margin-analysis integration
+  // wants the quote book without the ability to open work on an advisor's desk,
+  // and a future scheduling worker wants the reverse.
+  PROPOSALS_READ: "proposals.read",
+  PROPOSALS_WRITE: "proposals.write",
+  // Deliberately its own grant, and the narrowest one here. Running the sweep
+  // SENDS MESSAGES TO PEOPLE - it is the only permission in this table whose
+  // exercise an advisor feels on their phone. Splitting it means the scheduled
+  // job that will eventually run it can be given exactly this and nothing else:
+  // it never needs to open, issue or read a proposal to do its job.
+  PROPOSALS_SLA_SWEEP: "proposals.sla.sweep",
+
   // Catalog - destination browsing. The least sensitive thing here.
   CATALOG_READ: "catalog.read",
 
@@ -142,6 +160,14 @@ const ROLE_PERMISSIONS = Object.freeze({
     // never given. Reading a customer's BOOKINGS still needs the sales grant.
     PERMISSIONS.QUOTES_READ,
     PERMISSIONS.QUOTES_WRITE,
+    // STORY-013: creating trip proposals is the same job as quoting, one step
+    // earlier, so all three sit with the advisor. The sweep is here because
+    // today an advisor is the only principal who could run it; when a scheduled
+    // worker exists it gets PROPOSALS_SLA_SWEEP and none of the rest, which is
+    // the whole reason that one is split out.
+    PERMISSIONS.PROPOSALS_READ,
+    PERMISSIONS.PROPOSALS_WRITE,
+    PERMISSIONS.PROPOSALS_SLA_SWEEP,
     // An advisor logs out of their own session like anyone else. Ending YOUR
     // OWN session is not a privilege, and withholding it would mean an advisor
     // could never revoke a token they thought was compromised.

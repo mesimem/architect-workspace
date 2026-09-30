@@ -1,5 +1,17 @@
 // STORY-007: the rule that no quote exists without an audit entry.
 //
+// THE MECHANISM NOW LIVES IN backend/src/services/shared/auditedCommit.js,
+// moved there by STORY-013 when trip proposals needed the identical guarantee.
+// This file is the quote-shaped adapter over it and holds no logic of its own.
+// The reasoning below is unchanged and is still the canonical explanation of
+// WHY the rule is shaped this way - the shared module's header covers only why
+// it is shared.
+//
+// Nothing observable moved with it. The shared door derives its audit keys, log
+// event names, log context field and refusal messages from the noun "quote", so
+// they are the same strings this file used to hold. A refactor that renamed an
+// audit key would be a break in the trail, not a tidy-up.
+//
 // Extracted from quoteStore.js when that file crossed CLAUDE.md's 500-line
 // hard ceiling, which requires a split before more code lands. The line the
 // split follows is a real seam, not a line count: quoteStore.js owns the
@@ -54,146 +66,31 @@
 //     read-back (single-process store; the real fix is the database), and
 //     crash-during-rollback, which leaves the unaudited row on disk.
 
-const { deriveAuditKey } = require("../audit/auditLog");
+const { createAuditedCommit } = require("../shared/auditedCommit");
 
-const REASONS = Object.freeze({
-  NOT_SAVED: "not_saved",
-  AUDIT_UNAVAILABLE: "audit_unavailable",
+// "quote" is the noun every derived string is built from; "quotes" is the log
+// service tag these lines already carried.
+const { commit, auditNoChange, REASONS } = createAuditedCommit({
+  subject: "quote",
+  service: "quotes",
 });
 
-// Deliberately identical for both ways a save can fail. The caller is told the
-// truth - nothing changed - without being told which internal component let us
-// down, which is not their business and not actionable by them.
-const NOT_SAVED_MESSAGE = "The quote could not be saved. Nothing was changed.";
-const AUDIT_UNAVAILABLE_MESSAGE =
-  "The quote could not be recorded in the audit trail, so it was not saved. Please try again.";
-
-function refuse(reason, problems) {
-  return { ok: false, reason: reason, problems: problems };
-}
-
-function usableActor(actor) {
-  return typeof actor === "string" && actor.trim() !== "" ? actor : null;
-}
-
-// Structured JSON to stderr, per CLAUDE.md's observability rules.
-function logQuoteEvent(level, event, outcome, error, context) {
-  console.error(
-    JSON.stringify({
-      timestamp: new Date().toISOString(),
-      level: level,
-      service: "quotes",
-      event: event,
-      outcome: outcome,
-      error_class: error ? error.errorClass || error.name || "Error" : undefined,
-      context: context,
-    })
-  );
-}
-
-// Audits something that changed NO state - a refusal, or a save that turned
-// out to be a no-op. Best effort; see the header on why this one is allowed to
-// fail quietly and commitQuote is not.
-function auditNoChange(audit, { event, outcome = "failure", reason, actor, correlationId, resource }) {
-  const auditKey = deriveAuditKey(correlationId, event + "." + reason);
-  if (auditKey === "") {
-    // No usable correlation id means no key we could dedup on. Recording under
-    // a made-up key would put an entry in the trail that no later request could
-    // ever match.
-    return false;
-  }
-  try {
-    audit({
-      auditKey: auditKey,
-      event: event,
-      outcome: outcome,
-      actor: usableActor(actor),
-      resource: resource || "quote",
-      correlationId: correlationId,
-      // The reason only. Never the submitted body: a rejected quote can carry
-      // a customer's details, and the audit trail persists to disk forever.
-      context: { reason: reason },
-    });
-    return true;
-  } catch (error) {
-    // Swallowed deliberately, and deliberately not silent - the caller's
-    // outcome does not change, but this does not vanish. Without the log line
-    // this would be the empty catch CLAUDE.md forbids.
-    logQuoteEvent("warn", "quote.unaudited_no_change", "partial", error, {
-      reason: reason,
-      correlationId: correlationId,
-    });
-    return false;
-  }
-}
-
-// THE ONLY PATH THAT WRITES A QUOTE. Save, prove it saved, audit, and undo
-// everything if the audit fails. `previous` is the row to restore on rollback,
-// or null when the row is new.
-//
-// Returns { ok: true, quote } or a refusal. Callers never write to the store
-// themselves - a second write path would come with its own opinion about
-// auditing, which is exactly the drift this centralises away.
+// The quote-shaped call. `quoteId` and `version` are named here so the generic
+// door never has to know which field on a record is its key.
 function commitQuote(store, audit, { quote, previous, event, actor, correlationId, context }) {
-  try {
-    store.set(quote.quoteId, quote);
-  } catch (error) {
-    logQuoteEvent("error", "quote.save_failed", "failure", error, { quoteId: quote.quoteId });
-    return refuse(REASONS.NOT_SAVED, [NOT_SAVED_MESSAGE]);
-  }
-
-  // The read-back. Version is compared as well as presence, so a store that
-  // kept the OLD row is caught too - not just one that kept nothing.
-  const persisted = store.get(quote.quoteId);
-  if (!persisted || persisted.version !== quote.version) {
-    logQuoteEvent("error", "quote.save_not_durable", "failure", null, {
-      quoteId: quote.quoteId,
-      version: quote.version,
-    });
-    return refuse(REASONS.NOT_SAVED, [NOT_SAVED_MESSAGE]);
-  }
-
-  try {
-    audit({
-      // Keyed on the version, so v1 and v2 are two entries. Keyed on the
-      // quoteId alone, the audit log's first-write-wins rule would keep the
-      // creation and silently discard every later revision - the exact
-      // opposite of what the trust criterion asks for.
-      auditKey: deriveAuditKey(quote.quoteId, event + ".v" + quote.version),
-      event: event,
-      outcome: "success",
-      actor: usableActor(actor),
-      resource: quote.quoteId,
-      correlationId: correlationId,
-      // Ids, figures and field names only - never note text, which is
-      // free-form and may quote the customer.
-      context: context,
-    });
-  } catch (error) {
-    // COMPENSATING ACTION. The quote is stored but unaudited, the one state
-    // this module refuses to leave behind. Put it back the way it was.
-    try {
-      if (previous) {
-        store.set(quote.quoteId, previous);
-      } else {
-        store.delete(quote.quoteId);
-      }
-      logQuoteEvent("warn", "quote.rolled_back_unaudited", "success", error, {
-        quoteId: quote.quoteId,
-        version: quote.version,
-      });
-    } catch (rollbackError) {
-      // An unaudited quote we could not remove. Nothing further can be done in
-      // process, so say it as loudly as the log allows: this one needs a person.
-      logQuoteEvent("error", "quote.rollback_failed", "failure", rollbackError, {
-        quoteId: quote.quoteId,
-        version: quote.version,
-      });
-    }
-    return refuse(REASONS.AUDIT_UNAVAILABLE, [AUDIT_UNAVAILABLE_MESSAGE]);
-  }
-
-  return { ok: true, quote: quote };
+  const committed = commit(store, audit, {
+    id: quote.quoteId,
+    version: quote.version,
+    record: quote,
+    previous: previous,
+    event: event,
+    actor: actor,
+    correlationId: correlationId,
+    context: context,
+  });
+  // Refusals pass straight through; a success is renamed to the noun the
+  // callers next door already read.
+  return committed.ok ? { ok: true, quote: committed.record } : committed;
 }
 
 module.exports = { commitQuote, auditNoChange, REASONS };
