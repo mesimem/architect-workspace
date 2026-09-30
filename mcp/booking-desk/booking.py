@@ -41,6 +41,8 @@ Failure-first notes (CLAUDE.md requires these in writing):
 from __future__ import annotations
 
 import copy
+import time
+from collections.abc import Callable
 
 # In-memory stand-ins, seeded identically to the JS origin so behaviour
 # matches. A real inventory system and Stripe replace these later.
@@ -62,6 +64,23 @@ _TRANSACTION_LOG: list[dict] = []
 _next_trip_number = 1
 
 
+# An observer for the two supplier boundaries below, called as
+# `emit(event_name, fields)`. Deliberately a plain callable and not an MCP
+# Context: this module is the domain layer and must stay transport-agnostic,
+# so the MCP server owns the decision of what a log line IS (level, wire
+# format, correlation id) and this module only says WHAT HAPPENED and WHEN.
+#
+# Contract for anything passed here: `fields` carries identifiers, counts and
+# durations only. Never a credential, never a raw customer record. The
+# idempotency_key in particular is a capability -- whoever holds it can replay
+# or wedge a booking -- so it is never handed to an emitter.
+EmitFn = Callable[[str, dict], None]
+
+
+def _no_emit(event: str, fields: dict) -> None:
+    """Default observer: does nothing, costs nothing, never raises."""
+
+
 def _process_payment(customer_id: str) -> tuple[bool, str | None]:
     """Mock processor, deterministic on customer_id. Mirrors paymentService.js."""
     if customer_id in DECLINED_CUSTOMERS:
@@ -80,9 +99,17 @@ def book_trip(
     hotel_id: str,
     safari_id: str,
     idempotency_key: str,
+    emit: EmitFn | None = None,
 ) -> dict:
-    """Reserve inventory and charge the client, exactly once per idempotency_key."""
+    """Reserve inventory and charge the client, exactly once per idempotency_key.
+
+    `emit` observes the two supplier boundaries (availability, payment). It is
+    optional and defaults to a no-op, so this function's behaviour and return
+    value are identical whether or not anyone is listening.
+    """
     global _next_trip_number
+
+    observe = emit or _no_emit
 
     fingerprint = (customer_id, flight_id, hotel_id, safari_id)
 
@@ -110,10 +137,25 @@ def book_trip(
             "replayed": False,
         }
 
+    # Supplier boundary 1: inventory. In-process today, a Supplier API call
+    # when the stand-in above is replaced -- which is exactly why the timing
+    # and the log boundary go here now rather than being retrofitted later.
+    observe(
+        "dependency.supplier_availability.started",
+        {"flight_id": flight_id, "hotel_id": hotel_id, "safari_id": safari_id},
+    )
+    started_at = time.perf_counter()
     unavailable = (
         flight_id not in AVAILABILITY["flights"]
         or hotel_id not in AVAILABILITY["hotels"]
         or safari_id not in AVAILABILITY["safaris"]
+    )
+    observe(
+        "dependency.supplier_availability.completed",
+        {
+            "duration_ms": round((time.perf_counter() - started_at) * 1000, 3),
+            "available": not unavailable,
+        },
     )
     if unavailable:
         return {
@@ -122,7 +164,19 @@ def book_trip(
             "replayed": False,
         }
 
+    # Supplier boundary 2: payment. `approved` is the only outcome recorded --
+    # the decline reason is prose for the agent, and the card, the processor
+    # token and the amount are none of a log stream's business.
+    observe("dependency.payment.started", {"customer_id": customer_id})
+    started_at = time.perf_counter()
     paid, decline_message = _process_payment(customer_id)
+    observe(
+        "dependency.payment.completed",
+        {
+            "duration_ms": round((time.perf_counter() - started_at) * 1000, 3),
+            "approved": paid,
+        },
+    )
     if not paid:
         # Deliberately NOT memoized against the key. A declined card is a
         # retryable condition -- the agent fixes payment and retries with the

@@ -19,8 +19,18 @@ Fills the gap that backend/src/services/booking/bookTripService.js is
 `module.exports` only -- no route exists anywhere in the repo, so nothing
 outside Node can book a trip.
 
+LOGGING: this server declares the `logging` capability and emits structured
+`notifications/message` lines -- objects with a stable `event` name and one
+`correlation_id` per tool invocation, never formatted sentences. Payloads
+carry identifiers, counts and durations only; the idempotency_key appears as
+an 8-hex fingerprint and never in full. Event vocabulary and the two
+deprecation caveats are documented at the "Structured logging" block below.
+
 STDIO transport:  uv run server.py
 Inspector:        uv run mcp dev server.py:server
+                  (set a log level in the Inspector to see the log lines: at
+                  protocol 2026-07-28+ the server MUST NOT send until the
+                  client opts in per request)
 
 NOTE: stdout belongs to the JSON-RPC protocol on STDIO transport. Never
 print() in this file -- a stray print corrupts the message stream. Send
@@ -38,11 +48,15 @@ diagnostics to stderr.
 # Every annotation used here (`str | None`, `list[...]`) is native on the
 # Python this project requires, so the import buys nothing.
 
+import hashlib
 import json
-from typing import Annotated, Literal
+import time
+import uuid
+from typing import Annotated, Any, Literal
 
-from mcp.server import MCPServer
-from mcp.types import ToolAnnotations
+from mcp.server import MCPServer, ServerRequestContext
+from mcp.server.mcpserver import Context
+from mcp.types import EmptyResult, LoggingLevel, SetLevelRequestParams, ToolAnnotations
 from pydantic import BaseModel, Field
 
 import booking
@@ -57,6 +71,141 @@ server = MCPServer("booking-desk")
 # misdescribe it and imply a transport that is not involved.
 AVAILABILITY_URI = "travel://availability/current"
 BOOKING_URI_TEMPLATE = "travel://bookings/{trip_id}"
+
+# ---------------------------------------------------------------------------
+# Structured logging
+#
+# The capability is declared by registering a `logging/setLevel` handler,
+# because that registration is the ONLY thing the SDK looks at when it builds
+# ServerCapabilities: `get_capabilities()` sets `logging=LoggingCapability()`
+# if and only if "logging/setLevel" is in its request-handler map. Without the
+# handler the `logging` key is simply absent from the initialize response, the
+# client is entitled to discard every notifications/message we send, and
+# nothing anywhere raises -- verified against this server before the change,
+# whose initialize reply advertised only prompts/resources/tools.
+#
+# CAVEAT, matching the one in strict_arguments.py: `_lowlevel_server` is not
+# public API. MCPServer exposes no supported hook for a `logging/setLevel`
+# handler in mcp 2.1.0, and the alternative -- shipping a logging capability we
+# do not actually serve -- is worse. Revisit if a public hook lands.
+#
+# SECOND CAVEAT, and the sharper one: the MCP logging capability is DEPRECATED
+# as of protocol 2026-07-28 (SEP-2577), and this SDK marks `Context.log` and
+# every level helper with MCPDeprecationWarning. At 2026-07-28+ delivery also
+# became a per-request opt-in -- the SDK sends nothing unless the client put
+# `io.modelcontextprotocol/logLevel` in the request's `_meta`. On handshake-era
+# versions every level is deliverable and the threshold below is ours to apply.
+# So this code is correct on both eras but silent on the newest one unless the
+# client opts in -- see the Inspector note in the module docstring above.
+#
+# EVENT VOCABULARY (the complete set; keep this list and the code in step):
+#   tool.book_trip.started                       info
+#   tool.book_trip.completed                     info
+#   tool.book_trip.failed                        error   (+ error_class)
+#   dependency.supplier_availability.started     info
+#   dependency.supplier_availability.completed   info    (+ duration_ms)
+#   dependency.payment.started                   info
+#   dependency.payment.completed                 info    (+ duration_ms)
+#   booking.denied                               warning (+ reason)
+#   booking.replayed                             info
+# ---------------------------------------------------------------------------
+
+LOGGER_NAME = "booking-desk"
+
+# Ordered by increasing severity, exactly as the MCP LoggingLevel literal is.
+_LOG_LEVELS: tuple[LoggingLevel, ...] = (
+    "debug",
+    "info",
+    "notice",
+    "warning",
+    "error",
+    "critical",
+    "alert",
+    "emergency",
+)
+
+# The client's requested floor, moved by `logging/setLevel`. Connection-scoped
+# rather than per-request because that is what the handshake-era capability is:
+# one level for the session. "info" keeps `.started` boundary lines (debug) off
+# the wire until someone asks for them.
+_min_log_level: LoggingLevel = "info"
+
+
+async def _set_log_level(
+    request_ctx: ServerRequestContext[Any],
+    params: SetLevelRequestParams,
+) -> EmptyResult:
+    """Serve `logging/setLevel`, which is also what declares the capability.
+
+    This is a real handler, not a stub to light up the capability flag: on
+    handshake-era protocol versions the SDK delivers every level and states
+    that filtering is the application's job, so dropping below-threshold
+    events in `_emit` is the other half of honouring this request.
+    """
+    global _min_log_level
+    _min_log_level = params.level
+    return EmptyResult()
+
+
+server._lowlevel_server.add_request_handler(
+    "logging/setLevel", SetLevelRequestParams, _set_log_level
+)
+
+
+def _fingerprint(secret: str) -> str:
+    """A short, stable, non-reversible stand-in for a sensitive value.
+
+    Used for `idempotency_key`, which is a CAPABILITY, not a name: whoever
+    holds it can replay a booking or wedge that key. It still has to be
+    correlatable across log lines -- "did these two attempts share a key?" is
+    the first question anyone asks about a double-charge -- so it is logged as
+    8 hex of its SHA-256 and never in full.
+    """
+    return hashlib.sha256(secret.encode("utf-8")).hexdigest()[:8]
+
+
+def _elapsed_ms(started_at: float) -> float:
+    """Milliseconds since a `time.perf_counter()` reading, to 3 decimals.
+
+    perf_counter, not the wall clock: it is monotonic, so a duration cannot
+    come out negative because NTP stepped the clock mid-booking.
+    """
+    return round((time.perf_counter() - started_at) * 1000, 3)
+
+
+async def _emit(
+    ctx: Context | None,
+    level: LoggingLevel,
+    event: str,
+    correlation_id: str,
+    **fields: Any,
+) -> None:
+    """Send one structured log line to the client.
+
+    `data` is always an OBJECT with a stable `event` name and the correlation
+    id, never a preformatted sentence -- a sentence is readable once and
+    unsearchable ten thousand times.
+
+    No-ops when there is no Context, i.e. when the function is called directly
+    in a test rather than through a live request. Never raises: a logging
+    failure must not fail a booking that actually succeeded.
+    """
+    if ctx is None:
+        return
+    if _LOG_LEVELS.index(level) < _LOG_LEVELS.index(_min_log_level):
+        return
+    try:
+        await ctx.log(
+            level=level,
+            data={"event": event, "correlation_id": correlation_id, **fields},
+            logger_name=LOGGER_NAME,
+        )
+    except Exception:  # noqa: BLE001 -- see docstring: logging must not break booking.
+        # Swallowed deliberately and narrowly: this is the one place in this
+        # repo where dropping an error is correct, because the alternative is
+        # failing a confirmed, already-charged booking to report a log problem.
+        # Nothing else in this module catches broadly.
+        pass
 
 
 class TripLegs(BaseModel):
@@ -105,7 +254,7 @@ class BookingResult(BaseModel):
         open_world_hint=False,
     )
 )
-def book_trip(
+async def book_trip(
     customer_id: Annotated[
         str,
         Field(
@@ -159,6 +308,11 @@ def book_trip(
             ),
         ),
     ],
+    # Injected by the SDK, recognized by the `Context` annotation, and kept out
+    # of the published input schema -- so this is not a change to the tool's
+    # client-visible contract. `declared_arguments` in strict_arguments.py
+    # excludes it explicitly; see the docstring there for why that matters.
+    ctx: Context | None = None,
 ) -> BookingResult:
     """Reserve a flight, hotel and safari for a client and charge them, exactly once.
 
@@ -179,32 +333,128 @@ def book_trip(
     payment and retries with the SAME key. On 'idempotency_conflict' the key
     was already used for a different trip; mint a new one.
     """
-    if not customer_id.strip():
-        # The pattern above already forbids this, but the guard stays: a
-        # schema is the client's promise, not the server's guarantee.
-        return BookingResult(
-            status="invalid_customer",
-            message="Customer details are invalid.",
-            replayed=False,
-        )
+    # ONE id per invocation, minted here and stamped on every line below,
+    # including the two supplier boundaries inside booking.py. This is what
+    # makes the log stream traceable instead of merely verbose: at 2 AM you
+    # grep one id and get the whole attempt, in order, with its durations.
+    # It is deliberately NOT the idempotency_key -- retries of one booking
+    # share a key but are separate invocations and get separate ids -- and
+    # deliberately not returned to the caller, so the tool's response shape
+    # is unchanged.
+    correlation_id = uuid.uuid4().hex
+    started_at = time.perf_counter()
 
-    result = booking.book_trip(
+    await _emit(
+        ctx,
+        "info",
+        "tool.book_trip.started",
+        correlation_id,
+        tool="book_trip",
         customer_id=customer_id,
         flight_id=flight_id,
         hotel_id=hotel_id,
         safari_id=safari_id,
-        idempotency_key=idempotency_key,
+        idempotency_key_fp=_fingerprint(idempotency_key),
     )
 
-    legs = result.get("legs")
-    return BookingResult(
-        status=result["status"],
-        trip_id=result.get("trip_id"),
-        customer_id=result.get("customer_id"),
-        legs=TripLegs(**legs) if legs else None,
-        message=result.get("message"),
-        replayed=result["replayed"],
-    )
+    try:
+        if not customer_id.strip():
+            # The pattern above already forbids this, but the guard stays: a
+            # schema is the client's promise, not the server's guarantee.
+            await _emit(
+                ctx,
+                "warning",
+                "booking.denied",
+                correlation_id,
+                reason="invalid_customer",
+                customer_id=customer_id,
+                duration_ms=_elapsed_ms(started_at),
+            )
+            return BookingResult(
+                status="invalid_customer",
+                message="Customer details are invalid.",
+                replayed=False,
+            )
+
+        # booking.book_trip is sync, so its boundary events are collected and
+        # flushed here rather than awaited inline. Ordering and the durations
+        # are unaffected -- each duration is measured at its own boundary --
+        # and `finally` means a raise still reports the boundaries it reached.
+        dependency_events: list[tuple[str, dict[str, Any]]] = []
+        try:
+            result = booking.book_trip(
+                customer_id=customer_id,
+                flight_id=flight_id,
+                hotel_id=hotel_id,
+                safari_id=safari_id,
+                idempotency_key=idempotency_key,
+                emit=lambda event, fields: dependency_events.append((event, fields)),
+            )
+        finally:
+            for event, fields in dependency_events:
+                await _emit(ctx, "info", event, correlation_id, **fields)
+
+        status = result["status"]
+
+        if status != "confirmed":
+            await _emit(
+                ctx,
+                "warning",
+                "booking.denied",
+                correlation_id,
+                reason=status,
+                customer_id=customer_id,
+                idempotency_key_fp=_fingerprint(idempotency_key),
+                duration_ms=_elapsed_ms(started_at),
+            )
+        elif result["replayed"]:
+            # The double-charge that did not happen. Worth its own event name:
+            # a spike here means callers are retrying, which is the signal
+            # that something upstream is timing out.
+            await _emit(
+                ctx,
+                "info",
+                "booking.replayed",
+                correlation_id,
+                trip_id=result.get("trip_id"),
+                idempotency_key_fp=_fingerprint(idempotency_key),
+            )
+
+        await _emit(
+            ctx,
+            "info",
+            "tool.book_trip.completed",
+            correlation_id,
+            tool="book_trip",
+            status=status,
+            replayed=result["replayed"],
+            trip_id=result.get("trip_id"),
+            duration_ms=_elapsed_ms(started_at),
+        )
+
+        legs = result.get("legs")
+        return BookingResult(
+            status=result["status"],
+            trip_id=result.get("trip_id"),
+            customer_id=result.get("customer_id"),
+            legs=TripLegs(**legs) if legs else None,
+            message=result.get("message"),
+            replayed=result["replayed"],
+        )
+    except Exception as exc:
+        # Logged with a STABLE class name and re-raised, never swallowed. The
+        # class name is the searchable part; the message may contain anything
+        # and is left to the SDK's error response.
+        await _emit(
+            ctx,
+            "error",
+            "tool.book_trip.failed",
+            correlation_id,
+            tool="book_trip",
+            error_class=type(exc).__name__,
+            duration_ms=_elapsed_ms(started_at),
+        )
+        raise
 
 
 @server.resource(

@@ -1,0 +1,58 @@
+name: CI
+
+# Runs on every branch so a feature branch is verified before it reaches main,
+# and on PRs so the DRI review of .claude/ changes has evidence attached.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+# Least privilege: this workflow only reads the tree.
+permissions:
+  contents: read
+
+jobs:
+  node-tests:
+    name: Node tests (assert-based, node --test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 24.x matches the interpreter the suite was verified against locally
+      # (v24.18.0, 17/17 passing). node --test glob discovery needs >= 21.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # No dependencies to install: the suite is assert-based and uses only
+      # node's built-in test runner, so there is no lockfile and no npm ci.
+      - name: Run tests
+        run: npm test
+
+  python-typecheck:
+    name: Python typecheck (mypy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install mypy
+        run: python -m pip install --disable-pip-version-check mypy==2.3.1
+
+      # Four separate invocations, deliberately. mcp/booking-desk,
+      # mcp/destination-catalog and mcp/trip-quotes each contain a server.py,
+      # and their hyphenated directory names cannot be Python packages, so a
+      # single invocation fails with "Duplicate module named server" before it
+      # type-checks anything. --explicit-package-bases does not help for the
+      # same reason. See CI notes in docs/ if this ever needs revisiting.
+      #
+      # --ignore-missing-imports: this repo has a top-level directory named
+      # mcp/, which shadows the MCP SDK's own package name, so `mcp.server`
+      # resolves to the local folder and cannot be found. The SDK itself lives
+      # in per-project .venv directories that CI does not install.
+      - name: Typecheck
+        run: npm run typecheck

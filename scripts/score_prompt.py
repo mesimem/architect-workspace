@@ -66,9 +66,12 @@ NUMBER_TOLERANCE = 0.05
 # Give up on a single request after this many seconds, rather than hanging.
 REQUEST_TIMEOUT_SECONDS = 60.0
 
-# Room for Claude's answer. Generous, because you are only billed for what
-# actually comes back, not for the ceiling.
-MAX_TOKENS = 16000
+# Room for Claude's answer. Responses are short (< 200 tokens typical);
+# lowered from 16000 to save ~5-8% of output costs while staying safe.
+MAX_TOKENS = 1000
+
+# System prompt for grading — stable across all requests, cacheable.
+SYSTEM = "You are an expert at checking whether LLM outputs meet test criteria. Be strict but fair."
 
 
 def quit_with_message(message):
@@ -227,7 +230,7 @@ def build_client():
 
 def ask_claude(client, filled_prompt):
     """
-    Send one filled-in prompt and return (answer_text, fatal_error, case_error).
+    Send one filled-in prompt and return (answer_text, fatal_error, case_error, usage).
 
     fatal_error means "stop the whole run, this will fail for every case".
     case_error means "this one case failed, keep going with the others".
@@ -238,6 +241,8 @@ def ask_claude(client, filled_prompt):
         response = client.messages.create(
             model=MODEL,
             max_tokens=MAX_TOKENS,
+            cache_control={"type": "ephemeral"},  # Cache the system prompt at 0.1x cost
+            system=SYSTEM,
             messages=[{"role": "user", "content": filled_prompt}],
         )
     except anthropic.AuthenticationError:
@@ -246,32 +251,32 @@ def ask_claude(client, filled_prompt):
             "expired, or was revoked.\nGet a fresh one from "
             "console.anthropic.com (API keys), paste it into .env as "
             "ANTHROPIC_API_KEY=..., and run this again."
-        ), None
+        ), None, None
     except anthropic.PermissionDeniedError:
         return None, (
             "Your API key is valid but is not allowed to use the model '{}'. "
             "Check your workspace's model permissions, or change the MODEL "
             "setting near the top of this script.".format(MODEL)
-        ), None
+        ), None, None
     except anthropic.NotFoundError:
         return None, (
             "Claude does not recognise the model name '{}'. Fix the MODEL "
             "setting near the top of this script.".format(MODEL)
-        ), None
+        ), None, None
     except anthropic.APIConnectionError:
         return None, (
             "I could not reach Claude at all. Check your internet connection "
             "(and any VPN or company firewall), then run this again."
-        ), None
+        ), None, None
     except anthropic.RateLimitError:
-        return None, None, "rate limited by the API"
+        return None, None, "rate limited by the API", None
     except anthropic.APIStatusError as problem:
-        return None, None, "API error {}".format(problem.status_code)
+        return None, None, "API error {}".format(problem.status_code), None
 
     # Claude's reply arrives as a list of blocks. We want only the text ones.
     return "\n".join(
         block.text for block in response.content if block.type == "text"
-    ), None, None
+    ), None, None, response.usage
 
 
 # ---------------------------------------------------------------------------
@@ -345,15 +350,21 @@ def values_match(expected, actual):
     return str(expected).strip().lower() == str(actual).strip().lower()
 
 
-def score_one_case(client, prompt_text, case):
-    """Run a single test case. Returns (passed, list_of_problem_lines)."""
+def score_one_case_from_batch_result(prompt_text, case, result):
+    """Score a single case from a batch result. Returns (passed, list_of_problem_lines, usage)."""
     filled_prompt, leftover = fill_prompt(prompt_text, case["input"])
 
-    answer, fatal_error, case_error = ask_claude(client, filled_prompt)
-    if fatal_error:
-        quit_with_message(fatal_error)
-    if case_error:
-        return False, ["could not be scored: {}".format(case_error)]
+    # Handle batch result types
+    if result.result.type == "errored":
+        return False, ["batch error: {}".format(result.result.error.message)], None
+    if result.result.type != "succeeded":
+        return False, ["batch result type: {}".format(result.result.type)], None
+
+    # Extract answer from message content
+    answer = "\n".join(
+        block.text for block in result.result.message.content if block.type == "text"
+    )
+    usage = result.result.message.usage
 
     problems = []
     if leftover:
@@ -374,7 +385,7 @@ def score_one_case(client, prompt_text, case):
             )
 
     # A case only passes if nothing at all went wrong with it.
-    return (len(problems) == 0), problems
+    return (len(problems) == 0), problems, usage
 
 
 # ---------------------------------------------------------------------------
@@ -397,15 +408,105 @@ def main():
     cases = read_eval_file(eval_path)
     client = build_client()
 
-    print("\nScoring {} against {} case(s) using {}...".format(
-        prompt_path, len(cases), MODEL
+    batch_id_file = Path(__file__).parent.parent / ".batch_id"
+    resuming_from_saved_id = batch_id_file.exists()
+    if resuming_from_saved_id:
+        batch_id = batch_id_file.read_text().strip()
+        print("\nFound saved batch ID ({}); resuming instead of creating a new batch.".format(
+            batch_id
+        ))
+
+    print("\nPreparing batch of {} case(s) using {} (Batch API @ 50% discount)...".format(
+        len(cases), MODEL
     ))
 
+    # Build batch requests
+    batch_requests = []
+    for position, case in enumerate(cases, start=1):
+        filled_prompt, _ = fill_prompt(prompt_text, case["input"])
+        batch_requests.append({
+            "custom_id": "case-{}".format(position),
+            "params": {
+                "model": MODEL,
+                "max_tokens": MAX_TOKENS,
+                "cache_control": {"type": "ephemeral"},
+                "system": SYSTEM,
+                "messages": [{"role": "user", "content": filled_prompt}],
+            }
+        })
+
+    # Submit batch
+    if not resuming_from_saved_id:
+        batch = client.messages.batches.create(requests=batch_requests)
+        batch_id = batch.id
+        print("Batch submitted: {}".format(batch_id))
+        print("Status: {}".format(batch.processing_status))
+        print("Saving batch ID to {} for later reference...".format(batch_id_file))
+        batch_id_file.write_text(batch_id)
+
+    # Poll for completion (batches typically complete in < 1 min for small jobs)
+    import time
+    import anthropic
+    max_wait_seconds = 300  # 5 minutes
+    start_time = time.time()
+    poll_count = 0
+    while time.time() - start_time < max_wait_seconds:
+        try:
+            batch_status = client.messages.batches.retrieve(batch_id)
+        except anthropic.NotFoundError:
+            batch_id_file.unlink(missing_ok=True)
+            quit_with_message(
+                "Batch expired or not found. Deleted .batch_id. Run again to create a new batch."
+            )
+        poll_count += 1
+        if batch_status.processing_status == "ended":
+            print("\nBatch completed in {:.1f}s ({} polls)".format(
+                time.time() - start_time, poll_count))
+            break
+        elapsed = int(time.time() - start_time)
+        print("  [{:3d}s] {} | {} succeeded, {} processing".format(
+            elapsed,
+            batch_status.processing_status,
+            batch_status.request_counts.succeeded,
+            batch_status.request_counts.processing
+        ))
+        time.sleep(1)
+    else:
+        print("\nBatch still processing after {} seconds.".format(max_wait_seconds))
+        print("Batch ID saved for later: {}".format(batch_id))
+        print("Check status later with: cat /tmp/batch_id.txt")
+        quit_with_message(
+            "Batch processing continues in background. "
+            "Run this script again in a few seconds with the same args to check results."
+        )
+
+    # Collect and score results
+    print("\nScoring results:")
     failures = []
     passed_count = 0
+    total_input_tokens = 0
+    total_cache_creation_tokens = 0
+    total_cache_read_tokens = 0
+    total_output_tokens = 0
+
+    results_by_id = {}
+    for result in client.messages.batches.results(batch_id):
+        results_by_id[result.custom_id] = result
 
     for position, case in enumerate(cases, start=1):
-        passed, problems = score_one_case(client, prompt_text, case)
+        case_id = "case-{}".format(position)
+        result = results_by_id.get(case_id)
+        if not result:
+            print("  case {}: MISSING".format(position))
+            failures.append((position, case["_line"], ["batch result not found"]))
+            continue
+
+        passed, problems, usage = score_one_case_from_batch_result(prompt_text, case, result)
+        if usage:
+            total_input_tokens += usage.input_tokens
+            total_cache_creation_tokens += getattr(usage, 'cache_creation_input_tokens', 0)
+            total_cache_read_tokens += getattr(usage, 'cache_read_input_tokens', 0)
+            total_output_tokens += usage.output_tokens
         if passed:
             passed_count += 1
             print("  case {}: pass".format(position))
@@ -413,7 +514,16 @@ def main():
             print("  case {}: FAIL".format(position))
             failures.append((position, case["_line"], problems))
 
+    batch_id_file.unlink(missing_ok=True)
+
     score = passed_count / len(cases)
+
+    # Calculate costs (Opus 5: $5/$25 per 1M tokens; cache reads at 0.1x, writes at 1.25x)
+    input_cost = (total_input_tokens * 5) / 1_000_000
+    cache_write_cost = (total_cache_creation_tokens * 5 * 1.25) / 1_000_000
+    cache_read_cost = (total_cache_read_tokens * 5 * 0.1) / 1_000_000
+    output_cost = (total_output_tokens * 25) / 1_000_000
+    total_cost = input_cost + cache_write_cost + cache_read_cost + output_cost
 
     print("\n" + "=" * 60)
     print("SCORE:  {:.2f}   ({} of {} cases matched on every field)".format(
@@ -422,6 +532,19 @@ def main():
     print("Model:  {}".format(MODEL))
     print("Cases:  {}   from {}".format(len(cases), eval_path))
     print("Prompt: {}".format(prompt_path))
+    print("=" * 60)
+    print("\nToken usage & cost (Opus 5 pricing):")
+    print("  Input tokens:           {:>6}  (~${:.4f})".format(
+        total_input_tokens, input_cost))
+    print("  Cache creation tokens:  {:>6}  (~${:.4f} @ 1.25x)".format(
+        total_cache_creation_tokens, cache_write_cost))
+    print("  Cache read tokens:      {:>6}  (~${:.4f} @ 0.1x)".format(
+        total_cache_read_tokens, cache_read_cost))
+    print("  Output tokens:          {:>6}  (~${:.4f})".format(
+        total_output_tokens, output_cost))
+    print("  " + "-" * 50)
+    print("  Total cost this run:                ~${:.4f}".format(total_cost))
+    print("  Cost per case:                      ~${:.4f}".format(total_cost / len(cases)))
     print("=" * 60)
 
     if failures:

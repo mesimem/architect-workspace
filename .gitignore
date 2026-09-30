@@ -1,1 +1,14 @@
+# Secrets. Never commit a real value; see CLAUDE.md "Secrets management".
 .env
+
+# Scratch space. CLAUDE.md: "/tmp - Always safe to delete. Never committed."
+# Listed because /ship step 3 runs `git add .`, which would otherwise stage it.
+tmp/
+
+# Python build artefacts, regenerated on every server run.
+__pycache__/
+*.py[cod]
+.mypy_cache/
+
+# Note: uv writes a self-ignoring .venv/.gitignore, so the three
+# mcp/*/.venv directories are already excluded without a rule here.
