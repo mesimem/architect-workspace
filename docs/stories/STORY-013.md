@@ -27,8 +27,8 @@ the same criteria out of `.colaberry/progress.json`, which Claude Code keeps in
 step (see the managed block in CLAUDE.md). Ticking something you have not
 actually met only misleads you.
 
-- [ ] Given a new trip request, when a travel advisor creates a proposal, then it should be completed within 30 minutes.
-- [ ] Given a trip proposal, when it exceeds 30 minutes, then the advisor should be notified of the delay.
-- [ ] Trust: Given any trip proposal, when it is created, then an audit log entry must be created.
+- [x] Given a new trip request, when a travel advisor creates a proposal, then it should be completed within 30 minutes.
+- [x] Given a trip proposal, when it exceeds 30 minutes, then the advisor should be notified of the delay.
+- [x] Trust: Given any trip proposal, when it is created, then an audit log entry must be created.
 
 When every box above is ticked, stop and show the demo.

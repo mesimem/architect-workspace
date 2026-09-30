@@ -614,21 +614,44 @@
       "criteria": [
         {
           "text": "Given a new trip request, when a travel advisor creates a proposal, then it should be completed within 30 minutes.",
-          "passed": false
+          "passed": true,
+          "evidence": "backend/src/services/proposals/proposalClock.test.js, proposalStore.test.js and backend/src/http/proposals.test.js. The clock is SERVER-stamped at startProposal before any work happens and no later write touches it - proposalStore.test.js asserts startedAt is unchanged after completion, which is the assertion that makes this criterion mean anything: a completion that re-stamped the start would issue every proposal in zero minutes and pass vacuously forever. Confirmed by mutation: re-stamping startedAt at completion fails proposals.durability.test.js. A draft opened 09:00 and issued 09:12 reports within_sla with elapsedMs 720000, asserted by hand rather than recomputed. The 30-minute boundary is tested to the millisecond on both sides (29:59.999 and 30:00.000 pass, 30:00.001 breaches) because within 30 minutes includes the mark. Over HTTP, POST /api/proposals returns deadlineAt and remainingMs so the advisor can see the target, and proposals.durability.test.js measures a 41-minute elapsed across a real process restart."
         },
         {
           "text": "Given a trip proposal, when it exceeds 30 minutes, then the advisor should be notified of the delay.",
-          "passed": false
+          "passed": true,
+          "evidence": "backend/src/services/proposals/proposalDelayNotifier.test.js, proposalStore.test.js and backend/src/http/proposals.test.js. A late proposal STILL ISSUES and is marked breached - refusing at 30:00 would destroy the advisor's work to satisfy a timer - and the page is part of completeProposal rather than something a route remembers to ask for: proposalStore.test.js asserts a 41-minute completion pages once and an on-time one pages nobody. The other half of the criterion is covered too: listBreachedOpenProposals finds a draft that is ALREADY late but not yet issued, since a proposal abandoned at minute 12 and resumed at minute 90 would otherwise never page anyone. Over HTTP, a seeded 100-minute-old draft appears in GET /api/proposals/sla/breaches and POST /api/proposals/sla/notify pages its advisor with overdueMinutes at least 70. Dedup is keyed on the DURABLE audit log rather than an in-memory Set, so proposals.durability.test.js proves a restart does not re-page an advisor already told, and the same proposal completing later reports already_notified instead of paging twice. Caveat recorded honestly: the default channel is an in-memory outbox, as advisor/advisorNotifier.js is - no real message is sent, and a test asserts that default so a real channel cannot be wired in silently."
         },
         {
           "text": "Trust: Given any trip proposal, when it is created, then an audit log entry must be created.",
-          "passed": false
+          "passed": true,
+          "evidence": "backend/src/services/proposals/proposals.audit.test.js, proposals.durability.test.js and backend/src/http/proposals.test.js. Both writes go through the shared audited-commit door (backend/src/services/shared/auditedCommit.js), which reads the write back and ROLLS IT BACK if the audit throws - so an unaudited proposal cannot exist rather than merely being unlikely: with a failing audit, store size is asserted to be 0 on open, and on completion the row is asserted to roll back to the open draft with its clock intact. proposal.opened and proposal.issued are keyed on the version (proposalId:proposal.opened.v1, proposalId:proposal.issued.v2) so the audit log's first-write-wins rule cannot swallow the second, and both are read back through GET /api/admin/audit rather than only from the module's own store. Refusals are audited too, and the trail is asserted to carry ids and figures only - no customerNote or internalNotes text reaches it. proposals.durability.test.js confirms both entries and the recorded elapsed time survive a real restart."
         }
       ],
-      "files_touched": [],
-      "tests_added": [],
-      "notes": null,
-      "updated_at": null,
+      "files_touched": [
+        "backend/src/services/proposals/proposalClock.js",
+        "backend/src/services/proposals/proposalStore.js",
+        "backend/src/services/proposals/proposalAssembly.js",
+        "backend/src/services/proposals/proposalDelayNotifier.js",
+        "backend/src/services/shared/auditedCommit.js",
+        "backend/src/services/quotes/quoteWriteGuard.js",
+        "backend/src/services/authz/permissions.js",
+        "backend/src/http/routes/proposalRoutes.js",
+        "backend/src/http/routes/index.js",
+        "docs/stories/STORY-013.md"
+      ],
+      "tests_added": [
+        "backend/src/services/proposals/proposalClock.test.js",
+        "backend/src/services/proposals/proposalStore.test.js",
+        "backend/src/services/proposals/proposalAssembly.test.js",
+        "backend/src/services/proposals/proposalDelayNotifier.test.js",
+        "backend/src/services/proposals/proposals.audit.test.js",
+        "backend/src/services/proposals/proposals.durability.test.js",
+        "backend/src/http/proposals.test.js",
+        "backend/src/services/proposals/proposalFixtures.js"
+      ],
+      "notes": "API surface only, no UI. The story's how-to-build-it says develop a user interface; this repo has no frontend and STORY-007/008 both shipped services plus HTTP routes only, so the advisor surface is five endpoints under /api/proposals. Deviation agreed with the user before any code was written; all three criteria are fully testable at the service and route layer. THE LOAD-BEARING DECISION: startedAt is written durably before any work and never rewritten. AC-1 is measurable, AC-2 works for an open draft and not only a finished one, and a crash cannot hide an overrun - all three fall out of that one choice. Got wrong, the system would not break, it would flatter itself: every restart would silently reset every clock and no proposal would ever be late. The 30-minute boundary is INCLUSIVE (a breach is strictly greater than 30:00.000), tested to the millisecond on both sides. A backwards clock (skew, DST) clamps to zero and reads as on time with clockWentBackwards set, because paging an advisor about a minus-four-minute delay teaches them to ignore the channel. An unreadable clock is recorded as a breach with slaUnknown and null figures - of the two ways to be wrong, on time is the one that suppresses a page the advisor is owed. The elapsed time is STORED at issue, not derived on read. Recomputed from startedAt it would grow forever, and an on-time proposal would look breached by the next morning. Notification dedup is keyed on the durable audit log, not an in-memory Set, so a restart cannot re-page. The entry is written AFTER a confirmed send, which leaves a one-page duplicate window on a crash between send and audit; write-ahead would close that window but a failed send would then suppress the page forever with the trail claiming otherwise. A duplicate page is a nuisance, a suppressed page is the missed alert the criterion exists for. The routes take no at and no startedAt - the clock is the server's, always, because an SLA the measured party can edit is not an SLA. A test posts a forged future at to the sweep and asserts it pages nobody. To test a 30-minute breach in a suite that runs in milliseconds, proposals.test.js SEEDS a genuinely 100-minute-old draft through the service with a controlled clock and then exercises the real endpoints; nothing in the production path was loosened. quoteWriteGuard.js (STORY-007) was refactored into a thin adapter over the new shared door. Behaviour-preserving and verified as such: the audit key, both refusal messages, the log service tag, all three log event names, the quoteId log field and the rollback were each checked byte-for-byte, because a shared helper that quietly renames an audit key is a break in the trail, not a tidy-up. Known gaps, deliberately not built: nothing in production passes the assemble hook yet (pricing is local and synchronous, so nothing in completion CAN hang) - the boundary exists so STORY-015's itinerary read inherits the timeout and capped retries instead of inventing its own, and it is tested with hanging, throwing and junk-returning stubs. No customer-facing proposal view (the customer's priced document is a quote, and STORY-007 owns it). No conversion of an issued proposal into a quote - doing both atomically needs a transaction across two stores. Any advisor may read or complete a colleague's proposal; the story says nothing about ownership and desk work gets covered, so there is a named test recording that as a decision rather than an oversight.",
+      "updated_at": "2026-09-30T18:20:19.054Z",
       "verification": {
         "state": "in_progress",
         "criteria_passed": 0,
