@@ -16,6 +16,7 @@ const { adminRoutes } = require("./adminRoutes");
 const { crmRoutes } = require("./crmRoutes");
 const { quoteRoutes } = require("./quoteRoutes");
 const { proposalRoutes } = require("./proposalRoutes");
+const { productRoutes } = require("./productRoutes");
 
 const ROUTES = [].concat(
   portalRoutes,
@@ -25,7 +26,8 @@ const ROUTES = [].concat(
   adminRoutes,
   crmRoutes,
   quoteRoutes,
-  proposalRoutes
+  proposalRoutes,
+  productRoutes
 );
 
 module.exports = { ROUTES };

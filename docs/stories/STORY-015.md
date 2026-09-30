@@ -27,8 +27,8 @@ the same criteria out of `.colaberry/progress.json`, which Claude Code keeps in
 step (see the managed block in CLAUDE.md). Ticking something you have not
 actually met only misleads you.
 
-- [ ] Given a new safari product, when it is created, then it should include itineraries and pricing.
-- [ ] Given an existing safari product, when its itinerary is updated, then the changes should be reflected immediately.
-- [ ] Trust: Given any safari product, when it is created or updated, then an audit log entry must be created.
+- [x] Given a new safari product, when it is created, then it should include itineraries and pricing.
+- [x] Given an existing safari product, when its itinerary is updated, then the changes should be reflected immediately.
+- [x] Trust: Given any safari product, when it is created or updated, then an audit log entry must be created.
 
 When every box above is ticked, stop and show the demo.

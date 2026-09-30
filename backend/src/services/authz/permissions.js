@@ -14,12 +14,25 @@
 // ask for is listed here, a route asking for a permission that does not exist
 // is a startup error rather than a route nobody can reach.
 //
-// THE FOUR ROLES, AND WHY THEY ARE NOT NESTED.
-//   customer  - their own trips, their own bookings. Nothing else.
-//   advisor   - the review queue and the catalog. NOT customer data by default.
-//   admin     - operates the system: sees the audit trail, assigns roles.
-//   sales     - the CRM: leads, and the booking history of customers they hold
-//               a relationship with. NOT the system, NOT the review queue.
+// THE FIVE ROLES, AND WHY THEY ARE NOT NESTED.
+//   customer        - their own trips, their own bookings. Nothing else.
+//   advisor         - the review queue and the catalog. NOT customer data by
+//                     default.
+//   admin           - operates the system: sees the audit trail, assigns roles.
+//   sales           - the CRM: leads, and the booking history of customers they
+//                     hold a relationship with. NOT the system, NOT the review
+//                     queue.
+//   product_manager - the inventory: authors safari packages, their itineraries
+//                     and their prices. NOT customer data, NOT the CRM, NOT the
+//                     system.
+//
+// STORY-015 added `product_manager` for the same reason STORY-014 added
+// `sales`, and against the same alternative. Giving the product grants to
+// `advisor` was the cheaper change, and it would have meant every advisor could
+// reprice any package the agency sells - a much larger blast radius for a
+// leaked advisor token, in exchange for one fewer row in this table. An advisor
+// gets PRODUCTS_READ instead: sell from the catalog, do not author it. That
+// read/write split is the whole point of having the two permissions.
 //
 // STORY-014 added `sales` rather than widening `advisor`, which is the change
 // this file's own header predicted ("when a fourth role arrives ... only this
@@ -116,6 +129,23 @@ const PERMISSIONS = Object.freeze({
   // Catalog - destination browsing. The least sensitive thing here.
   CATALOG_READ: "catalog.read",
 
+  // Safari products (STORY-015). The AUTHORED inventory: a package, its
+  // day-by-day itinerary, and what it costs us against what we sell it for.
+  //
+  // SEPARATE FROM CATALOG_READ, which every role here holds. catalog.read is
+  // the customer-facing destination lookup (africa/catalogSource.js) and
+  // carries no cost figure. A product record carries pricing.internal - our
+  // supplier cost and our margin - so reading one is a different act from
+  // browsing a destination, and it is granted to staff only. A customer who
+  // held this would be reading our margin.
+  //
+  // Read and write are split because they leak differently: a read exposes the
+  // margin on every package at once, a write can change what the agency
+  // charges. Splitting them is what lets an advisor sell from the catalog
+  // without being able to reprice it.
+  PRODUCTS_READ: "products.read",
+  PRODUCTS_WRITE: "products.write",
+
   // Administration. These three are the reason this story exists.
   ADMIN_ROLES_READ: "admin.roles.read",
   ADMIN_ROLES_ASSIGN: "admin.roles.assign",
@@ -168,6 +198,12 @@ const ROLE_PERMISSIONS = Object.freeze({
     PERMISSIONS.PROPOSALS_READ,
     PERMISSIONS.PROPOSALS_WRITE,
     PERMISSIONS.PROPOSALS_SLA_SWEEP,
+    // STORY-015: READ ONLY. An advisor quotes from the product book, so they
+    // need to see a package's itinerary and its price - including the cost,
+    // because that is what a margin conversation with a customer rests on. They
+    // cannot author or reprice one; PRODUCTS_WRITE sits with product_manager
+    // alone. This is the read/write split doing its job.
+    PERMISSIONS.PRODUCTS_READ,
     // An advisor logs out of their own session like anyone else. Ending YOUR
     // OWN session is not a privilege, and withholding it would mean an advisor
     // could never revoke a token they thought was compromised.
@@ -200,6 +236,25 @@ const ROLE_PERMISSIONS = Object.freeze({
     PERMISSIONS.CRM_LEADS_READ,
     PERMISSIONS.CRM_LEADS_WRITE,
     PERMISSIONS.CRM_CUSTOMERS_READ,
+    PERMISSIONS.CATALOG_READ,
+    // Ending your own session is not a privilege - same reasoning as advisor.
+    PERMISSIONS.PORTAL_SESSION_END,
+  ]),
+
+  // STORY-015. A product manager authors what the agency sells: the package,
+  // the day-by-day itinerary, the cost and the price. Deliberately absent:
+  // CRM_LEADS_READ and CRM_CUSTOMERS_READ (authoring inventory is not a reason
+  // to read who bought it), ADMIN_AUDIT_READ (the trail records what a product
+  // manager did to a price, so reading it is the same conflict of interest that
+  // keeps it away from sales), QUOTES_* and PROPOSALS_* (pricing a package is
+  // not the same job as quoting a customer, and a product manager has no
+  // customers), and ADVISOR_REVIEWS_READ.
+  //
+  // CATALOG_READ is here because authoring a package means looking at the
+  // destinations it visits.
+  product_manager: Object.freeze([
+    PERMISSIONS.PRODUCTS_READ,
+    PERMISSIONS.PRODUCTS_WRITE,
     PERMISSIONS.CATALOG_READ,
     // Ending your own session is not a privilege - same reasoning as advisor.
     PERMISSIONS.PORTAL_SESSION_END,

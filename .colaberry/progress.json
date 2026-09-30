@@ -724,21 +724,35 @@
       "criteria": [
         {
           "text": "Given a new safari product, when it is created, then it should include itineraries and pricing.",
-          "passed": false
+          "passed": true,
+          "evidence": "backend/src/services/products/safariProductValidation.test.js, safariProductStore.test.js and backend/src/http/products.test.js. A product is not storable without BOTH halves: the itinerary must be a non-empty array whose days are exactly 1..durationDays, and the pricing block must carry a currency, a per-person price above zero and a cost. POST /api/products/safari returns 201 with the itinerary in full - days asserted as [1,2,3], the day-2 title and location checked by value - and the pricing with its margin DERIVED rather than supplied: 520000 - 420000 = 100000, written out by hand rather than recomputed from the implementation's own formula. createdBy comes from the resolved principal, never from the request body, so a caller cannot nominate who authored a package. The created product is then read back through GET /api/products/safari/:id and asserted deepStrictEqual to what the POST returned, and through the list, where count is 1. A second identical POST is 200 with replayed: true rather than 201, creates no second row and writes no second audit entry."
         },
         {
           "text": "Given an existing safari product, when its itinerary is updated, then the changes should be reflected immediately.",
-          "passed": false
+          "passed": true,
+          "evidence": "backend/src/services/products/safariProductStore.test.js and backend/src/http/products.test.js. A PATCH replacing day 2 is visible on the VERY NEXT request through both doors into the book - the single GET and the list - with version at 2, updatedBy set to the editing principal, createdBy unchanged, and the two days that were not edited asserted still exactly as they were. The response reports changed: [\"itinerary\"] rather than claiming a blanket save. The other half of immediacy is asserted too, and is the part that would otherwise rot: a REFUSED edit leaves the stored product byte-identical, checked with deepStrictEqual against the pre-edit record after a below-cost reprice, after a duration change that orphans day 3, after a duration change that leaves days 4-5 unsold, and after every 403 from an advisor, customer, sales and admin token. A store that refuses an edit and half-applies it is worse than one that accepts a bad edit, because the product manager is told no and the catalog says otherwise. Re-sending the same itinerary in a different order, or a name with different whitespace, is correctly reported as no change and does not bump the version."
         },
         {
           "text": "Trust: Given any safari product, when it is created or updated, then an audit log entry must be created.",
-          "passed": false
+          "passed": true,
+          "evidence": "backend/src/services/products/safariProductStore.test.js and backend/src/http/products.test.js - products.safari.created, products.safari.updated, products.safari.unchanged and products.safari.refused are all readable AFTERWARDS through GET /api/admin/audit with actor, resource and correlation id, which is a stronger proof than reading the module's own store. Updates key their audit entry on the CALLER'S correlationId, not on the product id, and a SECOND edit is asserted to write its own distinct entry: keyed on the product id, auditLog.js's first-write-wins rule would have recorded the first change to a package and silently discarded every later one, so a package repriced three times would show its original price in the trail forever. The consequence is stated and tested: a mutation arriving with no correlationId is REFUSED rather than performed unaudited, and the product is asserted unchanged after it. The update entry names fields: [\"itinerary\"] and daysChanged: [2] - which day moved, not merely that something did - and the itinerary is recorded as the digest {days: 3} deliberately, because auditLog.js's context depth cap would have turned a full before/after pair of day objects into \"<truncated>\", producing an entry that looked complete and held no evidence."
         }
       ],
-      "files_touched": [],
-      "tests_added": [],
-      "notes": null,
-      "updated_at": null,
+      "files_touched": [
+        "backend/src/services/products/safariProductValidation.js",
+        "backend/src/services/products/safariProductStore.js",
+        "backend/src/http/routes/productRoutes.js",
+        "backend/src/services/authz/permissions.js",
+        "backend/src/http/routes/index.js",
+        "docs/stories/STORY-015.md"
+      ],
+      "tests_added": [
+        "backend/src/services/products/safariProductValidation.test.js",
+        "backend/src/services/products/safariProductStore.test.js",
+        "backend/src/http/products.test.js"
+      ],
+      "notes": "43/43 npm test (was 40/40), npm run typecheck clean, so npm run verify green end to end. THE ITINERARY-CONFLICT RULE IS ONE SENTENCE, NOT THREE CHECKS: the set of days must be exactly 1..durationDays, each appearing once. That catches all three real faults - two entries claiming one day, a day past the duration, and a gap that is unsold time mid-package - each reported as its own named problem. Out-of-order input is VALID and gets sorted, because refusing a reordered form submission is rigour that only hurts the user. THE UPDATE PATH VALIDATES THE MERGED RECORD, NOT THE PATCH, and that is where this story actually bites: {durationDays: 2} on a 3-day product is a perfectly legal patch in isolation that would leave the stored itinerary describing a day which no longer exists, and replacing the itinerary alone can leave a gap against the stored duration. Both have named regression cases. costPerPersonCents is REQUIRED because without it there is no margin and the below-cost refusal - the check that catches $5,200 typed as 5200 cents - can never fire; cost and margin are nested under pricing.internal so a future customer-facing projection has exactly one field to filter, which is also why products.read is staff-only today. PRICING IS REPLACED AS A BLOCK, not merged field by field, so a patch omitting singleSupplementCents drops it to 0 - asserted explicitly so it is a decision rather than a discovery. A NEW product_manager ROLE rather than a wider advisor, chosen by the operator against the cheaper alternative: giving the product grants to advisor was one fewer row in the permission table in exchange for every advisor being able to reprice any package the agency sells. An advisor holds products.read - sell from the book, do not author it - and the HTTP suite asserts exactly that: 200 on both reads, 403 on POST and PATCH. The one change outside this story was approved first and TIGHTENS a test: permissions.test.js's CRM block warned that a loop over ROLES would silently pass the day a fifth role arrived with CRM access, so product_manager is now asserted by hand to hold none. Deliberately not built: no seasonal or per-date pricing (the backend holds no rate card - STORY-007's reasoning, and a quote carries the season), no per-traveller tiers, no link from a product to the africa/catalogSource.js destination it visits, no DELETE route (erasing a product erases the subject of its own audit trail), no pagination - list and the duplicate check both scan, O(n) on purpose, because STORY-016 owns scale and an index is a second copy of the data that can desync. NO DURABILITY SUITE YET: the store uses the same jsonFileStore as every other store here and inherits its behaviour, but unlike STORY-007/008/013 that has not been proven for THIS module in separate processes, and it is the most valuable thing to add next. version is recorded but NOT enforced - two product managers editing at once is last-write-wins, the standing repo-wide limit, and the real fix is Postgres.",
+      "updated_at": "2026-09-30T20:05:00.000Z",
       "verification": {
         "state": "in_progress",
         "criteria_passed": 0,

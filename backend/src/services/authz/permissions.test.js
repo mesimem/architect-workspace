@@ -124,7 +124,13 @@ function main() {
   for (const permission of ALL_PERMISSIONS) {
     assert.ok(granted.has(permission), permission + " is granted to no role");
   }
-  assert.deepStrictEqual(ROLES.slice().sort(), ["admin", "advisor", "customer", "sales"]);
+  assert.deepStrictEqual(ROLES.slice().sort(), [
+    "admin",
+    "advisor",
+    "customer",
+    "product_manager",
+    "sales",
+  ]);
   console.log("permissions: catalog and grant table agree, with no orphans on either side");
 
   // STORY-014: the CRM grants, stated as the blast radius of a leaked token
@@ -145,6 +151,15 @@ function main() {
     assert.strictEqual(can("customer", permission), false, "customer must not hold " + permission);
     assert.strictEqual(can("advisor", permission), false, "advisor must not hold " + permission);
     assert.strictEqual(can("admin", permission), false, "admin must not hold " + permission);
+    // STORY-015 is the fifth role this block's comment above predicted. Added
+    // by hand, for the reason stated there: a loop over ROLES would have passed
+    // silently while the claim "the CRM is reachable by sales alone" quietly
+    // stopped being proven.
+    assert.strictEqual(
+      can("product_manager", permission),
+      false,
+      "product_manager must not hold " + permission
+    );
   }
 
   // And sales does not drift into everyone else's job.
@@ -153,6 +168,39 @@ function main() {
   assert.strictEqual(can("sales", PERMISSIONS.ADVISOR_REVIEWS_READ), false);
   assert.strictEqual(can("sales", PERMISSIONS.PORTAL_TRIPS_READ), false);
   console.log("permissions: the CRM is reachable by sales alone, and sales reaches nothing else");
+
+  // STORY-015: the product grants, stated as blast radius. The read/write split
+  // is the whole point of having two permissions, so it is asserted rather than
+  // described: an advisor sells from the book, a product manager authors it.
+  assert.strictEqual(can("product_manager", PERMISSIONS.PRODUCTS_READ), true);
+  assert.strictEqual(can("product_manager", PERMISSIONS.PRODUCTS_WRITE), true);
+  assert.strictEqual(can("advisor", PERMISSIONS.PRODUCTS_READ), true);
+  assert.strictEqual(
+    can("advisor", PERMISSIONS.PRODUCTS_WRITE),
+    false,
+    "an advisor must not be able to reprice a package"
+  );
+
+  // A product record carries pricing.internal - our supplier cost and our
+  // margin - so a customer holding either grant would be reading our margin.
+  // Written per role rather than as a loop, for the reason the CRM block above
+  // gives: a loop would pass the day a sixth role arrives with product access.
+  for (const permission of [PERMISSIONS.PRODUCTS_READ, PERMISSIONS.PRODUCTS_WRITE]) {
+    assert.strictEqual(can("customer", permission), false, "customer must not hold " + permission);
+    assert.strictEqual(can("sales", permission), false, "sales must not hold " + permission);
+    // An admin administers the system; it does not author the inventory. See
+    // "ADMIN IS NOT A SUPERUSER" in the module header.
+    assert.strictEqual(can("admin", permission), false, "admin must not hold " + permission);
+  }
+
+  // And a product manager does not drift into everyone else's job.
+  assert.strictEqual(can("product_manager", PERMISSIONS.ADMIN_AUDIT_READ), false);
+  assert.strictEqual(can("product_manager", PERMISSIONS.ADMIN_ROLES_ASSIGN), false);
+  assert.strictEqual(can("product_manager", PERMISSIONS.QUOTES_WRITE), false);
+  assert.strictEqual(can("product_manager", PERMISSIONS.PROPOSALS_WRITE), false);
+  assert.strictEqual(can("product_manager", PERMISSIONS.ADVISOR_REVIEWS_READ), false);
+  assert.strictEqual(can("product_manager", PERMISSIONS.PORTAL_TRIPS_READ), false);
+  console.log("permissions: an advisor sells from the product book, a product manager authors it");
 
   console.log("permissions: all tests passed");
 }
