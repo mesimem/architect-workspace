@@ -3,13 +3,13 @@
   "project": "U.S.-based Full-Service Travel Agency Platform",
   "totals": {
     "stories_total": 17,
-    "stories_verified": 7,
+    "stories_verified": 8,
     "stories_submitted": 0,
-    "stories_in_progress": 10,
+    "stories_in_progress": 9,
     "stories_not_started": 0,
     "criteria_total": 53,
-    "criteria_passed": 21,
-    "points_awarded": 329
+    "criteria_passed": 24,
+    "points_awarded": 376
   },
   "stories": [
     {
@@ -444,19 +444,15 @@
       "notes": "Service-layer only, no HTTP route - the booking domain is fronted over MCP, as STORY-005 is. AC-1: one group record holds the shared itinerary and all members, so all-or-nothing confirmation is structural rather than a loop that can partially succeed. AC-2: groupValidation.js returns every problem at once, naming positions and never echoing submitted values. AC-3: audit entry per confirmation AND per refusal, one booking-log row per member at their own share, one accounting entry for the group total against the organizer. 43 checks across three suites; durability proven in separate processes against a real data dir.",
       "updated_at": "2026-09-29T05:50:13.173Z",
       "verification": {
-        "state": "in_progress",
-        "criteria_passed": 0,
+        "state": "verified",
+        "criteria_passed": 3,
         "criteria_total": 3,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
-        "outstanding": [
-          "Given a group booking is initiated, when details are complete, then the system confirms the booking for all members.",
-          "Given a group booking is incomplete, when submitted, then the system prompts for missing information.",
-          "Trust: The system logs all group booking transactions."
-        ]
+        "verified_at": "2026-09-29T06:05:56.329Z",
+        "commit_sha": "fe7cd16d312a9688822c6ed5b93a32f896e32738",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/fe7cd16d312a9688822c6ed5b93a32f896e32738",
+        "commit_at": "2026-09-29T05:45:18Z",
+        "points_awarded": 47,
+        "outstanding": []
       }
     },
     {
