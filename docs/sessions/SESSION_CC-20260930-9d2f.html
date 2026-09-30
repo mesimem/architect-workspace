@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session CC-20260930-9d2f — Change Report</title>
+<style>
+  :root {
+    --cherry: #FB2832;
+    --berry: #367895;
+    --leaf: #5BA63C;
+    --ink: #16202a;
+    --muted: #5c6b7a;
+    --rule: #dfe5ea;
+    --surface: #ffffff;
+    --canvas: #f4f6f8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: Roboto, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    line-height: 1.6;
+  }
+  code {
+    font-family: "Roboto Mono", ui-monospace, Consolas, "Courier New", monospace;
+    font-size: 0.9em;
+    background: #eef2f5;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.05em 0.35em;
+    word-break: break-word;
+  }
+  header.masthead {
+    background: var(--surface);
+    border-bottom: 3px solid var(--cherry);
+    padding: 2rem 1.5rem 1.5rem;
+  }
+  .wrap { max-width: 60rem; margin: 0 auto; }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--berry);
+    margin: 0 0 0.35rem;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 0.5rem; font-weight: 700; letter-spacing: -0.01em; }
+  .meta { color: var(--muted); font-size: 0.88rem; margin: 0; }
+  main { padding: 1.75rem 1.5rem 3rem; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--berry);
+    border-radius: 4px;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1.1rem;
+  }
+  .card-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    padding-bottom: 0.7rem;
+    margin-bottom: 0.9rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .card-index {
+    font-family: "Roboto Mono", ui-monospace, Consolas, monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    flex: none;
+  }
+  .card-head h2 { font-size: 1.06rem; margin: 0; font-weight: 600; flex: 1 1 auto; }
+  .badge {
+    flex: none;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .badge-done { background: #eaf5e4; color: #3d7327; border: 1px solid var(--leaf); }
+  .badge-open { background: #fdf1e3; color: #8a5810; border: 1px solid #E8920C; }
+  .field { display: grid; grid-template-columns: 9.5rem 1fr; gap: 1rem; padding: 0.4rem 0; }
+  .field + .field { border-top: 1px dotted var(--rule); }
+  .field-label {
+    font-size: 0.73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    padding-top: 0.2rem;
+  }
+  .field-value { font-size: 0.93rem; overflow-wrap: anywhere; }
+  footer { color: var(--muted); font-size: 0.8rem; padding: 0 1.5rem 2.5rem; }
+  @media (max-width: 40rem) {
+    .field { grid-template-columns: 1fr; gap: 0.15rem; }
+  }
+  @media print {
+    body { background: #fff; }
+    .card { break-inside: avoid; border-left-color: #999; }
+  }
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Claude Code session report</p>
+    <h1>Session CC-20260930-9d2f</h1>
+    <p class="meta">1 change logged &middot; generated 2026-09-30T19:57:47.565Z</p>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">01</span>
+    <h2>STORY-015: author safari products with day-by-day itineraries and audited pricing</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-09-30</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value">three new modules, two edited, plus three new test files. NEW: <code>backend/src/services/products/safariProductValidation.js</code> (PURE - what makes a product well-formed: the itinerary-conflict rule, the money rules, and the two normalisers that sort an itinerary and derive a margin), <code>backend/src/services/products/safariProductStore.js</code> (the book: create deduped on name+country, update validated on the MERGED record, one audit entry per create, per accepted edit and per refusal, <code>version</code> bumped per revision), <code>backend/src/http/routes/productRoutes.js</code> (four routes, each DECLARING its permission for <code>server.js</code> to enforce). EDITED: <code>backend/src/services/authz/permissions.js</code> (+<code>products.read</code>, <code>products.write</code>, +the <code>product_manager</code> role; <code>advisor</code> gains READ only - additive, no existing grant altered), <code>backend/src/http/routes/index.js</code> (register). Also <code>backend/src/services/authz/permissions.test.js</code>, which had to gain the fifth role - see note 4.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value">43/43 <code>npm test</code> (was 40/40), <code>npm run typecheck</code> clean (mypy, 3 packages + scripts), so <code>npm run verify</code> green end to end. AC-1: <code>POST /api/products/safari</code> returns 201 with the itinerary in full (one entry per day of the duration, <code>[1,2,3]</code> asserted) and the pricing with its margin derived by hand-checked arithmetic (520000 - 420000 = 100000); <code>createdBy</code> comes from the resolved principal, never the body. AC-2: a PATCH of the itinerary is visible on the VERY NEXT request through both doors into the book - the single GET and the list - with <code>version</code> at 2 and the unedited days asserted untouched. AC-3: <code>products.safari.created</code> and <code>products.safari.updated</code> both read back through <code>GET /api/admin/audit</code> with actor, resource and correlation id; the update entry names <code>fields: [&quot;itinerary&quot;]</code> and <code>daysChanged: [2]</code>; a SECOND edit is asserted to write its own distinct entry. Failure paths: a package priced below cost, in fractional cents, at zero, negative, past the ceiling or in an unsupported currency is refused with every fault listed in one pass; a duration change that orphans day 3 or leaves days 4-5 unsold is refused on the merged record and the stored product asserted byte-identical afterwards; an advisor gets 200 on both reads and 403 on POST and PATCH, customer/sales/admin get 403 on all four routes, no credential is 401 not 403, and the product is asserted unchanged after every one of those refusals. STORY-006's and STORY-014's suites pass UNMODIFIED except for the four lines described in note 4.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">SIX POINTS. (1) THE ITINERARY-CONFLICT RULE IS ONE SENTENCE, NOT THREE CHECKS: the set of days must be exactly 1..durationDays, each appearing once. That single rule catches all three real faults - two entries claiming one day, a day past the duration, and a gap that is unsold time mid-package - and each is reported as its own named problem. Out-of-order input is VALID and gets sorted; refusing a reordered form submission is rigour that only hurts the user. (2) THE UPDATE PATH VALIDATES THE MERGED RECORD, NOT THE PATCH, AND THIS IS WHERE THE STORY ACTUALLY BITES. <code>{durationDays: 2}</code> on a 3-day product is a perfectly legal patch in isolation; applied, it leaves the stored itinerary describing a day that no longer exists. Same fault from the other side: replacing the itinerary alone can leave a gap against the stored duration. Neither is reachable now, and both have named regression cases. (3) THE AUDIT ENTRY CARRIES AN ITINERARY DIGEST, NOT THE ITINERARY, AND THAT IS DELIBERATE. <code>auditLog.js</code> caps context nesting at <code>MAX_CONTEXT_DEPTH</code> and replaces anything deeper with <code>&quot;&lt;truncated&gt;&quot;</code>. A before/after pair holding full day objects sits below that cap, so writing it would produce an entry that LOOKS complete and actually reads <code>&quot;&lt;truncated&gt;&quot;</code> where the evidence should be. <code>{days: 3}</code> plus <code>daysChanged: [2]</code> is smaller, true, and answers the question an auditor asks first - which day moved - when a customer says their day 4 differs from the brochure. Recording less beats recording something that silently becomes <code>&quot;&lt;truncated&gt;&quot;</code>. (4) THE ONE CHANGE OUTSIDE THIS STORY WAS APPROVED BY THE OPERATOR FIRST, and it TIGHTENS a test rather than loosening one. <code>permissions.test.js:127</code> asserts the exact role list, so the fifth role had to be added there. More importantly, its CRM block's own comment warned that &quot;a loop over ROLES would silently pass the day a fifth role is added with CRM access&quot; - that fifth role is now us, so <code>product_manager</code> is asserted by hand to hold no CRM permission. Left alone, that suite would have stayed green while its stated claim, &quot;the CRM is reachable by sales alone&quot;, quietly stopped being proven. (5) A NEW ROLE RATHER THAN A WIDER ADVISOR, chosen by the operator against the cheaper alternative. Giving the product grants to <code>advisor</code> was one fewer row in the table in exchange for every advisor being able to reprice any package the agency sells. An advisor holds <code>products.read</code> - sell from the book, do not author it - and that read/write split is the entire reason there are two permissions. <code>product_manager</code> holds no CRM, no audit read, no quotes and no proposals. (6) SCOPE, AND WHAT WAS DELIBERATELY NOT BUILT. <code>costPerPersonCents</code> is REQUIRED, because without it there is no margin and the below-cost refusal - the check that catches the <code>$5,200</code> written as <code>5200</code> cents - can never fire; cost and margin are nested under <code>pricing.internal</code> so a future customer-facing projection has exactly one field to filter, which is also why <code>products.read</code> is staff-only today. PRICING IS REPLACED AS A BLOCK, not merged field by field, so a patch omitting <code>singleSupplementCents</code> drops it to 0 - asserted explicitly so the behaviour is a decision rather than a discovery. No seasonal or per-date pricing (the backend deliberately holds no rate card - STORY-007's reasoning, and a quote carries the season), no per-traveller tiers, no link between a product and the <code>africa/catalogSource.js</code> destination it visits, no DELETE route (an unsold package is a status question, and erasing a product erases the subject of its own audit trail), no pagination (STORY-016 owns scale - <code>list</code> and the duplicate check both scan, O(n) on purpose). NO DURABILITY SUITE YET: the store uses the same <code>jsonFileStore</code> as every other store here and inherits its behaviour, but unlike STORY-007/008/013 that has not been proven for THIS module in separate processes, and it is the most valuable thing to add next. <code>version</code> is recorded but NOT enforced - two product managers editing at once is last-write-wins, the standing repo-wide limit, and the real fix is Postgres. NOT VERIFIED BY CI at the time of writing: the results above are local.</div></div>
+</article>
+  </div>
+</main>
+<footer>
+  <div class="wrap">
+    Generated from PROGRESS.md by scripts/generateSessionChangelog.js. Only entries
+    tagged <code>Session: CC-20260930-9d2f</code> appear here.
+  </div>
+</footer>
+</body>
+</html>
