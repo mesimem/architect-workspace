@@ -244,7 +244,7 @@
         "verified_at": "2026-08-31T23:02:49.112Z",
         "commit_sha": "c3c64f968adf4bdb94409c29dec13201a1ffb76b",
         "commit_url": "https://github.com/mesimem/architect-workspace/commit/c3c64f968adf4bdb94409c29dec13201a1ffb76b",
-        "commit_at": "2026-08-31T22:59:44Z",
+        "commit_at": "2026-08-31T23:02:33Z",
         "points_awarded": 47,
         "outstanding": []
       }
@@ -831,60 +831,6 @@
         "commit_at": "2026-10-01T22:16:10Z",
         "points_awarded": 47,
         "outstanding": []
-      }
-    },
-    {
-      "id": "STORY-017",
-      "release": "r3",
-      "acceptance_total": 3,
-      "criteria": [
-        {
-          "text": "Given an advisor selects multiple travel products, when they create a package, then the system combines them into a single offering.",
-          "passed": true
-        },
-        {
-          "text": "Given an advisor tries to combine incompatible products, when they attempt to save, then the system displays an error message.",
-          "passed": true
-        },
-        {
-          "text": "Trust: The system logs all package creation and modification details in the audit trail.",
-          "passed": true
-        }
-      ],
-      "files_touched": [
-        "backend/src/services/packages/packageCompatibility.js",
-        "backend/src/services/packages/packagePricing.js",
-        "backend/src/services/packages/packageStore.js",
-        "backend/src/http/routes/packageRoutes.js",
-        "backend/src/http/routes/index.js",
-        "backend/src/services/authz/permissions.js",
-        "backend/src/services/quotes/quotePricing.js",
-        "docs/stories/STORY-017.md",
-        "docs/REQUIREMENTS.md",
-        "docs/TRACEABILITY.md"
-      ],
-      "tests_added": [
-        "backend/src/services/packages/packageCompatibility.test.js",
-        "backend/src/services/packages/packagePricing.test.js",
-        "backend/src/services/packages/packageStore.test.js",
-        "backend/src/http/packages.test.js"
-      ],
-      "notes": "Packages combine safari products BY REFERENCE (kind/productId/startDay), so a product reprice is never shadowed by a stale copy; the derived pricing block is stored deliberately, because it is the figure the advisor agreed to. Four incompatibility rules - mixed currency, duplicate product, overlapping day spans, cross-country with no travel day - with a GAP between components explicitly allowed. New packages.read/packages.write permissions held by advisor and product_manager only. Writes go through the shared audited commit, so a package that cannot be audited is rolled back rather than kept. Brief cited REQ-009; that id was taken by the quotation requirement, so the capability was written as REQ-019.",
-      "updated_at": "2026-10-01T23:04:13.040Z",
-      "verification": {
-        "state": "in_progress",
-        "criteria_passed": 0,
-        "criteria_total": 3,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
-        "outstanding": [
-          "Given an advisor selects multiple travel products, when they create a package, then the system combines them into a single offering.",
-          "Given an advisor tries to combine incompatible products, when they attempt to save, then the system displays an error message.",
-          "Trust: The system logs all package creation and modification details in the audit trail."
-        ]
       }
     }
   ]
