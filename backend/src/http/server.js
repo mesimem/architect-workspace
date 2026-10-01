@@ -64,97 +64,23 @@ const { recordAudit, deriveAuditKey } = require("../services/audit/auditLog");
 // no longer knows what any endpoint does, only how to run one.
 const { ROUTES } = require("./routes");
 
-const MAX_BODY_BYTES = 64 * 1024;
-const SERVICE_NAME = "http-api";
-
-function log(level, event, context) {
-  console.error(
-    JSON.stringify({
-      timestamp: new Date().toISOString(),
-      level: level,
-      service: SERVICE_NAME,
-      event: event,
-      outcome: level === "error" ? "failure" : "success",
-      context: context,
-    })
-  );
-}
-
-function send(res, status, body, correlationId, extraHeaders) {
-  const payload = JSON.stringify(body);
-  res.writeHead(
-    status,
-    Object.assign(
-      {
-        "Content-Type": "application/json",
-        "Content-Length": Buffer.byteLength(payload),
-        "X-Correlation-ID": correlationId,
-      },
-      extraHeaders || {}
-    )
-  );
-  res.end(payload);
-}
-
-// One shape for every error, so a client never has to guess. `error` is a
-// stable code; `message` is safe to show a human. Internal detail never
-// crosses this line.
-function sendError(res, status, code, message, correlationId) {
-  send(res, status, { error: code, message: message, correlationId: correlationId }, correlationId);
-}
-
-// Anything past MAX_BODY_BYTES is dropped rather than buffered, but the
-// request is still DRAINED so the 413 can actually be delivered. Destroying
-// the socket the moment the limit is crossed - the obvious implementation, and
-// the one written first here - makes the client see a dropped connection
-// instead of a clear error, which is indistinguishable from the server having
-// crashed. Only a genuinely pathological upload gets the socket closed.
-const ABORT_BODY_BYTES = MAX_BODY_BYTES * 16;
-
-function readJsonBody(req) {
-  return new Promise(function (resolve, reject) {
-    let size = 0;
-    let tooLarge = false;
-    let chunks = [];
-
-    req.on("data", function (chunk) {
-      size += chunk.length;
-
-      if (size > MAX_BODY_BYTES) {
-        tooLarge = true;
-        chunks = []; // release what was buffered; it will never be parsed
-      } else {
-        chunks.push(chunk);
-      }
-
-      if (size > ABORT_BODY_BYTES) {
-        reject(Object.assign(new Error("body far too large"), { code: "body_too_large" }));
-        req.destroy();
-      }
-    });
-
-    req.on("error", function (error) {
-      reject(Object.assign(error, { code: "read_failed" }));
-    });
-
-    req.on("end", function () {
-      if (tooLarge) {
-        reject(Object.assign(new Error("body too large"), { code: "body_too_large" }));
-        return;
-      }
-      const raw = Buffer.concat(chunks).toString("utf8");
-      if (raw.trim() === "") {
-        resolve({});
-        return;
-      }
-      try {
-        resolve(JSON.parse(raw));
-      } catch (error) {
-        reject(Object.assign(new Error("invalid json"), { code: "invalid_json" }));
-      }
-    });
-  });
-}
+// STORY-016 moved the socket-level mechanics to wire.js, under CLAUDE.md's
+// rule that an oversize file is split before new code lands. A pure move: the
+// four functions below are unchanged, and this file's job is now only the
+// pipeline that calls them. See wire.js's header for the line the split
+// follows.
+const { log, send, sendError, readJsonBody, MAX_BODY_BYTES } = require("./wire");
+// STORY-016: admission control and performance measurement. The reasoning for
+// every decision in here - which event ends a request, what a 4xx counts as,
+// why the health probe is exempt - is in opsPipeline.js, not repeated below.
+const {
+  createOps,
+  admit,
+  observe,
+  applyTimeouts,
+  startSnapshotLogging,
+  assertShedExemptionsAreSafe,
+} = require("./opsPipeline");
 
 // STORY-006: every route is checked ONCE, at startup, before a socket is ever
 // opened. Three things have to hold, and each one has a specific hole behind it:
@@ -201,6 +127,10 @@ function assertRoutesDeclarePermissions(routes) {
 // defect in the source, so it should stop `require`, not wait for a test to
 // happen to construct a server.
 assertRoutesDeclarePermissions(ROUTES);
+// STORY-016: same rule, same reason - a route that exempts itself from the
+// concurrency bound is a hole in it, so the exemption is validated at load
+// rather than discovered under load.
+assertShedExemptionsAreSafe(ROUTES);
 
 function matchRoute(method, pathname) {
   let pathMatchedWrongMethod = false;
@@ -254,6 +184,10 @@ function loadPortalCredentialsOrWarn() {
 function createServer({
   principals = loadPrincipals(),
   credentials = loadPortalCredentialsOrWarn(),
+  // STORY-016: one governor and one metrics recorder per server. Injectable so
+  // a test can set a concurrency limit of 2 and drive real saturation, rather
+  // than trying to generate enough load to hit the production default of 64.
+  ops = createOps(),
 } = {}) {
   // STORY-006: the DIRECTORY - every user the environment declares, as
   // { userId, role } and NOTHING ELSE. The admin routes need it to count how
@@ -266,7 +200,7 @@ function createServer({
     return { userId: principal.userId, role: principal.role };
   });
 
-  return http.createServer(async function (req, res) {
+  const server = http.createServer(async function (req, res) {
     // Honour an inbound correlation id so a trace can span services, but only
     // if it looks like one - an unvalidated header ends up in log lines.
     const inbound = req.headers["x-correlation-id"];
@@ -280,9 +214,14 @@ function createServer({
     try {
       pathname = new URL(req.url, "http://localhost").pathname;
     } catch (error) {
+      ops.metrics.record({ label: "invalid_url", outcome: "failure", durationMs: 0 });
       sendError(res, 400, "invalid_url", "The request URL could not be parsed.", correlationId);
       return;
     }
+
+    // Released in the finally below. Null when shed, and null for an exempt
+    // route - releasing a ticket never taken is what the null guard prevents.
+    let ticket = null;
 
     try {
       // STORY-005 reordered this: the route is matched BEFORE authenticating,
@@ -294,6 +233,51 @@ function createServer({
       // so an anonymous caller cannot map which endpoints exist by reading
       // status codes.
       const { route, params, wrongMethod } = matchRoute(req.method, pathname);
+
+      // STORY-016. Observation starts here because the metrics LABEL is the
+      // route pattern, which is only known once the route is matched. From
+      // this point every exit - 401, 403, 404, 413, 200, 500, or the client
+      // vanishing - is recorded exactly once, by the response's own close
+      // event rather than by each branch remembering to.
+      const observed = observe({
+        metrics: ops.metrics,
+        res: res,
+        route: route,
+        startedAt: started,
+      });
+
+      // ADMISSION, AND WHY IT SITS EXACTLY HERE: after matching, before
+      // authenticating. After matching, because the health probe has to be
+      // reachable while everything else is being refused, and a route cannot
+      // exempt itself before it is known. Before authenticating, because
+      // authentication is the first thing in this pipeline that costs real
+      // work, and the point of shedding is to refuse before spending it.
+      //
+      // A shed request never has its body read either - see where readJsonBody
+      // is called, far below. That is what makes saying no cheap enough to
+      // survive a surge much larger than our capacity.
+      const admission = await admit({ governor: ops.governor, route: route, observed: observed });
+      if (!admission.admitted) {
+        log("error", "request_shed", {
+          correlationId,
+          pathname,
+          method: req.method,
+          reason: admission.reason,
+          load: admission.load,
+        });
+        sendError(
+          res,
+          503,
+          "overloaded",
+          "The service is busy right now. Please retry in a moment.",
+          correlationId,
+          // Tells the client when to come back, so a retry storm spreads out
+          // instead of arriving together and re-creating the overload.
+          { "Retry-After": String(admission.retryAfterSeconds) }
+        );
+        return;
+      }
+      ticket = admission.ticket;
 
       let principal = null;
       if (!route || !route.public) {
@@ -423,6 +407,12 @@ function createServer({
         bearerToken: bearerTokenFrom(req.headers.authorization),
         credentials: credentials,
         directory: directory,
+        // STORY-016: the health probe and the metrics endpoint read these.
+        // Handed in like every other dependency rather than imported by the
+        // route, so the numbers a test reads are the ones its own server
+        // produced - not a module-level singleton shared across every server
+        // the suite ever constructed.
+        ops: ops,
       });
 
       // Every access attempt that gets this far is recorded here with the role
@@ -460,8 +450,41 @@ function createServer({
         "Something went wrong on our side. Quote the correlation id if you contact us.",
         correlationId
       );
+    } finally {
+      // STORY-016: THE SLOT IS RELEASED ON EVERY PATH, including the ones that
+      // return early and the one where the handler threw. A finally rather
+      // than a call at the end of the happy path, because a leaked slot is
+      // permanent: capacity drops by one for the life of the process, with
+      // nothing in the logs to say so, and enough of them starve the server
+      // down to refusing everything. release() is idempotent, so a second
+      // release from anywhere is a no-op rather than a counter drifting below
+      // the real in-flight count.
+      //
+      // Note what this does NOT wait for: the response finishing its journey
+      // to the client. The slot bounds WORK, and the work is done here; a slow
+      // client is held off by the socket timeouts in opsPipeline.js instead.
+      if (ticket) {
+        ticket.release();
+      }
     }
   });
+
+  // STORY-016, the three pieces that live on the server rather than a request:
+  //   timeouts    a slow client must not hold a connection, or a slot, forever
+  //   snapshots   the aggregate reaches the log stream on an interval, the only
+  //               place a p95 can actually be observed
+  //   ops         exposed so an operator script - and this story's load test -
+  //               can read the same numbers the metrics endpoint serves
+  applyTimeouts(server);
+  const stopSnapshots = startSnapshotLogging({
+    metrics: ops.metrics,
+    governor: ops.governor,
+    log: log,
+  });
+  server.on("close", stopSnapshots);
+  server.ops = ops;
+
+  return server;
 }
 
 module.exports = {

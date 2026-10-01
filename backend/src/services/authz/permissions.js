@@ -178,6 +178,24 @@ const PERMISSIONS = Object.freeze({
   ADMIN_ROLES_ASSIGN: "admin.roles.assign",
   ADMIN_AUDIT_READ: "admin.audit.read",
 
+  // STORY-016. Reading the system's own performance numbers: latency
+  // percentiles, success and failure rates, how saturated the instance is.
+  //
+  // SEPARATE FROM ADMIN_AUDIT_READ, which it most resembles - both are "look
+  // at the system rather than the business". The difference is what they are
+  // FOR and who should eventually hold them. The audit trail is evidence about
+  // PEOPLE: who changed a supplier's terms, whose access was denied. Metrics
+  // are evidence about the MACHINE, and they carry no actor, no customer and no
+  // money. That makes this the one grant it is safe to hand to a monitoring
+  // integration - a Grafana scraper or an on-call dashboard - and the whole
+  // point of splitting it is that doing so must not also hand over the audit
+  // trail. One row here is cheaper than explaining that conflation later.
+  //
+  // Note that this is a READ with no write twin. There is nothing to write:
+  // metrics are produced by serving traffic, and an endpoint that let a caller
+  // reset or edit them would be an endpoint for making an outage disappear.
+  OPS_METRICS_READ: "ops.metrics.read",
+
   // CRM (STORY-014). Read and write are split because they leak differently:
   // a read exposes every lead in the book at once, a write can only corrupt
   // one record at a time. Splitting them means a future reporting integration
@@ -271,6 +289,13 @@ const ROLE_PERMISSIONS = Object.freeze({
     PERMISSIONS.ADMIN_ROLES_ASSIGN,
     PERMISSIONS.ADMIN_AUDIT_READ,
     PERMISSIONS.PORTAL_SESSION_END,
+    // STORY-016: operating the system includes knowing whether it is coping.
+    // This is the role the table already describes as the one that "operates
+    // the system", so if any human role holds it, this is the one - and it is
+    // the ONLY role that holds it. An advisor does not need latency
+    // percentiles to sell a safari, and a customer holding this would learn
+    // how close the agency is to its capacity ceiling.
+    PERMISSIONS.OPS_METRICS_READ,
     // Note what is absent: PORTAL_TRIPS_READ, ADVISOR_REVIEWS_READ,
     // REQUESTS_TRIAGE. An admin administers; it does not get to read customer
     // itineraries as a perk of the job. See "ADMIN IS NOT A SUPERUSER" above.

@@ -19,8 +19,16 @@ const { proposalRoutes } = require("./proposalRoutes");
 const { productRoutes } = require("./productRoutes");
 const { supplierRoutes } = require("./supplierRoutes");
 const { suggestionRoutes } = require("./suggestionRoutes");
+const { healthRoutes } = require("./healthRoutes");
 
 const ROUTES = [].concat(
+  // STORY-016: FIRST in the table, which is the one place order matters here.
+  // Matching is first-wins, and the health probe is the request that must be
+  // answered when the instance is at its limit - so it should also be the
+  // cheapest to find. Its patterns overlap nothing else (checked against every
+  // other pattern in this folder), so putting it first changes no other
+  // route's behaviour.
+  healthRoutes,
   portalRoutes,
   triageRoutes,
   advisorRoutes,

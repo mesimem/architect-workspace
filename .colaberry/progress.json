@@ -789,21 +789,38 @@
       "criteria": [
         {
           "text": "Given an increase in user load, when multiple advisors access the system, then it should maintain performance.",
-          "passed": false
+          "passed": true
         },
         {
           "text": "Given a surge in customer activity, when thousands of customers interact with the system, then it should not crash.",
-          "passed": false
+          "passed": true
         },
         {
           "text": "Trust: Given any system load, when it scales, then performance metrics must be logged.",
-          "passed": false
+          "passed": true
         }
       ],
-      "files_touched": [],
-      "tests_added": [],
-      "notes": null,
-      "updated_at": null,
+      "files_touched": [
+        "backend/src/services/observability/perfMetrics.js",
+        "backend/src/services/observability/loadGovernor.js",
+        "backend/src/http/opsPipeline.js",
+        "backend/src/http/wire.js",
+        "backend/src/http/server.js",
+        "backend/src/http/routes/healthRoutes.js",
+        "backend/src/http/routes/index.js",
+        "backend/src/services/authz/permissions.js",
+        "docs/SCALABILITY.md",
+        "docs/stories/STORY-016.md"
+      ],
+      "tests_added": [
+        "backend/src/services/observability/perfMetrics.test.js",
+        "backend/src/services/observability/loadGovernor.test.js",
+        "backend/src/http/opsPipeline.test.js",
+        "backend/src/http/scalability.test.js",
+        "backend/src/services/shared/jsonFileStore.scalability.test.js"
+      ],
+      "notes": "Bounded concurrency with a bounded wait queue, rolling latency percentiles, a public health probe the load balancer reads as 200-healthy / 503-drain-me, and a perf_snapshot JSON line on an interval. 117/117 npm test (was 80/80). AC-1: 40 advisors x 5 simultaneous requests, all 200, zero shed, zero failed, p95 inside a stated 500ms budget. AC-2: 2,000 requests from 1,000 distinct customers, every accepted connection answered with a 200 or a clean 503, zero dropped, probe back to healthy and traffic served afterwards with no intervention. AC-3: a real perf_snapshot line captured off the log stream carrying p50/p95/p99 and describing that load, plus /api/admin/metrics gated to ops.metrics.read (advisor and customer both 403) and a public probe asserted to leak no capacity figures. Failure paths: overload (slots held, every request cleanly refused with Retry-After, recovery without intervention), network latency (an abandoned request releases its slot - a leak would permanently cost capacity) and database bottleneck (store write amplification MEASURED at N/2, ceiling documented at 10,000 rows / ~2.1MB per synchronous write, asserted in bytes not milliseconds so it is reproducible). server.js was split to wire.js first, as a pure move, to respect CLAUDE.md's 500-line ceiling before adding code. KNOWN LIMIT, documented in docs/SCALABILITY.md: peak_in_flight is 1 because handlers are synchronous once admitted, so the event loop is the real serialiser - the bound governs AWAITING work and bites once a handler waits on a database or supplier API. Postgres not attempted: database-engine change is a governance boundary.",
+      "updated_at": "2026-10-01T22:09:44.256Z",
       "verification": {
         "state": "in_progress",
         "criteria_passed": 0,

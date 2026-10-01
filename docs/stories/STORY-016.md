@@ -27,8 +27,8 @@ the same criteria out of `.colaberry/progress.json`, which Claude Code keeps in
 step (see the managed block in CLAUDE.md). Ticking something you have not
 actually met only misleads you.
 
-- [ ] Given an increase in user load, when multiple advisors access the system, then it should maintain performance.
-- [ ] Given a surge in customer activity, when thousands of customers interact with the system, then it should not crash.
-- [ ] Trust: Given any system load, when it scales, then performance metrics must be logged.
+- [x] Given an increase in user load, when multiple advisors access the system, then it should maintain performance.
+- [x] Given a surge in customer activity, when thousands of customers interact with the system, then it should not crash.
+- [x] Trust: Given any system load, when it scales, then performance metrics must be logged.
 
 When every box above is ticked, stop and show the demo.
