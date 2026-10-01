@@ -120,21 +120,6 @@ The system must generate professional quotes and itineraries for customers.
 
 Fulfilled by: STORY-007
 
-## Product Packaging
-
-### REQ-019 — Functional · must
-
-The system must allow advisors to combine multiple travel products into one package.
-
-Written during STORY-017. The build brief for that story cited this capability as
-REQ-009, but REQ-009 in this repo is the quotation requirement above and is already
-fulfilled by STORY-007 — so the capability was genuinely missing from this list
-rather than misnumbered. It is recorded here under its own id instead of being
-folded onto a requirement about quotes, which would have made the traceability
-table claim something untrue.
-
-Fulfilled by: STORY-017
-
 ## Scalability
 
 ### REQ-018 — Non-functional · must

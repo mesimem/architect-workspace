@@ -8,13 +8,26 @@ As a travel advisor, I want to combine multiple travel products into one package
 
 ## The requirement this satisfies
 
-- **REQ-019** (Functional, must) — The system must allow advisors to combine multiple travel products into one package.
+- **REQ-009** as cited by the build brief — "The system must allow advisors to combine
+  multiple travel products into one package."
 
-The build brief for this story cited that capability as **REQ-009**. REQ-009 in this
-repo is the quotation requirement, already fulfilled by STORY-007, so the capability
-was missing from `docs/REQUIREMENTS.md` rather than misnumbered — it is written there
-now as REQ-019. Nothing about the work changed; "combine multiple travel products into
-one package" was never ambiguous.
+**Read that citation with care.** REQ-009 in `docs/REQUIREMENTS.md` is a different
+requirement — "the system must generate professional quotes and itineraries for
+customers", already fulfilled by STORY-007. The packaging capability is not in that
+file under any id, and `docs/TRACEABILITY.md` therefore has no row for this story.
+
+That gap is deliberate and is NOT an oversight to be tidied up locally. Both documents
+are generated from the platform's plan (`.colaberry/plan.json`, 16 stories, 18
+requirements, last written 2026-08-31), which has no record of STORY-017. A
+hand-written requirement here would read as truth to the next person while disagreeing
+with the plan every sync republishes. The honest state is a story whose requirement
+reference points at the brief it came from, with the discrepancy written down.
+
+When the plan is republished with this story in it, the requirement will arrive with
+its real id and this section should be rewritten to cite it.
+
+Nothing about the work was ever ambiguous: "combine multiple travel products into one
+package" is what got built.
 
 ## How to build it
 
@@ -27,7 +40,7 @@ The repo has exactly one authored inventory of sellable travel products: the saf
 product book from STORY-015 (`services/products/safariProductStore.js`), twelve seeded
 Kenya and Tanzania packages each carrying a country, a duration, a day-by-day itinerary
 and USD pricing with an internal cost. There is no flight, lodging or transfer inventory
-anywhere in the system, and REQ-019 does not ask for one.
+anywhere in the system, and the requirement does not ask for one.
 
 So a package combines **safari products, by reference**. Each component is written
 
