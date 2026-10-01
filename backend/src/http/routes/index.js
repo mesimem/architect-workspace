@@ -17,6 +17,7 @@ const { crmRoutes } = require("./crmRoutes");
 const { quoteRoutes } = require("./quoteRoutes");
 const { proposalRoutes } = require("./proposalRoutes");
 const { productRoutes } = require("./productRoutes");
+const { packageRoutes } = require("./packageRoutes");
 const { supplierRoutes } = require("./supplierRoutes");
 const { suggestionRoutes } = require("./suggestionRoutes");
 const { healthRoutes } = require("./healthRoutes");
@@ -38,6 +39,11 @@ const ROUTES = [].concat(
   quoteRoutes,
   proposalRoutes,
   productRoutes,
+  // STORY-017. Sits after productRoutes because a package is built out of
+  // products, and the table reads in dependency order. Its patterns overlap
+  // nothing else here - /api/packages against /api/products/safari - so the
+  // position is readability, not behaviour.
+  packageRoutes,
   supplierRoutes,
   suggestionRoutes
 );

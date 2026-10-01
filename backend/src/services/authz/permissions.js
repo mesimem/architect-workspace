@@ -156,6 +156,29 @@ const PERMISSIONS = Object.freeze({
   PRODUCTS_READ: "products.read",
   PRODUCTS_WRITE: "products.write",
 
+  // Travel packages (STORY-017). Combining products the agency already sells
+  // into ONE offering: which products, in what order, and at what package
+  // discount.
+  //
+  // SEPARATE FROM PRODUCTS_READ / PRODUCTS_WRITE, which it most resembles, and
+  // the split is the reason both exist. Authoring a product sets what the
+  // agency charges for a thing it sells; combining products sets what it offers
+  // as a journey. They are held by overlapping but not identical roles - an
+  // advisor composes packages and may NOT reprice the products inside them,
+  // which is precisely the boundary products.write draws. Folding packages into
+  // products.write would have handed every package-building advisor the ability
+  // to reprice the whole catalogue, which is the larger blast radius for a
+  // leaked advisor token and the exact trade the PRODUCTS_READ comment above
+  // already refused once.
+  //
+  // Read and write are split because they leak differently - a read exposes the
+  // margin on every offering at once (a package carries pricing.internal, same
+  // as a product), a write can change what the agency offers. Splitting them is
+  // what lets a future catalogue or reporting integration read the package book
+  // without being able to alter an offering.
+  PACKAGES_READ: "packages.read",
+  PACKAGES_WRITE: "packages.write",
+
   // Suppliers (STORY-010). Who the agency BUYS from: the business, the
   // contracts signed with them, and the rate card under each contract.
   //
@@ -253,6 +276,15 @@ const ROLE_PERMISSIONS = Object.freeze({
     // cannot author or reprice one; PRODUCTS_WRITE sits with product_manager
     // alone. This is the read/write split doing its job.
     PERMISSIONS.PRODUCTS_READ,
+    // STORY-017: BOTH halves. The story is written in the advisor's voice -
+    // "as a travel advisor, I want to combine multiple travel products into
+    // one package" - and composing an offering out of the catalogue is selling
+    // work, which is this role's job. Note how this sits against the line
+    // above: an advisor may combine the Masai Mara package into an offering
+    // and may NOT change what the Masai Mara package costs. That is the
+    // read/write split on products doing exactly the work it was added for.
+    PERMISSIONS.PACKAGES_READ,
+    PERMISSIONS.PACKAGES_WRITE,
     // STORY-010: BOTH halves, and this is the only role that holds either.
     // Managing supplier information is the advisor's own job - the story is
     // written in their voice - and it is the same job as quoting, one step
@@ -336,6 +368,20 @@ const ROLE_PERMISSIONS = Object.freeze({
   product_manager: Object.freeze([
     PERMISSIONS.PRODUCTS_READ,
     PERMISSIONS.PRODUCTS_WRITE,
+    // STORY-017: BOTH halves, granted DELIBERATELY rather than inherited. The
+    // story names the advisor, so this row is the one that needed an argument
+    // of its own: a product manager who authors the components is the other
+    // principal who combines them, and a catalogue package assembled from
+    // in-house products is inventory work as much as it is selling work.
+    //
+    // This is the grant most likely to be wrong, so here is the test to apply
+    // if it is ever revisited: if the agency's product managers turn out not to
+    // build packages, delete these two lines. Nothing else changes - the
+    // permission stays, the routes stay, and the advisor keeps working. A grant
+    // that can be withdrawn by deleting two rows is the shape a debatable grant
+    // should have.
+    PERMISSIONS.PACKAGES_READ,
+    PERMISSIONS.PACKAGES_WRITE,
     PERMISSIONS.CATALOG_READ,
     // Ending your own session is not a privilege - same reasoning as advisor.
     PERMISSIONS.PORTAL_SESSION_END,

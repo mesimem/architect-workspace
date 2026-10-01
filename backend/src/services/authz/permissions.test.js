@@ -202,6 +202,32 @@ function main() {
   assert.strictEqual(can("product_manager", PERMISSIONS.PORTAL_TRIPS_READ), false);
   console.log("permissions: an advisor sells from the product book, a product manager authors it");
 
+  // STORY-017. The package grants, and the LINE THEY DRAW AGAINST the product
+  // grants above: an advisor may combine the Masai Mara package into an
+  // offering and may not change what the Masai Mara package costs. Those two
+  // facts sitting next to each other are the whole argument for packages.write
+  // being its own permission rather than part of products.write.
+  assert.strictEqual(can("advisor", PERMISSIONS.PACKAGES_READ), true);
+  assert.strictEqual(can("advisor", PERMISSIONS.PACKAGES_WRITE), true);
+  assert.strictEqual(
+    can("advisor", PERMISSIONS.PRODUCTS_WRITE),
+    false,
+    "an advisor composes packages but must not reprice the products inside them"
+  );
+  assert.strictEqual(can("product_manager", PERMISSIONS.PACKAGES_READ), true);
+  assert.strictEqual(can("product_manager", PERMISSIONS.PACKAGES_WRITE), true);
+
+  // A package carries pricing.internal - the combined cost and margin across
+  // every product in it - so the same roles that are kept away from a product's
+  // margin are kept away from a package's. Written per role rather than as a
+  // loop, for the reason the CRM block above gives.
+  for (const permission of [PERMISSIONS.PACKAGES_READ, PERMISSIONS.PACKAGES_WRITE]) {
+    assert.strictEqual(can("customer", permission), false, "customer must not hold " + permission);
+    assert.strictEqual(can("sales", permission), false, "sales must not hold " + permission);
+    assert.strictEqual(can("admin", permission), false, "admin must not hold " + permission);
+  }
+  console.log("permissions: packages are composed by advisors and product managers alone");
+
   // STORY-010: the supplier grants, stated as blast radius. The advisor is the
   // ONLY role holding either half, which is a stronger claim than the product
   // block above makes and so is asserted against every other role by name.

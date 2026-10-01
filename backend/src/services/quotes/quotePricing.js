@@ -321,6 +321,12 @@ function priceQuote({ lines, currency, discountBasisPoints = 0 }) {
 
 module.exports = {
   priceQuote,
+  // STORY-017: exported so packages/packagePricing.js can apply a package
+  // discount by the SAME rule, rather than copying the formula. The comment on
+  // applyDiscount says rounding "is defined here and nowhere else", and a
+  // second copy three directories away would quietly make that false - which is
+  // how a quote and the package it was built from end up disagreeing by a cent.
+  applyDiscount,
   STATUSES,
   CURRENCIES,
   MAX_LINES,
