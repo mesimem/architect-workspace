@@ -3,13 +3,13 @@
   "project": "U.S.-based Full-Service Travel Agency Platform",
   "totals": {
     "stories_total": 17,
-    "stories_verified": 12,
+    "stories_verified": 13,
     "stories_submitted": 0,
-    "stories_in_progress": 5,
+    "stories_in_progress": 4,
     "stories_not_started": 0,
     "criteria_total": 53,
-    "criteria_passed": 36,
-    "points_awarded": 564
+    "criteria_passed": 39,
+    "points_awarded": 611
   },
   "stories": [
     {
@@ -244,7 +244,7 @@
         "verified_at": "2026-08-31T23:02:49.112Z",
         "commit_sha": "c3c64f968adf4bdb94409c29dec13201a1ffb76b",
         "commit_url": "https://github.com/mesimem/architect-workspace/commit/c3c64f968adf4bdb94409c29dec13201a1ffb76b",
-        "commit_at": "2026-08-31T22:57:53Z",
+        "commit_at": "2026-08-31T22:59:44Z",
         "points_awarded": 47,
         "outstanding": []
       }
@@ -822,19 +822,15 @@
       "notes": "Bounded concurrency with a bounded wait queue, rolling latency percentiles, a public health probe the load balancer reads as 200-healthy / 503-drain-me, and a perf_snapshot JSON line on an interval. 117/117 npm test (was 80/80). AC-1: 40 advisors x 5 simultaneous requests, all 200, zero shed, zero failed, p95 inside a stated 500ms budget. AC-2: 2,000 requests from 1,000 distinct customers, every accepted connection answered with a 200 or a clean 503, zero dropped, probe back to healthy and traffic served afterwards with no intervention. AC-3: a real perf_snapshot line captured off the log stream carrying p50/p95/p99 and describing that load, plus /api/admin/metrics gated to ops.metrics.read (advisor and customer both 403) and a public probe asserted to leak no capacity figures. Failure paths: overload (slots held, every request cleanly refused with Retry-After, recovery without intervention), network latency (an abandoned request releases its slot - a leak would permanently cost capacity) and database bottleneck (store write amplification MEASURED at N/2, ceiling documented at 10,000 rows / ~2.1MB per synchronous write, asserted in bytes not milliseconds so it is reproducible). server.js was split to wire.js first, as a pure move, to respect CLAUDE.md's 500-line ceiling before adding code. KNOWN LIMIT, documented in docs/SCALABILITY.md: peak_in_flight is 1 because handlers are synchronous once admitted, so the event loop is the real serialiser - the bound governs AWAITING work and bites once a handler waits on a database or supplier API. Postgres not attempted: database-engine change is a governance boundary.",
       "updated_at": "2026-10-01T22:09:44.256Z",
       "verification": {
-        "state": "in_progress",
-        "criteria_passed": 0,
+        "state": "verified",
+        "criteria_passed": 3,
         "criteria_total": 3,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
-        "outstanding": [
-          "Given an increase in user load, when multiple advisors access the system, then it should maintain performance.",
-          "Given a surge in customer activity, when thousands of customers interact with the system, then it should not crash.",
-          "Trust: Given any system load, when it scales, then performance metrics must be logged."
-        ]
+        "verified_at": "2026-10-01T22:18:50.632Z",
+        "commit_sha": "18c9010e3df948fbe8bb4f4fba577973144e9f39",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/18c9010e3df948fbe8bb4f4fba577973144e9f39",
+        "commit_at": "2026-10-01T22:16:10Z",
+        "points_awarded": 47,
+        "outstanding": []
       }
     },
     {
