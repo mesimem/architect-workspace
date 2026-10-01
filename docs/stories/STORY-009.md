@@ -27,8 +27,8 @@ the same criteria out of `.colaberry/progress.json`, which Claude Code keeps in
 step (see the managed block in CLAUDE.md). Ticking something you have not
 actually met only misleads you.
 
-- [ ] Given a customer provides preferences, when AI processes them, then it suggests relevant trips.
-- [ ] Given a customer provides no preferences, when AI processes, then it suggests popular trips.
-- [ ] Trust: The system logs all AI suggestions for review.
+- [x] Given a customer provides preferences, when AI processes them, then it suggests relevant trips.
+- [x] Given a customer provides no preferences, when AI processes, then it suggests popular trips.
+- [x] Trust: The system logs all AI suggestions for review.
 
 When every box above is ticked, stop and show the demo.

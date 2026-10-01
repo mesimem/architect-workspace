@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session CC-20261001-4b7e — Change Report</title>
+<style>
+  :root {
+    --cherry: #FB2832;
+    --berry: #367895;
+    --leaf: #5BA63C;
+    --ink: #16202a;
+    --muted: #5c6b7a;
+    --rule: #dfe5ea;
+    --surface: #ffffff;
+    --canvas: #f4f6f8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: Roboto, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    line-height: 1.6;
+  }
+  code {
+    font-family: "Roboto Mono", ui-monospace, Consolas, "Courier New", monospace;
+    font-size: 0.9em;
+    background: #eef2f5;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.05em 0.35em;
+    word-break: break-word;
+  }
+  header.masthead {
+    background: var(--surface);
+    border-bottom: 3px solid var(--cherry);
+    padding: 2rem 1.5rem 1.5rem;
+  }
+  .wrap { max-width: 60rem; margin: 0 auto; }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--berry);
+    margin: 0 0 0.35rem;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 0.5rem; font-weight: 700; letter-spacing: -0.01em; }
+  .meta { color: var(--muted); font-size: 0.88rem; margin: 0; }
+  main { padding: 1.75rem 1.5rem 3rem; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--berry);
+    border-radius: 4px;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1.1rem;
+  }
+  .card-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    padding-bottom: 0.7rem;
+    margin-bottom: 0.9rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .card-index {
+    font-family: "Roboto Mono", ui-monospace, Consolas, monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    flex: none;
+  }
+  .card-head h2 { font-size: 1.06rem; margin: 0; font-weight: 600; flex: 1 1 auto; }
+  .badge {
+    flex: none;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .badge-done { background: #eaf5e4; color: #3d7327; border: 1px solid var(--leaf); }
+  .badge-open { background: #fdf1e3; color: #8a5810; border: 1px solid #E8920C; }
+  .field { display: grid; grid-template-columns: 9.5rem 1fr; gap: 1rem; padding: 0.4rem 0; }
+  .field + .field { border-top: 1px dotted var(--rule); }
+  .field-label {
+    font-size: 0.73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    padding-top: 0.2rem;
+  }
+  .field-value { font-size: 0.93rem; overflow-wrap: anywhere; }
+  footer { color: var(--muted); font-size: 0.8rem; padding: 0 1.5rem 2.5rem; }
+  @media (max-width: 40rem) {
+    .field { grid-template-columns: 1fr; gap: 0.15rem; }
+  }
+  @media print {
+    body { background: #fff; }
+    .card { break-inside: avoid; border-left-color: #999; }
+  }
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Claude Code session report</p>
+    <h1>Session CC-20261001-4b7e</h1>
+    <p class="meta">1 change logged &middot; generated 2026-10-01T19:48:30.139Z</p>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">01</span>
+    <h2>STORY-009: suggest trip ideas to customers, deterministically and audibly</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-10-01</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value">four new modules, two edited, plus four new test files. NEW: <code>backend/src/services/suggestions/tripCorpus.js</code> (the pool to suggest FROM - the authored product book wins, an empty book falls back to the seeded catalog, catalog dollars convert UP to cents, interests tagged from a small literal vocabulary, and an explicit editorial <code>popularityRank</code> tie-broken on tripId so the order is total). <code>suggestionEngine.js</code> (PURE, and the swappable port - one function of one argument, weighted matching over only the dimensions the customer actually stated, a 0.5 relevance floor, and three hard filters: budget and duration ceilings past a named stretch band, and zero overlap on stated interests). <code>tripSuggestionService.js</code> (the orchestration: validate, call the engine behind an explicit timeout and capped retries, audit EVERY outcome, flag the uncertain ones to the advisor queue). <code>backend/src/http/routes/suggestionRoutes.js</code> (POST /api/suggestions/trips, a refusal-to-status table, and no customer projection because a suggestion carries no cost figure). EDITED: <code>backend/src/services/authz/permissions.js</code> (+<code>suggestions.request</code>, granted to <code>customer</code> and <code>advisor</code> only - additive, no existing grant altered), <code>backend/src/http/routes/index.js</code> (register). TESTS: <code>tripCorpus.test.js</code>, <code>suggestionEngine.test.js</code>, <code>tripSuggestionService.test.js</code>, <code>backend/src/http/suggestions.test.js</code>.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value">47/47 <code>npm test</code> (was 43/43), <code>npm run typecheck</code> clean (mypy, 3 packages + scripts), so <code>npm run verify</code> green end to end. AC-1: over HTTP, preferences {countries:[Tanzania], interests:[wildlife]} return exactly SF-300 at score 1 with its reasons spelled out, asserted as an EXACT list rather than a non-empty one. AC-2: no preferences returns strategy <code>popular</code> in the corpus order, and all four spellings of saying nothing (undefined, null, {}, {countries:null}) are asserted to take that same path. AC-3: <code>suggestions.generated</code> read back through <code>GET /api/admin/audit</code> as an admin, with actor CUST-SUGG-1 (the authenticated principal, never the body) and carrying strategy, confidence, tripIds, scores, stated dimensions, attempt count and flag reasons; the same requestId twice leaves ONE row and reports <code>replayed: true</code>, asserted by counting rows through the API. Failure paths: an engine that THROWS is refused, audited as a failure and flagged (not retried - a broken engine does not fix itself); one that HANGS times out, retries exactly once and stops (attempts asserted as 2); one returning the wrong SHAPE is a <code>ContractViolation</code>, not a 200 with undefined in it; zero suggestions is a 200 with a message and a real row in the advisor queue; a throwing audit refuses the whole response; a throwing review queue is logged and does NOT lose the audited answer. Guardrail: 401 with no token, 403 for sales, product_manager and admin, 200 for customer and advisor, 405 on GET. Every refusal the service can return is asserted to have a mapped status.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">SIX POINTS. (1) THE AI MODULE IS DETERMINISTIC, BY A DECISION TAKEN WITH THE OPERATOR BEFORE ANY CODE WAS WRITTEN. CLAUDE.md's core principle is that probabilistic components do not decide production outcomes, REQ-011 asks for suggestions and not for a technology, and a live model would have meant a paid external dependency, a secret, and acceptance tests that cannot be deterministic. What was built instead is a PORT: one function of one argument matching the shape <code>shared/callWithRetry.js</code> wraps, so a model-backed engine drops in at a single call site and inherits the timeout, retries, audit trail and advisor flag without any of them changing. The envelope is already proven against engines that throw, hang and lie about their shape - so the day a remote engine arrives, the hard part is done. (2) A TEST FOUND A REAL RELEVANCE HOLE, AND THE RULE CHANGED RATHER THAN THE ASSERTION. Scoring alone let a customer asking for a BEACH trip in Botswana be answered with a Botswana SAFARI: it took the country credit and cleared the floor on country alone. Stated interests now EXCLUDE on zero overlap. Matching where somebody wants to go while matching nothing they want to do is the plainest form of the irrelevant-suggestions failure path, and it arrived looking like an answer. (3) AN EMPTY LIST IS AN ANSWER, AND PADDING IT WOULD BE THE BUG. A request whose preferences nothing matches returns ZERO suggestions, a 200 with a message, and a row in the advisor queue - not the least-bad safari. There is deliberately no automatic retry with loosened preferences: quietly ignoring a stated budget to fill the list is worse than saying nothing. (4) WHAT GETS FLAGGED, AND WHAT DELIBERATELY DOES NOT. Three conditions only: zero suggestions despite stated preferences, a matched result at or below 0.6 confidence, and an engine error. A <code>popular</code> result is NOT flagged - somebody who stated nothing has not made an uncertain request, and flagging every browse would bury the queue the guardrail depends on, which is the failure mode <code>requestTriageService.js</code>'s own header warns about. The review row is keyed <code>sugg:&lt;requestId&gt;</code>, NOT the bare requestId: <code>advisorReviewQueue</code> is first-write-wins and triage already writes to it, so sharing the key would mean a request that was triaged AND asked for suggestions could hold only one of the two flags, with the other vanishing silently. No advisor is paged; the queue row is the source of truth, and paging a human when a browse returns a thin match is how an on-call rota stops being answered. (5) THE AUDIT ROW RECORDS WHICH PREFERENCE DIMENSIONS WERE STATED, NEVER THEIR VALUES, and that absence is asserted. An audit row is append-only and permanent, and a customer's budget does not need to live in one forever to answer the question the log exists to answer. It is kept flat for the same reason STORY-015 digests its itinerary: <code>auditLog</code> truncates past <code>MAX_CONTEXT_DEPTH</code>, so an array of suggestion objects would audit as &quot;&lt;truncated&gt;&quot;. If the audit write fails the service REFUSES to serve rather than hand over suggestions it cannot account for - the same posture <code>safariProductStore</code> takes on an unauditable mutation. (6) SCOPE, AND WHAT WAS DELIBERATELY NOT BUILT. API surface only, no UI, as with STORY-007/008/013/015. POPULARITY IS EDITORIAL, NOT MEASURED, and is stated as such in the code: this repo has no view counts or ratings and the booking ledger is empty on a cold start, so deriving a rank from it would read as data while being zero for everything. It is one function (<code>rankFor</code>) to replace when a real signal exists. Suggestions are NOT PERSISTED - only the audit row is - so there is no read route for a customer's past suggestions; the trail is <code>admin.audit.read</code>. No free-text wishes (preferences are a structured object; unstructured requests remain <code>requestTriageService</code>'s job), no dates or seasonality (no date model exists here), no party size (it changes the price, not which trips suit, and quotes/ owns price), no personalisation from history, no caching. Interest tagging is literal substring matching against a small explicit vocabulary: it will MISS tags, costing a trip one point, rather than over-tag, which would make every trip match every preference and is the same failure path arriving through the back door. No durability suite for the new modules - the service writes only through <code>auditLog</code> and <code>advisorReviewQueue</code>, both already proven durable in separate processes by STORY-013's suite, and the corpus holds no state of its own. NOT VERIFIED BY CI at the time of writing: every result above is local.</div></div>
+</article>
+  </div>
+</main>
+<footer>
+  <div class="wrap">
+    Generated from PROGRESS.md by scripts/generateSessionChangelog.js. Only entries
+    tagged <code>Session: CC-20261001-4b7e</code> appear here.
+  </div>
+</footer>
+</body>
+</html>

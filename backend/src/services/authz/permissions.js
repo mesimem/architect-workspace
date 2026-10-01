@@ -129,6 +129,16 @@ const PERMISSIONS = Object.freeze({
   // Catalog - destination browsing. The least sensitive thing here.
   CATALOG_READ: "catalog.read",
 
+  // Trip suggestions (STORY-009). Asking the system for trip ideas.
+  //
+  // SEPARATE FROM CATALOG_READ, which is the thing it most resembles. Browsing
+  // the catalog is a read; asking for suggestions WRITES - an audit row every
+  // time, and a review-queue row whenever the answer is thin. Granting it with
+  // catalog.read would mean any future read-only integration given the catalog
+  // could also fill the advisor queue. A permission is named for the act, and
+  // these are two different acts.
+  SUGGESTIONS_REQUEST: "suggestions.request",
+
   // Safari products (STORY-015). The AUTHORED inventory: a package, its
   // day-by-day itinerary, and what it costs us against what we sell it for.
   //
@@ -178,6 +188,10 @@ const ROLE_PERMISSIONS = Object.freeze({
     // STORY-007: their own quotes, in the customer view. Note what is absent -
     // QUOTES_READ, the staff grant that carries costs and margins.
     PERMISSIONS.PORTAL_QUOTES_READ,
+    // STORY-009: asking for trip ideas. This is the customer's own act, about
+    // their own preferences, and REQ-011 exists to serve them - so if any role
+    // holds it, this one must.
+    PERMISSIONS.SUGGESTIONS_REQUEST,
   ]),
 
   advisor: Object.freeze([
@@ -204,6 +218,12 @@ const ROLE_PERMISSIONS = Object.freeze({
     // cannot author or reprice one; PRODUCTS_WRITE sits with product_manager
     // alone. This is the read/write split doing its job.
     PERMISSIONS.PRODUCTS_READ,
+    // STORY-009: an advisor pulls up trip ideas while working a request - it
+    // is the same job as quoting, one step earlier still. Note that holding
+    // this does NOT let them read anyone else's suggestions; there is no read
+    // grant, because there is no read route. The record of what was suggested
+    // lives in the audit trail, which is admin.audit.read.
+    PERMISSIONS.SUGGESTIONS_REQUEST,
     // An advisor logs out of their own session like anyone else. Ending YOUR
     // OWN session is not a privilege, and withholding it would mean an advisor
     // could never revoke a token they thought was compromised.
