@@ -3,13 +3,13 @@
   "project": "U.S.-based Full-Service Travel Agency Platform",
   "totals": {
     "stories_total": 17,
-    "stories_verified": 11,
+    "stories_verified": 12,
     "stories_submitted": 0,
-    "stories_in_progress": 6,
+    "stories_in_progress": 5,
     "stories_not_started": 0,
     "criteria_total": 53,
-    "criteria_passed": 33,
-    "points_awarded": 517
+    "criteria_passed": 36,
+    "points_awarded": 564
   },
   "stories": [
     {
@@ -87,9 +87,9 @@
         "criteria_passed": 0,
         "criteria_total": 3,
         "verified_at": null,
-        "commit_sha": "423ed0bb7197a62640fd1b73634a51f39875fb73",
-        "commit_url": "https://github.com/mesimem/architect-workspace/commit/423ed0bb7197a62640fd1b73634a51f39875fb73",
-        "commit_at": "2026-08-31T21:48:17Z",
+        "commit_sha": null,
+        "commit_url": null,
+        "commit_at": null,
         "points_awarded": null,
         "outstanding": [
           "Given a customer selects a flight, hotel, and safari, when they proceed to checkout, then the system confirms the booking as one trip.",
@@ -199,7 +199,7 @@
         "verified_at": "2026-08-31T22:12:10.399Z",
         "commit_sha": "fef1916ebb788c4aaf1c5d5a464c4c9e58e6ee32",
         "commit_url": "https://github.com/mesimem/architect-workspace/commit/fef1916ebb788c4aaf1c5d5a464c4c9e58e6ee32",
-        "commit_at": "2026-08-31T22:11:08Z",
+        "commit_at": "2026-08-31T22:31:05Z",
         "points_awarded": 47,
         "outstanding": []
       }
@@ -541,14 +541,14 @@
       "notes": "Supplier book with contracts and rates (REQ-012), advisor-only. Four data-mismatch faults refused: inverted/zero-length contract dates, duplicate contractRef, orphan rate, rate currency disagreeing with its contract. Updates validate the MERGED record, not the patch - replacing a contract is legal in isolation but orphans the rates already stored against the old ref. Every create, update, no-op save and refusal is audited; a mutation with no correlationId is refused rather than performed unaudited. supplierStore.js is over the 500-line ceiling with the deviation logged in its header per CLAUDE.md.",
       "updated_at": "2026-10-01T21:01:34.131Z",
       "verification": {
-        "state": "in_progress",
+        "state": "verified",
         "criteria_passed": 3,
         "criteria_total": 3,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
+        "verified_at": "2026-10-01T21:06:40.247Z",
+        "commit_sha": "6bfabc8884cfab10386120b880e8afc6920e3e8d",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/6bfabc8884cfab10386120b880e8afc6920e3e8d",
+        "commit_at": "2026-10-01T21:03:57Z",
+        "points_awarded": 47,
         "outstanding": []
       }
     },
