@@ -202,6 +202,50 @@ function main() {
   assert.strictEqual(can("product_manager", PERMISSIONS.PORTAL_TRIPS_READ), false);
   console.log("permissions: an advisor sells from the product book, a product manager authors it");
 
+  // STORY-010: the supplier grants, stated as blast radius. The advisor is the
+  // ONLY role holding either half, which is a stronger claim than the product
+  // block above makes and so is asserted against every other role by name.
+  assert.strictEqual(can("advisor", PERMISSIONS.SUPPLIERS_READ), true);
+  assert.strictEqual(can("advisor", PERMISSIONS.SUPPLIERS_WRITE), true);
+
+  // A supplier record carries the COST BASE every margin is computed from, for
+  // every package that supplier appears in - a wider exposure than any single
+  // product's pricing.internal. Written per role rather than as a loop, for the
+  // reason the two blocks above give: a loop over ROLES would pass silently the
+  // day a sixth role arrives holding supplier access.
+  for (const permission of [PERMISSIONS.SUPPLIERS_READ, PERMISSIONS.SUPPLIERS_WRITE]) {
+    // The one that matters most. A customer holding this reads what we pay,
+    // which is the single figure that makes every quote we have issued
+    // negotiable.
+    assert.strictEqual(can("customer", permission), false, "customer must not hold " + permission);
+    assert.strictEqual(can("sales", permission), false, "sales must not hold " + permission);
+    // An admin administers the system. It holds ADMIN_AUDIT_READ, and the trail
+    // is what records who changed a supplier's terms - a role that can both
+    // alter a contract and read the record of having altered it is the conflict
+    // of interest this table keeps breaking up.
+    assert.strictEqual(can("admin", permission), false, "admin must not hold " + permission);
+    // Arguable, and deliberately refused: a product manager prices packages
+    // against supplier cost, so a read here could be justified. It was not
+    // granted, because arguable is not a reason to grant. If a later story asks
+    // for it, that is one row and this assertion is the thing that will make
+    // the change deliberate rather than accidental.
+    assert.strictEqual(
+      can("product_manager", permission),
+      false,
+      "product_manager must not hold " + permission
+    );
+  }
+
+  // The supplier grants did not drag the advisor into anyone else's job. Each
+  // of these is a rule from this module's header that STORY-010 could have
+  // undone by accident - notably "advisor: NOT customer data by default",
+  // which a supplier grant has no reason to touch and must not.
+  assert.strictEqual(can("advisor", PERMISSIONS.CRM_CUSTOMERS_READ), false);
+  assert.strictEqual(can("advisor", PERMISSIONS.ADMIN_AUDIT_READ), false);
+  assert.strictEqual(can("advisor", PERMISSIONS.ADMIN_ROLES_ASSIGN), false);
+  assert.strictEqual(can("advisor", PERMISSIONS.PRODUCTS_WRITE), false);
+  console.log("permissions: the supplier book is reachable by the advisor alone");
+
   console.log("permissions: all tests passed");
 }
 

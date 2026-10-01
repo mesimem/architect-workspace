@@ -512,35 +512,44 @@
       "criteria": [
         {
           "text": "Given a supplier is added, when details are saved, then it appears in the supplier list.",
-          "passed": false
+          "passed": true
         },
         {
           "text": "Given a supplier is updated, when changes are saved, then the system reflects the updates.",
-          "passed": false
+          "passed": true
         },
         {
           "text": "Trust: The system logs all supplier data changes.",
-          "passed": false
+          "passed": true
         }
       ],
-      "files_touched": [],
-      "tests_added": [],
-      "notes": null,
-      "updated_at": null,
+      "files_touched": [
+        "backend/src/services/suppliers/supplierValidation.js",
+        "backend/src/services/suppliers/supplierContracts.js",
+        "backend/src/services/suppliers/supplierStore.js",
+        "backend/src/http/routes/supplierRoutes.js",
+        "backend/src/http/routes/index.js",
+        "backend/src/services/authz/permissions.js"
+      ],
+      "tests_added": [
+        "backend/src/services/suppliers/supplierValidation.test.js",
+        "backend/src/services/suppliers/supplierContracts.test.js",
+        "backend/src/services/suppliers/supplierStore.test.js",
+        "backend/src/http/suppliers.test.js",
+        "backend/src/services/authz/permissions.test.js"
+      ],
+      "notes": "Supplier book with contracts and rates (REQ-012), advisor-only. Four data-mismatch faults refused: inverted/zero-length contract dates, duplicate contractRef, orphan rate, rate currency disagreeing with its contract. Updates validate the MERGED record, not the patch - replacing a contract is legal in isolation but orphans the rates already stored against the old ref. Every create, update, no-op save and refusal is audited; a mutation with no correlationId is refused rather than performed unaudited. supplierStore.js is over the 500-line ceiling with the deviation logged in its header per CLAUDE.md.",
+      "updated_at": "2026-10-01T21:01:34.131Z",
       "verification": {
         "state": "in_progress",
-        "criteria_passed": 0,
+        "criteria_passed": 3,
         "criteria_total": 3,
         "verified_at": null,
         "commit_sha": null,
         "commit_url": null,
         "commit_at": null,
         "points_awarded": null,
-        "outstanding": [
-          "Given a supplier is added, when details are saved, then it appears in the supplier list.",
-          "Given a supplier is updated, when changes are saved, then the system reflects the updates.",
-          "Trust: The system logs all supplier data changes."
-        ]
+        "outstanding": []
       }
     },
     {

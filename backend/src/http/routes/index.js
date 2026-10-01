@@ -17,6 +17,7 @@ const { crmRoutes } = require("./crmRoutes");
 const { quoteRoutes } = require("./quoteRoutes");
 const { proposalRoutes } = require("./proposalRoutes");
 const { productRoutes } = require("./productRoutes");
+const { supplierRoutes } = require("./supplierRoutes");
 const { suggestionRoutes } = require("./suggestionRoutes");
 
 const ROUTES = [].concat(
@@ -29,6 +30,7 @@ const ROUTES = [].concat(
   quoteRoutes,
   proposalRoutes,
   productRoutes,
+  supplierRoutes,
   suggestionRoutes
 );
 

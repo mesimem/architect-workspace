@@ -156,6 +156,23 @@ const PERMISSIONS = Object.freeze({
   PRODUCTS_READ: "products.read",
   PRODUCTS_WRITE: "products.write",
 
+  // Suppliers (STORY-010). Who the agency BUYS from: the business, the
+  // contracts signed with them, and the rate card under each contract.
+  //
+  // THE MOST COST-SENSITIVE READ IN THIS TABLE. A product record carries our
+  // margin on one package; a supplier record carries the cost base those
+  // margins are computed from, for every package that supplier appears in. So
+  // this is granted to staff only, and narrowly: a customer holding
+  // suppliers.read would be reading what we pay, which is the one figure that
+  // makes every quote we have ever issued negotiable.
+  //
+  // Read and write are split because they leak differently - a read exposes the
+  // whole cost base at once, a write can change what we believe we owe under a
+  // signed agreement. Splitting them is what lets a future margin-analysis or
+  // reporting integration read the book without being able to alter a contract.
+  SUPPLIERS_READ: "suppliers.read",
+  SUPPLIERS_WRITE: "suppliers.write",
+
   // Administration. These three are the reason this story exists.
   ADMIN_ROLES_READ: "admin.roles.read",
   ADMIN_ROLES_ASSIGN: "admin.roles.assign",
@@ -218,6 +235,25 @@ const ROLE_PERMISSIONS = Object.freeze({
     // cannot author or reprice one; PRODUCTS_WRITE sits with product_manager
     // alone. This is the read/write split doing its job.
     PERMISSIONS.PRODUCTS_READ,
+    // STORY-010: BOTH halves, and this is the only role that holds either.
+    // Managing supplier information is the advisor's own job - the story is
+    // written in their voice - and it is the same job as quoting, one step
+    // further back: you cannot price a trip honestly without knowing what the
+    // lodge actually charges under the contract we signed.
+    //
+    // Deliberately NOT given to product_manager, which is the role it most
+    // resembles. A product manager prices packages against supplier cost, so a
+    // read there is arguable - but arguable is not a reason to grant it. One
+    // row is cheap to add the day a story asks; a grant made on a guess is
+    // discovered years later by reading a leaked token's blast radius.
+    //
+    // Deliberately NOT given to admin either, for the reason the table already
+    // applies to sales: admin holds ADMIN_AUDIT_READ, and the trail is what
+    // records who changed a supplier's terms. A role that can both alter a
+    // contract and read the record of having altered it is the conflict of
+    // interest this table keeps breaking up.
+    PERMISSIONS.SUPPLIERS_READ,
+    PERMISSIONS.SUPPLIERS_WRITE,
     // STORY-009: an advisor pulls up trip ideas while working a request - it
     // is the same job as quoting, one step earlier still. Note that holding
     // this does NOT let them read anyone else's suggestions; there is no read
