@@ -3,13 +3,13 @@
   "project": "U.S.-based Full-Service Travel Agency Platform",
   "totals": {
     "stories_total": 17,
-    "stories_verified": 8,
+    "stories_verified": 11,
     "stories_submitted": 0,
-    "stories_in_progress": 9,
+    "stories_in_progress": 6,
     "stories_not_started": 0,
     "criteria_total": 53,
-    "criteria_passed": 24,
-    "points_awarded": 376
+    "criteria_passed": 33,
+    "points_awarded": 517
   },
   "stories": [
     {
@@ -87,9 +87,9 @@
         "criteria_passed": 0,
         "criteria_total": 3,
         "verified_at": null,
-        "commit_sha": "bf4ca67f56bd2af145271e48acad2cdd567d8a22",
-        "commit_url": "https://github.com/mesimem/architect-workspace/commit/bf4ca67f56bd2af145271e48acad2cdd567d8a22",
-        "commit_at": "2026-08-18T00:20:00Z",
+        "commit_sha": "423ed0bb7197a62640fd1b73634a51f39875fb73",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/423ed0bb7197a62640fd1b73634a51f39875fb73",
+        "commit_at": "2026-08-31T21:48:17Z",
         "points_awarded": null,
         "outstanding": [
           "Given a customer selects a flight, hotel, and safari, when they proceed to checkout, then the system confirms the booking as one trip.",
@@ -138,7 +138,7 @@
         "verified_at": "2026-08-31T21:51:25.109Z",
         "commit_sha": "9a52f6b6042b0e10b404621dcc08a08a32962f4e",
         "commit_url": "https://github.com/mesimem/architect-workspace/commit/9a52f6b6042b0e10b404621dcc08a08a32962f4e",
-        "commit_at": "2026-08-18T00:30:12Z",
+        "commit_at": "2026-08-31T21:51:02Z",
         "points_awarded": 47,
         "outstanding": []
       }
@@ -494,19 +494,15 @@
       "notes": "THE GOVERNING DECISION, agreed with the user before any code was written: the \"AI module\" is a deterministic scorer behind a swappable port, not a model call. CLAUDE.md core principle is that probabilistic components do not decide production outcomes, REQ-011 asks for suggestions and not for a technology, and a live model would have meant a paid external dependency, a secret, and acceptance tests that cannot be deterministic. The engine is one function of one argument - suggestTrips({preferences, trips, limit}) - matching the shape shared/callWithRetry.js wraps, so a model-backed engine drops in at a single call site and inherits the timeout, capped retries, audit trail and advisor flag without any of them changing. The service is already tested against engines that throw, hang and return the wrong shape, so the envelope is proven before anything remote arrives. API surface only, no UI - same as STORY-007, 008, 013 and 015 in this repo, which has no frontend. The customer surface is one endpoint, POST /api/suggestions/trips. GUARDRAILS. Uncertain requests reach a human on exactly three conditions: zero suggestions despite stated preferences, a matched result at or below 0.6 confidence, and an engine error. A popular-strategy result is deliberately NOT flagged - somebody who stated nothing has not made an uncertain request, and flagging every browse would bury the queue the guardrail depends on. The review row is keyed sugg:<requestId>, not the bare requestId, because advisorReviewQueue is first-write-wins and requestTriageService already writes to it; sharing the key would mean a request that was triaged AND asked for suggestions could hold only one of the two flags, with the other vanishing silently. No advisor is paged: the queue row is the source of truth, and paging a human when a browse returns a thin match is how an on-call rota stops being answered. AUTHZ. One new permission, suggestions.request, granted to customer and advisor only. Deliberately NOT bundled with catalog.read, which it most resembles: browsing is a read, asking for suggestions WRITES an audit row every time and may write to the advisor queue. sales, product_manager and admin are each asserted to get a 403. KNOWN GAPS, deliberately not built. Popularity is editorial, not measured (see criterion 2 evidence). Suggestions are not persisted - only the audit row is, so there is no \"show me my last suggestions\" read route; the trail is admin.audit.read. No free-text wishes: preferences are a structured object and unstructured requests remain advisor/requestTriageService.js job. No dates or seasonality (no date model exists in this repo), no party size (it changes the price, not which trips suit, and quotes/ owns price), no personalisation from history, and no caching. Interest tagging is literal substring matching against a small explicit vocabulary - it will miss tags, which costs a trip one point, rather than over-tag, which would make every trip match every preference and is the irrelevant-suggestions failure path arriving through the back door. VERIFICATION: npm test 47/47 passing, npm run typecheck clean.",
       "updated_at": "2026-10-01T19:46:45.702Z",
       "verification": {
-        "state": "in_progress",
-        "criteria_passed": 0,
+        "state": "verified",
+        "criteria_passed": 3,
         "criteria_total": 3,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
-        "outstanding": [
-          "Given a customer provides preferences, when AI processes them, then it suggests relevant trips.",
-          "Given a customer provides no preferences, when AI processes, then it suggests popular trips.",
-          "Trust: The system logs all AI suggestions for review."
-        ]
+        "verified_at": "2026-10-01T19:50:00.580Z",
+        "commit_sha": "36d7a85930b57140a39dde605f1f88966a52a78e",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/36d7a85930b57140a39dde605f1f88966a52a78e",
+        "commit_at": "2026-10-01T19:49:09Z",
+        "points_awarded": 47,
+        "outstanding": []
       }
     },
     {
@@ -669,19 +665,15 @@
       "notes": "API surface only, no UI. The story's how-to-build-it says develop a user interface; this repo has no frontend and STORY-007/008 both shipped services plus HTTP routes only, so the advisor surface is five endpoints under /api/proposals. Deviation agreed with the user before any code was written; all three criteria are fully testable at the service and route layer. THE LOAD-BEARING DECISION: startedAt is written durably before any work and never rewritten. AC-1 is measurable, AC-2 works for an open draft and not only a finished one, and a crash cannot hide an overrun - all three fall out of that one choice. Got wrong, the system would not break, it would flatter itself: every restart would silently reset every clock and no proposal would ever be late. The 30-minute boundary is INCLUSIVE (a breach is strictly greater than 30:00.000), tested to the millisecond on both sides. A backwards clock (skew, DST) clamps to zero and reads as on time with clockWentBackwards set, because paging an advisor about a minus-four-minute delay teaches them to ignore the channel. An unreadable clock is recorded as a breach with slaUnknown and null figures - of the two ways to be wrong, on time is the one that suppresses a page the advisor is owed. The elapsed time is STORED at issue, not derived on read. Recomputed from startedAt it would grow forever, and an on-time proposal would look breached by the next morning. Notification dedup is keyed on the durable audit log, not an in-memory Set, so a restart cannot re-page. The entry is written AFTER a confirmed send, which leaves a one-page duplicate window on a crash between send and audit; write-ahead would close that window but a failed send would then suppress the page forever with the trail claiming otherwise. A duplicate page is a nuisance, a suppressed page is the missed alert the criterion exists for. The routes take no at and no startedAt - the clock is the server's, always, because an SLA the measured party can edit is not an SLA. A test posts a forged future at to the sweep and asserts it pages nobody. To test a 30-minute breach in a suite that runs in milliseconds, proposals.test.js SEEDS a genuinely 100-minute-old draft through the service with a controlled clock and then exercises the real endpoints; nothing in the production path was loosened. quoteWriteGuard.js (STORY-007) was refactored into a thin adapter over the new shared door. Behaviour-preserving and verified as such: the audit key, both refusal messages, the log service tag, all three log event names, the quoteId log field and the rollback were each checked byte-for-byte, because a shared helper that quietly renames an audit key is a break in the trail, not a tidy-up. Known gaps, deliberately not built: nothing in production passes the assemble hook yet (pricing is local and synchronous, so nothing in completion CAN hang) - the boundary exists so STORY-015's itinerary read inherits the timeout and capped retries instead of inventing its own, and it is tested with hanging, throwing and junk-returning stubs. No customer-facing proposal view (the customer's priced document is a quote, and STORY-007 owns it). No conversion of an issued proposal into a quote - doing both atomically needs a transaction across two stores. Any advisor may read or complete a colleague's proposal; the story says nothing about ownership and desk work gets covered, so there is a named test recording that as a decision rather than an oversight.",
       "updated_at": "2026-09-30T18:20:19.054Z",
       "verification": {
-        "state": "in_progress",
-        "criteria_passed": 0,
+        "state": "verified",
+        "criteria_passed": 3,
         "criteria_total": 3,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
-        "outstanding": [
-          "Given a new trip request, when a travel advisor creates a proposal, then it should be completed within 30 minutes.",
-          "Given a trip proposal, when it exceeds 30 minutes, then the advisor should be notified of the delay.",
-          "Trust: Given any trip proposal, when it is created, then an audit log entry must be created."
-        ]
+        "verified_at": "2026-09-30T18:52:36.804Z",
+        "commit_sha": "bc61e45a59f5c8e7f02a3c487d5acc1f18aa9915",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/bc61e45a59f5c8e7f02a3c487d5acc1f18aa9915",
+        "commit_at": "2026-09-30T18:27:11Z",
+        "points_awarded": 47,
+        "outstanding": []
       }
     },
     {
@@ -770,19 +762,15 @@
       "notes": "43/43 npm test (was 40/40), npm run typecheck clean, so npm run verify green end to end. THE ITINERARY-CONFLICT RULE IS ONE SENTENCE, NOT THREE CHECKS: the set of days must be exactly 1..durationDays, each appearing once. That catches all three real faults - two entries claiming one day, a day past the duration, and a gap that is unsold time mid-package - each reported as its own named problem. Out-of-order input is VALID and gets sorted, because refusing a reordered form submission is rigour that only hurts the user. THE UPDATE PATH VALIDATES THE MERGED RECORD, NOT THE PATCH, and that is where this story actually bites: {durationDays: 2} on a 3-day product is a perfectly legal patch in isolation that would leave the stored itinerary describing a day which no longer exists, and replacing the itinerary alone can leave a gap against the stored duration. Both have named regression cases. costPerPersonCents is REQUIRED because without it there is no margin and the below-cost refusal - the check that catches $5,200 typed as 5200 cents - can never fire; cost and margin are nested under pricing.internal so a future customer-facing projection has exactly one field to filter, which is also why products.read is staff-only today. PRICING IS REPLACED AS A BLOCK, not merged field by field, so a patch omitting singleSupplementCents drops it to 0 - asserted explicitly so it is a decision rather than a discovery. A NEW product_manager ROLE rather than a wider advisor, chosen by the operator against the cheaper alternative: giving the product grants to advisor was one fewer row in the permission table in exchange for every advisor being able to reprice any package the agency sells. An advisor holds products.read - sell from the book, do not author it - and the HTTP suite asserts exactly that: 200 on both reads, 403 on POST and PATCH. The one change outside this story was approved first and TIGHTENS a test: permissions.test.js's CRM block warned that a loop over ROLES would silently pass the day a fifth role arrived with CRM access, so product_manager is now asserted by hand to hold none. Deliberately not built: no seasonal or per-date pricing (the backend holds no rate card - STORY-007's reasoning, and a quote carries the season), no per-traveller tiers, no link from a product to the africa/catalogSource.js destination it visits, no DELETE route (erasing a product erases the subject of its own audit trail), no pagination - list and the duplicate check both scan, O(n) on purpose, because STORY-016 owns scale and an index is a second copy of the data that can desync. NO DURABILITY SUITE YET: the store uses the same jsonFileStore as every other store here and inherits its behaviour, but unlike STORY-007/008/013 that has not been proven for THIS module in separate processes, and it is the most valuable thing to add next. version is recorded but NOT enforced - two product managers editing at once is last-write-wins, the standing repo-wide limit, and the real fix is Postgres.",
       "updated_at": "2026-09-30T20:05:00.000Z",
       "verification": {
-        "state": "in_progress",
-        "criteria_passed": 0,
+        "state": "verified",
+        "criteria_passed": 3,
         "criteria_total": 3,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
-        "outstanding": [
-          "Given a new safari product, when it is created, then it should include itineraries and pricing.",
-          "Given an existing safari product, when its itinerary is updated, then the changes should be reflected immediately.",
-          "Trust: Given any safari product, when it is created or updated, then an audit log entry must be created."
-        ]
+        "verified_at": "2026-09-30T19:56:38.755Z",
+        "commit_sha": "21af288bd47dcefa4d70be2bf66b492c4762c012",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/21af288bd47dcefa4d70be2bf66b492c4762c012",
+        "commit_at": "2026-09-30T19:56:05Z",
+        "points_awarded": 47,
+        "outstanding": []
       }
     },
     {
