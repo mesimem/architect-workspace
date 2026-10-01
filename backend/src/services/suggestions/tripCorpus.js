@@ -91,7 +91,14 @@ const UNRANKED = POPULAR_COUNTRIES.length;
 // do with what they asked for, so the bias is towards tagging nothing.
 const INTEREST_KEYWORDS = Object.freeze({
   wildlife: ["safari", "wildlife", "game drive", "big five", "migration", "gorilla", "chimp"],
-  trekking: ["trek", "hike", "hiking", "climb", "summit", "kilimanjaro", "trail"],
+  // A PLACE NAME IS NOT AN ACTIVITY, and "kilimanjaro" used to be in this list
+  // until the real inventory was seeded and caught it: a family game-drive
+  // package was tagged `trekking` because its summary mentions elephant herds
+  // BENEATH Kilimanjaro. Half the lodges in northern Tanzania advertise the
+  // view. Every genuine climb here says trek, climb or summit, so the verbs are
+  // the signal and the mountain is not - which is the general rule for this
+  // list, not a one-off exception.
+  trekking: ["trek", "hike", "hiking", "climb", "summit", "trail"],
   beach: ["beach", "coast", "island", "zanzibar", "diving", "snorkel", "reef"],
   culture: ["culture", "cultural", "village", "market", "heritage", "maasai", "museum"],
   luxury: ["luxury", "luxe", "private lodge", "exclusive", "boutique"],

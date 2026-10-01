@@ -151,6 +151,16 @@ function main() {
   assert.deepStrictEqual(deriveInterests(""), []);
   assert.deepStrictEqual(deriveInterests(null), []);
   assert.deepStrictEqual(deriveInterests("Trekking to the SUMMIT"), ["trekking"]);
+  // REGRESSION, found when the real Kenya/Tanzania inventory was seeded: a
+  // FAMILY GAME-DRIVE package was tagged `trekking` because its summary
+  // mentions elephant herds beneath Kilimanjaro. A place name is not an
+  // activity - half the lodges in northern Tanzania advertise that view - and
+  // a customer who asks to trek must not be sent on a minibus tour.
+  assert.deepStrictEqual(
+    deriveInterests("Elephant herds beneath Kilimanjaro, with game drives for children"),
+    ["wildlife", "family"]
+  );
+  assert.deepStrictEqual(deriveInterests("A midnight climb up Kilimanjaro"), ["trekking"]);
   assert.deepStrictEqual(
     deriveInterests("Luxury beach lodge with cultural village visits").sort(),
     ["beach", "culture", "luxury"]
