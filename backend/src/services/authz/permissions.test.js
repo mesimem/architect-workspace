@@ -128,6 +128,7 @@ function main() {
     "admin",
     "advisor",
     "customer",
+    "operations_manager",
     "product_manager",
     "sales",
   ]);
@@ -271,6 +272,71 @@ function main() {
   assert.strictEqual(can("advisor", PERMISSIONS.ADMIN_ROLES_ASSIGN), false);
   assert.strictEqual(can("advisor", PERMISSIONS.PRODUCTS_WRITE), false);
   console.log("permissions: the supplier book is reachable by the advisor alone");
+
+  // STORY-018: the operations booking board, stated as blast radius. The read
+  // is the dangerous half here - it returns every booking the agency holds in
+  // one response - which is the opposite of the usual intuition and the reason
+  // each negative below is worth writing out.
+  assert.strictEqual(can("operations_manager", PERMISSIONS.OPS_BOOKINGS_READ), true);
+  assert.strictEqual(can("operations_manager", PERMISSIONS.OPS_BOOKINGS_WRITE), true);
+
+  // Nobody else reaches the booking board. Written out per role rather than as
+  // a loop, for the reason the CRM block above gives: a loop would pass
+  // silently the day a seventh role is added with booking access, and the claim
+  // being made here is precisely "no other role has this".
+  for (const permission of [PERMISSIONS.OPS_BOOKINGS_READ, PERMISSIONS.OPS_BOOKINGS_WRITE]) {
+    assert.strictEqual(
+      can("customer", permission),
+      false,
+      "a customer must not hold " + permission + " - it exposes every other customer's trips"
+    );
+    assert.strictEqual(can("advisor", permission), false, "advisor must not hold " + permission);
+    assert.strictEqual(
+      can("product_manager", permission),
+      false,
+      "product_manager must not hold " + permission
+    );
+    // Both deliberately refused, and both were the cheaper alternative to
+    // adding this role at all. `sales` holds customer relationships, but the
+    // board is EVERY customer's booking at once - strictly wider than the
+    // relationship-scoped read CRM_CUSTOMERS_READ was argued for. `admin`
+    // operates the system, and granting it here would mean the role that reads
+    // the audit trail is also the role that can cancel a booking.
+    assert.strictEqual(can("sales", permission), false, "sales must not hold " + permission);
+    assert.strictEqual(can("admin", permission), false, "admin must not hold " + permission);
+  }
+
+  // And an operations manager does not drift into everyone else's job. The
+  // first of these is the one that matters most: the trail records what an
+  // operations manager did to a booking, so a role that could both change a
+  // status and read the record of having changed it is a weaker control than
+  // two people - the same conflict of interest this table keeps breaking up.
+  assert.strictEqual(
+    can("operations_manager", PERMISSIONS.ADMIN_AUDIT_READ),
+    false,
+    "an operations manager must not read the trail that records what they did"
+  );
+  assert.strictEqual(can("operations_manager", PERMISSIONS.ADMIN_ROLES_ASSIGN), false);
+  // Operations DELIVER what was sold; they do not reprice or re-author it, and
+  // they do not sell. The reads below are granted, the writes are not, and that
+  // split is the whole shape of this role.
+  assert.strictEqual(can("operations_manager", PERMISSIONS.PRODUCTS_READ), true);
+  assert.strictEqual(can("operations_manager", PERMISSIONS.PACKAGES_READ), true);
+  assert.strictEqual(
+    can("operations_manager", PERMISSIONS.PRODUCTS_WRITE),
+    false,
+    "an operations manager arranges what was sold but must not reprice it"
+  );
+  assert.strictEqual(can("operations_manager", PERMISSIONS.PACKAGES_WRITE), false);
+  assert.strictEqual(can("operations_manager", PERMISSIONS.QUOTES_WRITE), false);
+  assert.strictEqual(can("operations_manager", PERMISSIONS.PROPOSALS_WRITE), false);
+  // Arranging a trip does not require the lead pipeline or a customer's full
+  // purchase history.
+  assert.strictEqual(can("operations_manager", PERMISSIONS.CRM_LEADS_READ), false);
+  assert.strictEqual(can("operations_manager", PERMISSIONS.CRM_CUSTOMERS_READ), false);
+  assert.strictEqual(can("operations_manager", PERMISSIONS.ADVISOR_REVIEWS_READ), false);
+  assert.strictEqual(can("operations_manager", PERMISSIONS.PORTAL_TRIPS_READ), false);
+  console.log("permissions: the booking board is reachable by the operations manager alone");
 
   console.log("permissions: all tests passed");
 }

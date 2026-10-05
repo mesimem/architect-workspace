@@ -20,6 +20,7 @@ const { productRoutes } = require("./productRoutes");
 const { packageRoutes } = require("./packageRoutes");
 const { supplierRoutes } = require("./supplierRoutes");
 const { suggestionRoutes } = require("./suggestionRoutes");
+const { opsBookingRoutes } = require("./opsBookingRoutes");
 const { healthRoutes } = require("./healthRoutes");
 
 const ROUTES = [].concat(
@@ -45,7 +46,15 @@ const ROUTES = [].concat(
   // position is readability, not behaviour.
   packageRoutes,
   supplierRoutes,
-  suggestionRoutes
+  suggestionRoutes,
+  // STORY-018. Last, because the booking board reads what every other area
+  // produces - a booking is the end of the journey that starts with a quote and
+  // a package. Its three patterns sit under /api/ops/bookings and are the first
+  // use of the /api/ops prefix in this table (STORY-016's metrics endpoint is
+  // /api/admin/metrics, despite its permission being named ops.metrics.read).
+  // They overlap nothing else here, so the position is readability, not
+  // behaviour.
+  opsBookingRoutes
 );
 
 module.exports = { ROUTES };

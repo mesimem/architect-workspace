@@ -889,6 +889,61 @@
           "Trust: The system logs all package creation and modification details in the audit trail."
         ]
       }
+    },
+    {
+      "id": "STORY-018",
+      "release": "r3",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given a new booking is created, when the manager views the booking dashboard, then the system displays the booking with its current status.",
+          "passed": true,
+          "evidence": "backend/src/services/booking/opsBookingBoard.test.js and backend/src/http/opsBookings.test.js. Proved against a REAL booking rather than a fixture row: the board is first asserted EMPTY, then bookTrip is called the way the application calls it, then the board is asked - so the row found can only have come from that booking. It shows status confirmed, statusIsManaged true, allowedNextStatuses [in_progress, cancelled], statusVersion 0 and statusChangedBy null, because nobody has touched it and the honest answer is not a fabricated 'changed at creation'. Over HTTP the same trip arrives at GET /api/ops/bookings with total 1, countsByStatus {confirmed: 1} and the status vocabulary alongside it, so a client builds its controls from the server's list rather than a hardcoded copy. There is NO sync step between the two calls: the board reads the crm-transactions ledger live, which is the one durable store every booking path already writes to (bookTripService one row per trip, groupBookingService one row per group MEMBER carrying groupId). That is also why the story's 'dashboard fails to display new bookings' failure path is structurally hard rather than merely tested - there is no projection, cache or overnight job between a booking existing and it being shown. Edge cases the happy path cannot produce are covered with injected ledgers: a row whose status is outside the vocabulary is still LISTED showing its real status with statusIsManaged false and no legal moves (hiding a booking is a worse answer than showing one nobody can advance), rows too malformed to key are skipped and COUNTED as unlistable rather than silently dropped, ordering is newest-first with ties broken on tripId so a dashboard's order is stable, and a row with no bookedAt sorts LAST because an absent date is not evidence of being recent."
+        },
+        {
+          "text": "Given a booking status is updated, when the manager saves the changes, then the system reflects the updated status in the dashboard.",
+          "passed": true,
+          "evidence": "backend/src/services/booking/opsBookingBoard.test.js, bookingStatusLifecycle.test.js, bookingStatusStore.test.js and backend/src/http/opsBookings.test.js. After a save the dashboard is RE-QUERIED rather than the update's own return value being trusted: the row reads in_progress with previousStatus confirmed, statusChangedBy taken from the resolved principal (never from the request body), and countsByStatus moves with it - a dashboard showing the new status in the row and the old one in its summary would be wrong in the more misleading of the two places. The status is a fixed four-value lifecycle (confirmed -> in_progress -> completed, cancelled from either live state) with completed and cancelled TERMINAL, because a trip that has been travelled cannot be un-travelled and re-opening a cancelled booking is a new booking with its own payment. Terminality is derived from an empty row in the transition table, not a second hand-kept list, and every route out of a terminal state is refused exhaustively rather than in one or two sampled cases. IDEMPOTENCY: re-sending the status a booking already has is classified NO_CHANGE, returns 200 with changed:false, writes nothing and audits nothing - a double-clicked button must not append a second entry claiming the status changed twice. FAILURE PATH 'booking status fails to update' is covered in both its forms. As a RULE: confirmed cannot jump to completed (409 illegal_transition naming the statuses that would work), a completed booking cannot be reopened (409 terminal_status), a typo is 400 unknown_target_status and not a 409, because the operator should look for their typo rather than for a rule that refused them. As an OUTAGE, against stores told to misbehave: a store that throws, one that accepts the write and silently loses it, and one that keeps the OLD row are all caught as not_saved - the read-back compares the VERSION, so staleness is caught and not just absence - and each returns 503 meaning 'unchanged, repeat the request' rather than 500. Every refusal is followed by re-reading the board to prove the booking did not move, and the service tests inject a write that THROWS if called, so 'nothing was written' is asserted rather than assumed."
+        },
+        {
+          "text": "Trust: The system logs all booking status changes in the audit trail.",
+          "passed": true,
+          "evidence": "backend/src/services/booking/bookingStatusStore.test.js and backend/src/http/opsBookings.test.js - entries are read back AFTERWARDS through GET /api/admin/audit as an admin, which is a stronger proof than reading the module's own store. The word that carries the weight is ALL: writes go through shared/auditedCommit.js, which keys each entry on deriveAuditKey(tripId, event + '.vN'), so two changes to one booking produce TRIP-1:booking.status.changed.v1 and .v2. The audit log is first-write-wins, so keyed on the tripId alone the first change would be recorded and every later one silently discarded - the code would pass its other tests while quietly failing this criterion. Asserted over HTTP by carrying a booking confirmed -> in_progress -> completed and then finding BOTH entries, not just the first. Each entry carries actor from the authenticated principal, resource, the client's own X-Correlation-ID so a change traces back to the request that caused it, and a context of exactly {tripId, from, to, version} - asserted as an EXACT key set, because the failure being guarded against is someone later adding the customer or the price to a trail that persists to disk forever. No status change exists without its entry: when the audit write throws, the row is rolled back - DELETED if it was the first change, RESTORED EXACTLY if it superseded one, since deleting there would turn an audit outage into silent data loss - and the caller gets audit_unavailable, with the test asserting no success entry survives. Refused attempts are audited too, under their own event booking.status.change_refused, which is more than the criterion asks for: a manager repeatedly trying to reopen completed bookings is a fact about a person. That audit is deliberately best-effort and asymmetrical with the write - if it fails the caller's outcome is unchanged, because the refusal already left the system exactly as it was - and a request with no usable correlation id is refused UNAUDITED rather than recorded under an invented key no later request could match."
+        }
+      ],
+      "files_touched": [
+        "backend/src/services/booking/bookingStatusLifecycle.js",
+        "backend/src/services/booking/bookingStatusStore.js",
+        "backend/src/services/booking/opsBookingBoard.js",
+        "backend/src/http/routes/opsBookingRoutes.js",
+        "backend/src/http/routes/index.js",
+        "backend/src/services/authz/permissions.js",
+        "backend/src/services/authz/permissions.test.js",
+        "docs/stories/STORY-018.md"
+      ],
+      "tests_added": [
+        "backend/src/services/booking/bookingStatusLifecycle.test.js",
+        "backend/src/services/booking/bookingStatusStore.test.js",
+        "backend/src/services/booking/opsBookingBoard.test.js",
+        "backend/src/http/opsBookings.test.js"
+      ],
+      "notes": "The centralised book of bookings was NOT built, because it already existed: crm-transactions is the one durable store every booking path writes to, one row per trip, and bookTripService's confirmed single bookings live in an in-memory Map that does not survive a restart, so that ledger row is their only durable trace. The board reads it live - no projection, no cache, no sync step that can fail. The operations status is an OVERLAY in a second store keyed on the same tripId rather than a column, because logTransaction is deliberately idempotent by returning the existing row untouched: a ledger that rewrites its rows is not a ledger. The overlay holds the status, previous status, version and who changed it when - no customer, no itinerary, no money, so it cannot drift from the ledger. A booking with no overlay row is untouched, not missing, and reads as confirmed. New ops.bookings.read/ops.bookings.write permissions on a sixth role, operations_manager, held by no other role: admin was refused because the role that reads the audit trail must not also be the role that can cancel a booking, and sales because the board is every customer's booking at once rather than the relationship-scoped read CRM_CUSTOMERS_READ was argued for; the role deliberately does NOT hold admin.audit.read, the CRM grants, or any write on products, packages, quotes or proposals. The route exposes no filters because nothing in this pipeline reads query strings (server.js parses the pathname only) and adding that is an edit to the central pipeline every route shares - the service-level filters are built and tested for whoever does it. Verified locally: 125/125 npm test, full suite, no regressions. NOTE ON THIS ENTRY: the platform plan (.colaberry/plan.json) contains 16 stories and has no STORY-017 or STORY-018, so a sync will rebuild progress.json without this entry as it already did once for STORY-017 (commit 9a6a756); it is re-added by hand and the commit that carries the work names Story: STORY-018 in its trailer. The brief cited REQ-012, which this repo already uses for the supplier requirement fulfilled by STORY-010 - plan.json's REQ-012 carries fulfilled_by: [STORY-010] and TRACEABILITY.md row 20 agrees. REQUIREMENTS.md and TRACEABILITY.md were deliberately NOT edited: those docs are generated from the platform plan, and commit fafedda already reverted one hand-written requirement (REQ-019) for exactly that reason. The story doc records the citation and the discrepancy instead.",
+      "updated_at": "2026-10-05T23:44:50.271Z",
+      "verification": {
+        "state": "in_progress",
+        "criteria_passed": 0,
+        "criteria_total": 3,
+        "verified_at": null,
+        "commit_sha": null,
+        "commit_url": null,
+        "commit_at": null,
+        "points_awarded": null,
+        "outstanding": [
+          "Given a new booking is created, when the manager views the booking dashboard, then the system displays the booking with its current status.",
+          "Given a booking status is updated, when the manager saves the changes, then the system reflects the updated status in the dashboard.",
+          "Trust: The system logs all booking status changes in the audit trail."
+        ]
+      }
     }
   ]
 }

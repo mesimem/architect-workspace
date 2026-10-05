@@ -25,6 +25,9 @@
 //   product_manager - the inventory: authors safari packages, their itineraries
 //                     and their prices. NOT customer data, NOT the CRM, NOT the
 //                     system.
+//   operations_manager - delivery: the booking board, and moving each booking
+//                     along its lifecycle. NOT the CRM, NOT authoring products,
+//                     NOT the audit trail that records what they did.
 //
 // STORY-015 added `product_manager` for the same reason STORY-014 added
 // `sales`, and against the same alternative. Giving the product grants to
@@ -223,6 +226,26 @@ const PERMISSIONS = Object.freeze({
   // a read exposes every lead in the book at once, a write can only corrupt
   // one record at a time. Splitting them means a future reporting integration
   // can be given the read without the ability to edit anything.
+  // The operations booking board (STORY-018). Read and write are split for the
+  // same reason as everywhere else in this table, and here the asymmetry is
+  // unusually sharp: the READ exposes every booking the agency holds in one
+  // response - who is travelling, where, and for how much - while the WRITE can
+  // only move one booking along a four-state lifecycle that refuses to leave a
+  // terminal state. So the read is the more dangerous of the two, which is the
+  // opposite of the usual intuition and the reason a future reporting or
+  // finance integration must be given the read deliberately rather than as a
+  // side effect of being allowed to manage statuses.
+  //
+  // SEPARATE FROM CRM_CUSTOMERS_READ, which it most resembles - both show what
+  // customers have bought. The difference is the question each answers.
+  // CRM_CUSTOMERS_READ answers "what has this customer booked with us", for a
+  // salesperson holding that relationship. This one answers "what does the
+  // agency have to deliver", across all customers, for whoever is arranging it.
+  // Conflating them would mean that managing operations required a grant over
+  // the CRM, or that holding the CRM silently included the operations board.
+  OPS_BOOKINGS_READ: "ops.bookings.read",
+  OPS_BOOKINGS_WRITE: "ops.bookings.write",
+
   CRM_LEADS_READ: "crm.leads.read",
   CRM_LEADS_WRITE: "crm.leads.write",
   // Separate from CRM_LEADS_READ: a lead is someone who asked about a trip, a
@@ -382,6 +405,47 @@ const ROLE_PERMISSIONS = Object.freeze({
     // should have.
     PERMISSIONS.PACKAGES_READ,
     PERMISSIONS.PACKAGES_WRITE,
+    PERMISSIONS.CATALOG_READ,
+    // Ending your own session is not a privilege - same reasoning as advisor.
+    PERMISSIONS.PORTAL_SESSION_END,
+  ]),
+
+  // STORY-018. Delivery: what the agency has sold and has to arrange. This role
+  // watches the booking board and moves each booking along its lifecycle.
+  //
+  // WHY A SIXTH ROLE RATHER THAN A GRANT ON AN EXISTING ONE. The story is
+  // written in the operations manager's voice, and no existing role is that
+  // person. The two candidates were both refused for the same reason the header
+  // gives for `sales` and `product_manager`: the cheaper change has the larger
+  // blast radius.
+  //
+  //   admin - operates the SYSTEM. Putting the booking board here would mean
+  //           the role that reads the audit trail and assigns roles is also the
+  //           role that can cancel bookings, so there would be no one who could
+  //           be given operations work without also being handed the system.
+  //   sales - holds customer relationships. The booking board is every
+  //           customer's booking at once, which is a strictly wider read than
+  //           the relationship-scoped one CRM_CUSTOMERS_READ was argued for.
+  //
+  // WHAT THIS ROLE DELIBERATELY DOES NOT HOLD, and these absences are the point
+  // of it being its own row: CRM_* (arranging a trip does not require the lead
+  // pipeline or a customer's full purchase history), PRODUCTS_WRITE and
+  // PACKAGES_WRITE (operations deliver what was sold; they do not reprice or
+  // re-author it), QUOTES_* and PROPOSALS_* (selling is not delivering),
+  // ADMIN_* including ADMIN_AUDIT_READ - and that last one matters most. The
+  // trail records what an operations manager did to a booking, so reading it is
+  // the same conflict of interest that keeps it away from sales and product
+  // manager. Someone who can both change a status and read the record of who
+  // changed it is a weaker control than two people.
+  operations_manager: Object.freeze([
+    PERMISSIONS.OPS_BOOKINGS_READ,
+    PERMISSIONS.OPS_BOOKINGS_WRITE,
+    // Arranging a booking means looking at what was actually sold: the safari's
+    // itinerary and the package it was part of. READ ONLY on both - see the
+    // absences above.
+    PERMISSIONS.PRODUCTS_READ,
+    PERMISSIONS.PACKAGES_READ,
+    // The destinations those products visit, for the same reason.
     PERMISSIONS.CATALOG_READ,
     // Ending your own session is not a privilege - same reasoning as advisor.
     PERMISSIONS.PORTAL_SESSION_END,
