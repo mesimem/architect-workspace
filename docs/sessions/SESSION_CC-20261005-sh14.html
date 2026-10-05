@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session CC-20261005-sh14 — Change Report</title>
+<style>
+  :root {
+    --cherry: #FB2832;
+    --berry: #367895;
+    --leaf: #5BA63C;
+    --ink: #16202a;
+    --muted: #5c6b7a;
+    --rule: #dfe5ea;
+    --surface: #ffffff;
+    --canvas: #f4f6f8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: Roboto, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    line-height: 1.6;
+  }
+  code {
+    font-family: "Roboto Mono", ui-monospace, Consolas, "Courier New", monospace;
+    font-size: 0.9em;
+    background: #eef2f5;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.05em 0.35em;
+    word-break: break-word;
+  }
+  header.masthead {
+    background: var(--surface);
+    border-bottom: 3px solid var(--cherry);
+    padding: 2rem 1.5rem 1.5rem;
+  }
+  .wrap { max-width: 60rem; margin: 0 auto; }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--berry);
+    margin: 0 0 0.35rem;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 0.5rem; font-weight: 700; letter-spacing: -0.01em; }
+  .meta { color: var(--muted); font-size: 0.88rem; margin: 0; }
+  main { padding: 1.75rem 1.5rem 3rem; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--berry);
+    border-radius: 4px;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1.1rem;
+  }
+  .card-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    padding-bottom: 0.7rem;
+    margin-bottom: 0.9rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .card-index {
+    font-family: "Roboto Mono", ui-monospace, Consolas, monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    flex: none;
+  }
+  .card-head h2 { font-size: 1.06rem; margin: 0; font-weight: 600; flex: 1 1 auto; }
+  .badge {
+    flex: none;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .badge-done { background: #eaf5e4; color: #3d7327; border: 1px solid var(--leaf); }
+  .badge-open { background: #fdf1e3; color: #8a5810; border: 1px solid #E8920C; }
+  .field { display: grid; grid-template-columns: 9.5rem 1fr; gap: 1rem; padding: 0.4rem 0; }
+  .field + .field { border-top: 1px dotted var(--rule); }
+  .field-label {
+    font-size: 0.73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    padding-top: 0.2rem;
+  }
+  .field-value { font-size: 0.93rem; overflow-wrap: anywhere; }
+  footer { color: var(--muted); font-size: 0.8rem; padding: 0 1.5rem 2.5rem; }
+  @media (max-width: 40rem) {
+    .field { grid-template-columns: 1fr; gap: 0.15rem; }
+  }
+  @media print {
+    body { background: #fff; }
+    .card { break-inside: avoid; border-left-color: #999; }
+  }
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Claude Code session report</p>
+    <h1>Session CC-20261005-sh14</h1>
+    <p class="meta">1 change logged &middot; generated 2026-10-05T23:52:05.948Z</p>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">01</span>
+    <h2>STORY-018: centralize all bookings and manage their statuses</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-10-05</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value">three new service modules, one new route module, three edited, plus four new test files. NEW: <code>backend/src/services/booking/bookingStatusLifecycle.js</code> (PURE - the four-status vocabulary and the transition table that defines what an operations manager may do to a booking; no I/O, no clock, no store). <code>backend/src/services/booking/bookingStatusStore.js</code> (the write door: an OVERLAY store keyed on tripId holding status, previousStatus, version, changedBy and the two timestamps, committed through the shared <code>auditedCommit</code> so a change that cannot be audited is rolled back; also <code>auditRefusedChange</code> for attempts that changed nothing). <code>backend/src/services/booking/opsBookingBoard.js</code> (the JOIN and the use case: <code>listBookings</code>/<code>getBooking</code> assemble dashboard rows from the live <code>crm-transactions</code> ledger plus the overlay, and <code>updateBookingStatus</code> reads the current status itself, asks the lifecycle, then writes). <code>backend/src/http/routes/opsBookingRoutes.js</code> (GET <code>/api/ops/bookings</code>, GET <code>/api/ops/bookings/:tripId</code>, PATCH <code>/api/ops/bookings/:tripId/status</code>, with the refusal-reason to HTTP-status table). EDITED: <code>backend/src/http/routes/index.js</code> (register the module, last in the table); <code>backend/src/services/authz/permissions.js</code> (new <code>ops.bookings.read</code>/<code>ops.bookings.write</code>, new sixth role <code>operations_manager</code>, header roster updated); <code>backend/src/services/authz/permissions.test.js</code> (the exact-role-roster assertion is a deliberate tripwire that fails when a role is added - updated, plus a blast-radius block for the new role in the style of the five before it). Also <code>docs/stories/STORY-018.md</code> and the <code>.colaberry/progress.json</code> entry. NOT edited: <code>docs/REQUIREMENTS.md</code>, <code>docs/TRACEABILITY.md</code>, <code>server.js</code>.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value">125/125 <code>npm test</code> (was 121/121 at session start), <code>npm run typecheck</code> clean (mypy, 3 MCP packages + scripts), so <code>npm run verify</code> green end to end. AC-1: the board is asserted EMPTY, then <code>bookTrip</code> is called the way the application calls it, then the board is asked - so the row found can only have come from that booking, and it carries status <code>confirmed</code>, <code>statusVersion</code> 0, <code>statusChangedBy</code> null and <code>allowedNextStatuses</code> [in_progress, cancelled]. Over HTTP the same trip arrives at GET <code>/api/ops/bookings</code> with total 1 and <code>countsByStatus {confirmed: 1}</code>. AC-2: after a PATCH the dashboard is RE-QUERIED rather than the response trusted - row reads <code>in_progress</code>, <code>previousStatus</code> confirmed, <code>statusChangedBy</code> the authenticated principal (never the body), and the header counts move with it. AC-3: <code>booking.status.changed</code> read back through GET <code>/api/admin/audit</code> as an admin with actor, resource, the client's own X-Correlation-ID and a context of exactly {tripId, from, to, version}; a booking carried confirmed -&gt; in_progress -&gt; completed yields BOTH entries (v1 and v2), asserted by filtering the trail, not just the first. Idempotency: a replayed PATCH is 200 with <code>changed: false</code>, writes nothing, and the total audit count is asserted UNCHANGED with <code>...v2</code> asserted absent. Failure paths: an illegal transition is 409 naming the statuses that would work; a terminal booking cannot be reopened (409); a typo is 400 <code>unknown_target_status</code>, not 409; a missing booking is 404 on read and write; a malformed percent-encoded id is 400 not 500. Against stores told to misbehave: one that throws, one that silently loses the write, and one that keeps the OLD row are all caught as <code>not_saved</code> (the read-back compares VERSION, so staleness is caught and not just absence); an audit that throws rolls the row back - DELETED on a first change, RESTORED EXACTLY on a later one - and returns <code>audit_unavailable</code>, with no success entry surviving. Guardrail: 401 with no token and with an invented token, 403 for customer, advisor, sales, admin and product_manager on all three routes, asserted BEFORE any successful call so a 403 cannot be an accident of ordering; the board is then re-read to prove none of the refused requests moved the booking.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">SIX POINTS. (1) THE CENTRALISED BOOK WAS NOT BUILT, BECAUSE IT ALREADY EXISTED. <code>crm-transactions</code> is the one durable store every booking path writes to - one row per trip from <code>bookTripService</code>, one row per group MEMBER from <code>groupBookingService</code> carrying a <code>groupId</code>. <code>bookTripService</code> keeps its confirmed single bookings in an in-memory Map that does not survive a restart, so that ledger row is their only durable trace: reading it is not the convenient source, it is the only one still correct tomorrow. The board reads it LIVE on every call - no projection, no cache, no overnight job - which is what makes &quot;dashboard fails to display new bookings&quot; structurally hard rather than merely tested. (2) THE STATUS IS AN OVERLAY, NOT A COLUMN. <code>logTransaction</code> is deliberately idempotent by returning the existing row untouched, so the ledger cannot be updated through its own front door - a ledger that rewrites its rows is not a ledger. The overlay holds status, previousStatus, version and who/when, and NO customer, itinerary or money, so it cannot drift. The rejected alternative - copy every booking into our own table with a status column - buys a simpler query and costs a sync step that can fail, which is the exact failure path above. A booking with no overlay row is UNTOUCHED, not missing, and reads as <code>confirmed</code>. (3) THE VERSION IS WHAT MAKES &quot;ALL CHANGES ARE LOGGED&quot; TRUE. <code>auditedCommit</code> keys entries on id + <code>.vN</code>, and the audit log is first-write-wins: keyed on the tripId alone, the first status change would be recorded and every later one SILENTLY DISCARDED - the code would pass its other tests while quietly failing the trust criterion. (4) A SIXTH ROLE, NOT A GRANT ON AN EXISTING ONE. <code>admin</code> was refused because the role that reads the audit trail must not also be the role that can cancel a booking; <code>sales</code> because the board is every customer's booking at once, strictly wider than the relationship-scoped read <code>CRM_CUSTOMERS_READ</code> was argued for. The READ is the dangerous half here (every booking the agency holds, in one response) while the WRITE only walks a four-state lifecycle - the opposite of the usual intuition, and why the split matters. The role deliberately does NOT hold <code>admin.audit.read</code>, the CRM grants, or any write on products, packages, quotes or proposals. (5) ONE CORRECTION MADE DURING THE WORK: a comment claiming the metrics endpoint is <code>/api/ops/metrics</code> was wrong - it is <code>/api/admin/metrics</code> (only its PERMISSION is named <code>ops.metrics.read</code>) - and was fixed rather than left; nothing was broken by it. A test assumption was also wrong on first run: <code>deriveAuditKey</code> refuses only a BLANK or non-string base, not a short one, since the event discriminator it appends already clears the minimum length - the test now pins both sides of the real boundary. (6) NOT DONE, DELIBERATELY: no query-string filters on the list route - <code>listBookings</code> takes <code>status</code> and <code>groupId</code> and they are tested, but nothing in this pipeline reads query strings (<code>server.js</code> parses the pathname only, and no route in the system takes one), so exposing them means editing the central request pipeline every route shares for something no acceptance criterion asks; no <code>on_hold</code> status (a state invented ahead of the requirement asking for it is a state nobody can say is correct - one entry in <code>STATUSES</code> and two transition rows when one does); no bulk status endpoint (each change is its own audited decision); no delete route (that is what <code>cancelled</code> is for); and single-trip bookings were NOT made durable - that is a pre-existing limitation of the booking path this story reads around rather than fixes. REQUIREMENT ID: the brief cited REQ-012, which this repo already uses for the SUPPLIER requirement fulfilled by STORY-010 - <code>plan.json</code>'s REQ-012 carries <code>fulfilled_by: [STORY-010]</code> and TRACEABILITY.md row 20 agrees. <code>docs/REQUIREMENTS.md</code> and <code>docs/TRACEABILITY.md</code> were deliberately NOT edited: those are generated from the platform plan, and commit <code>fafedda</code> already reverted one hand-written requirement (REQ-019) for exactly that reason. The story doc records the citation and the discrepancy instead. <code>.colaberry/progress.json</code> <code>verification.state</code> left as <code>in_progress</code> with <code>commit_sha</code> null - same precedent as STORY-010, STORY-015, STORY-016 and STORY-017, since the platform writes those on sync; the plan has 16 stories and no STORY-017 or STORY-018, so a sync will drop this entry as it did once before (commit 9a6a756). NOT VERIFIED BY CI at the time of writing: every result above is local.</div></div>
+</article>
+  </div>
+</main>
+<footer>
+  <div class="wrap">
+    Generated from PROGRESS.md by scripts/generateSessionChangelog.js. Only entries
+    tagged <code>Session: CC-20261005-sh14</code> appear here.
+  </div>
+</footer>
+</body>
+</html>
