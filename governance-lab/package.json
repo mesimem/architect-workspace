@@ -1,14 +1,17 @@
 {
   "name": "governance-lab",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
-  "description": "A small acting agent: it proposes an action and an unguarded tool carries it out.",
+  "description": "An acting agent behind a gate that can allow, deny, or park an action for a named human.",
   "type": "module",
   "engines": {
     "node": ">=18"
   },
   "scripts": {
     "act": "node act.js",
-    "propose": "node agent.js"
+    "propose": "node agent.js",
+    "pending": "node govern.js pending",
+    "approve": "node govern.js approve",
+    "deny": "node govern.js deny"
   }
 }

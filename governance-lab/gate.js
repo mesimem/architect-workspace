@@ -5,99 +5,67 @@
 // the people who own the risk can read and argue about the rules without
 // reading JavaScript.
 //
+// Three verdicts. `allow` acts now. `deny` never acts. `escalate` parks the
+// action for a named human and acts only if that human says yes.
+//
 // Fail closed. An action no rule speaks to is denied, so the policy is a list
 // of what is permitted rather than a list of the harms someone imagined.
 
-import { appendFileSync, mkdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { append as audit } from './audit.js';
+import { compare, read } from './facts.js';
+import { assess, ceilingFor } from './risk.js';
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const POLICY_PATH = join(HERE, 'policy.json');
-const DECISIONS_PATH = join(HERE, 'data', 'decisions.jsonl');
-
-const NUMERIC_OPS = new Set(['gt', 'gte', 'lt', 'lte']);
-
-// Used to render the fact that lost, e.g. "amount 2400 exceeds 500".
-const PHRASES = {
-  eq: 'is',
-  neq: 'is not',
-  gt: 'exceeds',
-  gte: 'is at least',
-  lt: 'is below',
-  lte: 'is at most',
-};
 
 function loadPolicy() {
   return JSON.parse(readFileSync(POLICY_PATH, 'utf8'));
 }
 
-// Dotted paths so a future rule can reach into context, e.g. "context.rowCount".
-function read(action, field) {
-  return field.split('.').reduce((v, k) => (v == null ? undefined : v[k]), action);
+// Names the facts that cost points, so a reason is never just a number. A
+// verdict an approver cannot trace back to a fact is not reviewable.
+function signals(factors) {
+  const hits = factors.filter((factor) => factor.points > 0);
+  if (hits.length === 0) return 'no risk signals';
+
+  return hits
+    .map((f) => `${f.note} (${f.field} ${JSON.stringify(f.value)}, +${f.points})`)
+    .join('; ');
 }
 
-function holds(action, condition) {
-  const actual = read(action, condition.field);
-  switch (condition.op) {
-    case 'eq':
-      return actual === condition.value;
-    case 'neq':
-      return actual !== condition.value;
-    case 'gt':
-      return actual > condition.value;
-    case 'gte':
-      return actual >= condition.value;
-    case 'lt':
-      return actual < condition.value;
-    case 'lte':
-      return actual <= condition.value;
-    default:
-      throw new Error(
-        `policy.json rule uses an unknown operator "${condition.op}"`
-      );
-  }
-}
+function placement(verdict, model) {
+  const allowCeiling = ceilingFor(model, 'allow');
+  const escalateCeiling = ceilingFor(model, 'escalate');
 
-function fact(action, condition) {
-  const actual = JSON.stringify(read(action, condition.field) ?? null);
-  const limit = JSON.stringify(condition.value);
-  return `${condition.field} ${actual} ${PHRASES[condition.op]} ${limit}`;
+  if (verdict === 'allow') return `within the allow ceiling of ${allowCeiling}`;
+  if (verdict === 'escalate') return `above the allow ceiling of ${allowCeiling}`;
+  return `above the escalate ceiling of ${escalateCeiling}`;
 }
 
 function decide(action, policy) {
   for (const rule of policy.rules) {
-    if (!holds(action, rule.appliesTo)) continue;
+    const applies = compare(
+      rule.appliesTo.op,
+      read(action, rule.appliesTo.field),
+      rule.appliesTo.value
+    );
+    if (!applies) continue;
 
-    // A limit that cannot be compared is a limit that cannot be cleared.
-    // Without this, a refund with a null amount would slip through as allowed,
-    // because `null > 500` is false.
-    const actual = read(action, rule.deny.field);
-    if (
-      NUMERIC_OPS.has(rule.deny.op) &&
-      (typeof actual !== 'number' || Number.isNaN(actual))
-    ) {
-      return {
-        verdict: 'deny',
-        ruleId: rule.id,
-        reason: `${rule.id}: ${rule.deny.field} ${JSON.stringify(
-          actual ?? null
-        )} cannot be compared against ${JSON.stringify(rule.deny.value)}`,
-      };
-    }
-
-    if (holds(action, rule.deny)) {
-      return {
-        verdict: 'deny',
-        ruleId: rule.id,
-        reason: `${rule.id}: ${fact(action, rule.deny)}`,
-      };
-    }
+    const risk = assess(action, rule.risk);
 
     return {
-      verdict: 'allow',
+      verdict: risk.verdict,
       ruleId: rule.id,
-      reason: `${rule.id}: ${rule.allowReason}`,
+      reason: `${rule.id}: risk ${risk.score} ${placement(
+        risk.verdict,
+        rule.risk
+      )} — ${signals(risk.factors)}`,
+      risk,
+      escalateTo: rule.escalateTo ?? 'a named human',
     };
   }
 
@@ -106,31 +74,27 @@ function decide(action, policy) {
     verdict: fallback.verdict,
     ruleId: fallback.ruleId,
     reason: fallback.reason,
+    risk: null,
+    escalateTo: null,
   };
 }
 
 // A denial is a decision somebody will question later, so it is recorded
 // exactly as carefully as an approval. Recording happens inside evaluate:
 // there is no way to get a verdict without leaving a record of it.
-function record(action, decision) {
-  const entry = {
+export function evaluate(action) {
+  const decision = decide(action, loadPolicy());
+
+  audit({
+    event: 'evaluation',
     actionId: action.actionId,
     actionType: action.actionType,
     amount: action.amount,
     verdict: decision.verdict,
     ruleId: decision.ruleId,
+    riskScore: decision.risk?.score ?? null,
     reason: decision.reason,
-    at: new Date().toISOString(),
-  };
+  });
 
-  mkdirSync(dirname(DECISIONS_PATH), { recursive: true });
-  appendFileSync(DECISIONS_PATH, `${JSON.stringify(entry)}\n`, 'utf8');
-
-  return entry;
-}
-
-export function evaluate(action) {
-  const decision = decide(action, loadPolicy());
-  record(action, decision);
   return decision;
 }

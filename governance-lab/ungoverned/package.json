@@ -1,0 +1,14 @@
+{
+  "name": "governance-lab-ungoverned",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The control case: the same agent with the gate removed. Writes only to ungoverned/data/.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "act": "node act.js",
+    "propose": "node agent.js"
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
 
   "default": {
     "verdict": "deny",
@@ -10,10 +10,132 @@
   "rules": [
     {
       "id": "refund-limit",
-      "description": "Refunds up to $500 are permitted. Above that, a human decides.",
+      "description": "A refund is scored on five factors. Low risk goes through; middling risk waits for a named human; high risk is refused outright. The $500 limit lives in the amount factor below, so a large refund with clean facts reaches a person rather than a wall.",
       "appliesTo": { "field": "actionType", "op": "eq", "value": "refund" },
-      "deny": { "field": "amount", "op": "gt", "value": 500 },
-      "allowReason": "amount within the 500 refund limit"
+      "escalateTo": "support-lead",
+
+      "risk": {
+        "factors": [
+          {
+            "id": "amount",
+            "label": "Refund amount (USD)",
+            "field": "amount",
+            "tiers": [
+              {
+                "op": "gt",
+                "value": 2000,
+                "points": 40,
+                "note": "far above the $500 refund limit"
+              },
+              {
+                "op": "gt",
+                "value": 500,
+                "points": 25,
+                "note": "above the $500 refund limit"
+              }
+            ],
+            "points": 0,
+            "note": "within the $500 refund limit",
+            "uncomparable": {
+              "points": 40,
+              "note": "amount is missing, so the $500 limit cannot be cleared"
+            }
+          },
+          {
+            "id": "accountAge",
+            "label": "Account age (days)",
+            "field": "context.accountAgeDays",
+            "tiers": [
+              {
+                "op": "lt",
+                "value": 30,
+                "points": 20,
+                "note": "account is under 30 days old"
+              },
+              {
+                "op": "lt",
+                "value": 180,
+                "points": 10,
+                "note": "account is under 180 days old"
+              }
+            ],
+            "points": 0,
+            "note": "established account",
+            "uncomparable": {
+              "points": 20,
+              "note": "account age unknown"
+            }
+          },
+          {
+            "id": "refundVelocity",
+            "label": "Prior refunds today",
+            "field": "context.priorRefundsToday",
+            "tiers": [
+              {
+                "op": "gte",
+                "value": 3,
+                "points": 20,
+                "note": "three or more refunds already today"
+              },
+              {
+                "op": "gte",
+                "value": 1,
+                "points": 8,
+                "note": "already refunded today"
+              }
+            ],
+            "points": 0,
+            "note": "first refund today",
+            "uncomparable": {
+              "points": 20,
+              "note": "refund history unknown"
+            }
+          },
+          {
+            "id": "addressChange",
+            "label": "Address changed after the order",
+            "field": "context.addressChangedAfterOrder",
+            "tiers": [
+              {
+                "op": "eq",
+                "value": true,
+                "points": 25,
+                "note": "delivery address changed after the order was placed"
+              }
+            ],
+            "points": 0,
+            "note": "address unchanged since the order"
+          },
+          {
+            "id": "blastRadius",
+            "label": "Records affected",
+            "field": "context.rowCount",
+            "whenMissing": 1,
+            "tiers": [
+              {
+                "op": "gt",
+                "value": 1000,
+                "points": 40,
+                "note": "touches more than 1000 records"
+              },
+              {
+                "op": "gt",
+                "value": 1,
+                "points": 15,
+                "note": "touches more than one record"
+              }
+            ],
+            "points": 0,
+            "note": "touches a single record"
+          }
+        ],
+
+        "bands": [
+          { "verdict": "allow", "max": 20 },
+          { "verdict": "escalate", "max": 74 },
+          { "verdict": "deny" }
+        ]
+      }
     }
   ]
 }
