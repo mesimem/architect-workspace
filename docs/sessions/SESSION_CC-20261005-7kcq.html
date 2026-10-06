@@ -110,7 +110,7 @@
   <div class="wrap">
     <p class="eyebrow">Claude Code session report</p>
     <h1>Session CC-20261005-7kcq</h1>
-    <p class="meta">2 changes logged &middot; generated 2026-10-06T01:41:13.735Z</p>
+    <p class="meta">3 changes logged &middot; generated 2026-10-06T01:59:18.809Z</p>
   </div>
 </header>
 <main>
@@ -136,6 +136,17 @@
 <div class="field"><div class="field-label">What changed</div><div class="field-value"><code>command-center/</code> rewired to read <code>.colaberry/plan.json</code>, <code>progress.json</code> and <code>manifest.json</code> at runtime (<code>assets/data.js</code> is now a loader + pure join, no project content); <code>assets/site.js</code> makes all 9 tabs real links, adds the &quot;Data as of&quot; stamp (red over 7 days), <code>?mode=sample|real</code>, and shared card/detail helpers; Overview rebuilt from the model; 8 tabs built (<code>outcomes</code>, <code>users</code>, <code>guardrails</code>, <code>systems</code>, <code>pm</code> with a Gantt + due/baseline/slip table, <code>agents</code> as story owners, <code>kb</code> with a traceability table, notes and a deterministic Q&amp;A panel in <code>assets/kbChat.js</code>, <code>data-model</code>); one-level-down <code>detail.html</code> + <code>assets/detail.js</code>; <code>command-center/data-model.json</code> (the 16 stores the backend actually creates, extracted from code) and <code>command-center/kb-notes.json</code>; root <code>index.html</code> redirect and <code>.nojekyll</code>; <code>.colaberry/enrichment/STORY-000.json</code>; STORY-000 criteria ticked in <code>progress.json</code> and the story file.</div></div>
 <div class="field"><div class="field-label">Verification</div><div class="field-value"><code>npm test</code> 134/134 pass, including <code>tests/commandCenter.test.js</code> (join on story id, deleted story leaves the page, guardrails kept only by verified stories, stamp ages and warns after a week, sample labelled and non-mutating, roles/owners/releases/slippage, data model matches every non-test <code>createJsonFileStore</code> call, chat answers from data and refuses outside it, all 9 tab pages exist, no project content in any page). Every tab, two detail pages and Sample mode rendered in headless Chrome against a local server and checked by eye.</div></div>
 <div class="field"><div class="field-label">Notes</div><div class="field-value">Real mode now shows 16/17 verified, STORY-017/018 as &quot;not checked yet&quot; (in the plan, not in progress.json), REQ-016 as an uncovered requirement, and STORY-012 slipped 39 days. The data model is read from the backend rather than designed, and records that no store holds a customer entity. Q&amp;A is keyword matching, not an LLM (a static public page cannot hold a key). GitHub Pages not turned on (optional Step 4) and the push webhook (Step 1) skipped - both still available.</div></div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">03</span>
+    <h2>Revert the hand-republished plan (ba31274) so the platform manages plan.json again</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-10-05</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value"><code>git revert ba31274</code> - <code>.colaberry/plan.json</code> back to the platform's 16-story, 18-requirement version (STORY-017/018, REQ-019/020 and the &quot;operations manager&quot; role removed; r3 back to STORY-009/010/016). <code>tests/commandCenter.test.js</code>: a data-model store may now cite a story that is in the plan OR has a <code>docs/stories/</code> file, since two stores were built by STORY-017/018.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value">committed <code>plan.json</code> hashes to 91c6c6b5...e1df3a, exactly the sha256 the platform recorded for it in <code>manifest.json</code>, so syncs should refresh it again; <code>npm test</code> 134/134.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">Operator decision. STORY-017/018 code, tests, story docs and commits are untouched - they still need to be added in the portal to verify. <code>ba31274</code> carried no Session ID and had no PROGRESS.md entry; by timing (19:09, two minutes after CC-20261005-sh14's last commit) it was most likely that session, unconfirmed.</div></div>
 </article>
   </div>
 </main>
