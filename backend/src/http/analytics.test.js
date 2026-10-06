@@ -19,6 +19,7 @@ const { findAuditEntry } = require("../services/audit/auditLog");
 const { AUDIT_EVENT } = require("../services/analytics/analyticsService");
 
 const ADMIN_TOKEN = "test-admin-token-analytics";
+const MANAGER_TOKEN = "test-manager-token-analytics";
 const FINANCE_TOKEN = "test-finance-token-analytics";
 const CUSTOMER_TOKEN = "test-customer-token-analytics";
 const ADVISOR_TOKEN = "test-advisor-token-analytics";
@@ -26,6 +27,7 @@ const SALES_TOKEN = "test-sales-token-analytics";
 
 const TOKENS = [
   ADMIN_TOKEN + ":admin:ADMIN-AN-1",
+  MANAGER_TOKEN + ":manager:MGR-AN-1",
   FINANCE_TOKEN + ":finance:FIN-AN-1",
   CUSTOMER_TOKEN + ":customer:CUST-AN-1",
   ADVISOR_TOKEN + ":advisor:ADV-AN-1",
@@ -58,8 +60,8 @@ async function main() {
   }
 
   try {
-    // AC1 over HTTP: admin and finance see revenue and booking trends.
-    for (const token of [ADMIN_TOKEN, FINANCE_TOKEN]) {
+    // AC1 over HTTP: the manager and finance see revenue and booking trends.
+    for (const token of [MANAGER_TOKEN, FINANCE_TOKEN]) {
       const res = await get(token);
       assert.strictEqual(res.status, 200, JSON.stringify(res.body));
       const { analytics } = res.body;
@@ -70,7 +72,7 @@ async function main() {
         { month: booked.bookedAt.slice(0, 7), bookings: 1, revenueCents: booked.amountCents },
       ]);
     }
-    console.log("analytics http: admin and finance see the revenue trend");
+    console.log("analytics http: the manager and finance see the revenue trend");
 
     // AC3 over HTTP: the request's correlation id keys the audit entry.
     const traced = await get(FINANCE_TOKEN, "trace-analytics-0001");
@@ -80,8 +82,9 @@ async function main() {
     assert.strictEqual(entry.actor, "FIN-AN-1");
     console.log("analytics http: the dashboard request is audited under its correlation id");
 
-    // Access control: everyone else is refused, and no token is a 401.
-    for (const token of [CUSTOMER_TOKEN, ADVISOR_TOKEN, SALES_TOKEN]) {
+    // Access control: everyone else is refused - admin included, since it reads
+    // the audit trail of analytics runs - and no token is a 401.
+    for (const token of [ADMIN_TOKEN, CUSTOMER_TOKEN, ADVISOR_TOKEN, SALES_TOKEN]) {
       const res = await get(token);
       assert.strictEqual(res.status, 403, "expected 403 for " + token);
       assert.strictEqual(res.body.analytics, undefined);
@@ -89,7 +92,7 @@ async function main() {
     const anonymous = await get(null);
     assert.strictEqual(anonymous.status, 401);
     assert.strictEqual(anonymous.body.analytics, undefined);
-    console.log("analytics http: other roles get 403, no token gets 401");
+    console.log("analytics http: admin and other roles get 403, no token gets 401");
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

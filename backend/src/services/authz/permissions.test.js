@@ -129,11 +129,25 @@ function main() {
     "advisor",
     "customer",
     "finance",
+    "manager",
     "operations_manager",
     "product_manager",
     "sales",
   ]);
   console.log("permissions: catalog and grant table agree, with no orphans on either side");
+
+  // STORY-012: analytics belong to the manager and finance, and the manager
+  // holds nothing else. Admin is refused by name - it reads the audit trail
+  // that records every analytics run.
+  assert.deepStrictEqual(permissionsFor("manager").slice().sort(), [
+    PERMISSIONS.ANALYTICS_READ,
+    PERMISSIONS.PORTAL_SESSION_END,
+  ].sort());
+  assert.strictEqual(can("finance", PERMISSIONS.ANALYTICS_READ), true);
+  for (const role of ["admin", "customer", "advisor", "sales", "product_manager", "operations_manager"]) {
+    assert.strictEqual(can(role, PERMISSIONS.ANALYTICS_READ), false, role + " must not hold analytics.read");
+  }
+  console.log("permissions: analytics are read by the manager and finance alone");
 
   // STORY-014: the CRM grants, stated as the blast radius of a leaked token
   // rather than as a list of features. Each negative below is a rule from this

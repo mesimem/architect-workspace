@@ -30,6 +30,8 @@
 //                     NOT the audit trail that records what they did.
 //   finance         - payment accounts: opens what a customer owes, reads
 //                     balances. NOT paying on a customer's behalf (STORY-011).
+//   manager         - revenue and booking analytics, as aggregates. NOT any
+//                     single booking, balance or customer (STORY-012).
 //
 // STORY-015 added `product_manager` for the same reason STORY-014 added
 // `sales`, and against the same alternative. Giving the product grants to
@@ -183,10 +185,6 @@ const ROLE_PERMISSIONS = Object.freeze({
     // percentiles to sell a safari, and a customer holding this would learn
     // how close the agency is to its capacity ceiling.
     PERMISSIONS.OPS_METRICS_READ,
-    // STORY-012: aggregate revenue and booking trends, for running the business.
-    // Aggregates only - no customer record, no single booking - so this does not
-    // breach "ADMIN IS NOT A SUPERUSER" above.
-    PERMISSIONS.ANALYTICS_READ,
     // Note what is absent: PORTAL_TRIPS_READ, ADVISOR_REVIEWS_READ,
     // REQUESTS_TRIAGE. An admin administers; it does not get to read customer
     // itineraries as a perk of the job. See "ADMIN IS NOT A SUPERUSER" above.
@@ -298,6 +296,19 @@ const ROLE_PERMISSIONS = Object.freeze({
     PERMISSIONS.PAYMENTS_ACCOUNTS_WRITE,
     // STORY-012: revenue trends are finance's own question.
     PERMISSIONS.ANALYTICS_READ,
+    PERMISSIONS.PORTAL_SESSION_END,
+  ]),
+
+  // STORY-012. The manager the story names: reads revenue and booking trends to
+  // make business decisions. An eighth role rather than a grant on admin, for
+  // the reason given for operations_manager and finance - admin reads the audit
+  // trail, and the trail records every analytics run, so the person running the
+  // numbers and the person reviewing who ran them stay two people. Aggregates
+  // only: deliberately absent are OPS_BOOKINGS_READ, PAYMENTS_ACCOUNTS_READ and
+  // CRM_* (no single booking, balance or customer), and every write.
+  manager: Object.freeze([
+    PERMISSIONS.ANALYTICS_READ,
+    // Ending your own session is not a privilege - same reasoning as advisor.
     PERMISSIONS.PORTAL_SESSION_END,
   ]),
 });
