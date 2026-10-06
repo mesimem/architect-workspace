@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-10-06T02:08:53.526Z",
-  "plan_version": 3,
-  "plan_sha256": "ce8be6a8aa8cdbbe785218e8b34ecc0e7ac76ea565cdcc53d132f8b328737493",
+  "generated_at": "2026-10-06T02:09:51.423Z",
+  "plan_version": 4,
+  "plan_sha256": "677b38dbd45f063ae937120a2870c1a72336c47e27682230e50ed17884ca50f4",
   "correlation_id": null,
   "project_id": "aa94af89-8d07-4ef4-96ec-ea775c53d2ed",
   "truth_revision": null,
   "files": [
     {
       "path": "docs/REQUIREMENTS.md",
-      "sha256": "ca9d08f725452b6a6d0446f16b1b8ba3a7a25ed9af48c318a063c5945e8a7ffa"
+      "sha256": "e519cb5f3010fd135c697bd9198041f428efd0e4f926702fae41f497de19f265"
     },
     {
       "path": "docs/STORIES.md",
-      "sha256": "921ce7bc491f1ff9179c6c42b780491aa2e20e37aafe293ebfdf7811344e8bef"
+      "sha256": "789b0f8037b4dc393a89f24c648ea47fdad5339527356a0403457d82c68aee44"
     },
     {
       "path": "docs/TRACEABILITY.md",
-      "sha256": "c8f2d2f0a94f22f1b35e3982da87e6edfa650704d3ff7906ecb1e13742dd9ac2"
+      "sha256": "96383b5571a7c861c58f4fb9ca4dd2756442e26c9cd70792624d72a840e96a28"
     },
     {
       "path": "docs/DATA_CONTRACT.md",
@@ -95,16 +95,20 @@
       "sha256": "bfa92b12e4348412928fe607ba562b2207ba7c5556fa00e9a5b285e5ed7ee0d6"
     },
     {
+      "path": "docs/stories/STORY-018.md",
+      "sha256": "4375a263f852e2d59e5c7585e48c49b8770d2cc8095343dd1a14c4f425357cff"
+    },
+    {
       "path": "docs/stories/STORY-000.md",
-      "sha256": "9503425b5931530d98206e0dc7333050a0a064be6406b88e3aae6a42e0bcb672"
+      "sha256": "5bee02e162eab387a4ab596f4d22c697b8afcba91d9047ab1d70f27770680b3c"
     },
     {
       "path": ".colaberry/plan.json",
-      "sha256": "fe30de3b6666a2c6e1024c81cc60a964bfa75aa27e3df5961e50ce92d87792f5"
+      "sha256": "0dbbb3de7a6e6ce55abc67c13694f2522f8aa8bc1d36fccfea4db91f8c35f60b"
     },
     {
       "path": ".colaberry/progress.json",
-      "sha256": "7048ed124bcb4301d0854c7e082edc227c7c7649c9cd4ce8b13f39e0ac1250f2"
+      "sha256": "ea04117bec0d35cc0d294a3aee79c9ba90ec7519b7dcd1829bd4777aa8128df2"
     },
     {
       "path": ".colaberry/profile.json",

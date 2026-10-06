@@ -150,6 +150,12 @@ The system must let a travel advisor combine multiple travel products into one p
 
 Fulfilled by: STORY-017
 
+### REQ-020 — Functional · should
+
+The system must let an operations manager centralize all bookings and manage their statuses.
+
+Fulfilled by: STORY-018
+
 ## Supplier Management
 
 ### REQ-012 — Functional · must

@@ -2,11 +2,11 @@
   "schema_version": 2,
   "project": "U.S.-based Full-Service Travel Agency Platform",
   "totals": {
-    "stories_total": 18,
+    "stories_total": 19,
     "stories_verified": 17,
     "stories_submitted": 0,
     "stories_in_progress": 0,
-    "stories_not_started": 1,
+    "stories_not_started": 2,
     "criteria_total": 53,
     "criteria_passed": 53,
     "points_awarded": 799
@@ -887,6 +887,40 @@
         },
         {
           "text": "Trust: The system logs all package creation and modification details in the audit trail.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": {
+        "state": "not_started",
+        "criteria_passed": 0,
+        "criteria_total": 0,
+        "verified_at": null,
+        "commit_sha": null,
+        "commit_url": null,
+        "commit_at": null,
+        "points_awarded": null,
+        "outstanding": []
+      }
+    },
+    {
+      "id": "STORY-018",
+      "release": "r3",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given a new booking is created, when the manager views the booking dashboard, then the system displays the booking with its current status.",
+          "passed": false
+        },
+        {
+          "text": "Given a booking status is updated, when the manager saves the changes, then the system reflects the updated status in the dashboard.",
+          "passed": false
+        },
+        {
+          "text": "Trust: The system logs all booking status changes in the audit trail.",
           "passed": false
         }
       ],

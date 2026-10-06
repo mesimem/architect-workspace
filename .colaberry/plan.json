@@ -190,6 +190,16 @@
       "fulfilled_by": [
         "STORY-017"
       ]
+    },
+    {
+      "id": "REQ-020",
+      "kind": "FUNC",
+      "cluster": "Student Additions",
+      "priority": "should",
+      "statement": "The system must let an operations manager centralize all bookings and manage their statuses.",
+      "fulfilled_by": [
+        "STORY-018"
+      ]
     }
   ],
   "releases": [
@@ -254,9 +264,10 @@
         "STORY-009",
         "STORY-010",
         "STORY-016",
-        "STORY-017"
+        "STORY-017",
+        "STORY-018"
       ],
-      "starts_on": "2026-09-12",
+      "starts_on": "2026-09-11",
       "ends_on": "2026-09-17",
       "is_demo_target": false
     },
@@ -501,7 +512,7 @@
         "AI processing error"
       ],
       "task_guidance": "Develop AI module to process customer preferences and suggest trips.",
-      "due_on": "2026-09-12",
+      "due_on": "2026-09-11",
       "due_baseline_on": "2026-09-12"
     },
     {
@@ -527,7 +538,7 @@
         "Update failure"
       ],
       "task_guidance": "Develop supplier management module for adding and updating supplier details.",
-      "due_on": "2026-09-14",
+      "due_on": "2026-09-13",
       "due_baseline_on": "2026-09-15"
     },
     {
@@ -683,7 +694,7 @@
         "Network latency"
       ],
       "task_guidance": "Implement load balancing and performance monitoring to ensure system scalability.",
-      "due_on": "2026-09-15",
+      "due_on": "2026-09-14",
       "due_baseline_on": "2026-09-17"
     },
     {
@@ -702,8 +713,27 @@
       "owner_agent": "Travel Advisor",
       "failure_paths": [],
       "task_guidance": "Implement exactly what the acceptance lines describe for this story, and nothing that belongs to another one.",
-      "due_on": "2026-09-17",
+      "due_on": "2026-09-16",
       "due_baseline_on": "2026-09-19"
+    },
+    {
+      "id": "STORY-018",
+      "title": "STORY-018: Centralize all bookings and manage their statuses",
+      "release": "r3",
+      "fulfills": [
+        "REQ-020"
+      ],
+      "narrative": "As an operations manager, I want to centralize all bookings and manage their statuses, so that I can efficiently oversee operations.",
+      "acceptance": [
+        "Given a new booking is created, when the manager views the booking dashboard, then the system displays the booking with its current status.",
+        "Given a booking status is updated, when the manager saves the changes, then the system reflects the updated status in the dashboard.",
+        "Trust: The system logs all booking status changes in the audit trail."
+      ],
+      "owner_agent": "Travel Advisor",
+      "failure_paths": [],
+      "task_guidance": "Implement exactly what the acceptance lines describe for this story, and nothing that belongs to another one.",
+      "due_on": "2026-09-17",
+      "due_baseline_on": "2026-09-21"
     }
   ],
   "agents": [],
@@ -711,8 +741,8 @@
     "name": "U.S.-based Full-Service Travel Agency Platform",
     "descriptor": "A platform specializing in African travel, offering a comprehensive range of travel services and AI-assisted features.",
     "repo_url": "https://github.com/mesimem/architect-workspace",
-    "plan_version": 3,
-    "plan_sha256": "ce8be6a8aa8cdbbe785218e8b34ecc0e7ac76ea565cdcc53d132f8b328737493"
+    "plan_version": 4,
+    "plan_sha256": "677b38dbd45f063ae937120a2870c1a72336c47e27682230e50ed17884ca50f4"
   },
   "schedule": {
     "build_start": "2026-08-20",
@@ -783,17 +813,18 @@
       "manager",
       "sales manager",
       "product manager",
-      "system architect"
+      "system architect",
+      "operations manager"
     ],
     "counts": {
-      "requirements_total": 19,
+      "requirements_total": 20,
       "requirements_by_kind": {
         "CONSTRAINT": 1,
-        "FUNC": 14,
+        "FUNC": 15,
         "NFR": 1,
         "SAFE": 3
       },
-      "stories_total": 17,
+      "stories_total": 18,
       "releases_total": 5,
       "agents_total": 0,
       "failure_paths_total": 45,
