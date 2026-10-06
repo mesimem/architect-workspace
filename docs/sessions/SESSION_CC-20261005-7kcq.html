@@ -110,7 +110,7 @@
   <div class="wrap">
     <p class="eyebrow">Claude Code session report</p>
     <h1>Session CC-20261005-7kcq</h1>
-    <p class="meta">7 changes logged &middot; generated 2026-10-06T02:44:35.342Z</p>
+    <p class="meta">8 changes logged &middot; generated 2026-10-06T03:01:42.286Z</p>
   </div>
 </header>
 <main>
@@ -191,6 +191,17 @@
 <div class="field"><div class="field-label">What changed</div><div class="field-value">NEW <code>scripts/demo.js</code> - starts the real backend in-process on a random local port and narrates 7 steps over HTTP: book a trip (service call; no booking route exists), idempotent retry, portal sign-in + itinerary + wrong password, role-based refusals for 4 roles, triage clear vs flagged + advisor queue, segment + campaign sent twice with nobody emailed twice, admin audit trail newest first. <code>--auto</code> runs unattended. <code>scripts/README.md</code> documents it.</div></div>
 <div class="field"><div class="field-label">Verification</div><div class="field-value">ran end to end in <code>--auto</code> (all 7 steps, expected statuses: 200/401/403/201), interactively with piped Enter presses (7 pauses, exits), and with input closing early (finishes). No test file: a presentation script, every behaviour it shows is covered by the existing suites.</div></div>
 <div class="field"><div class="field-label">Notes</div><div class="field-value">Operator asked for it for Demo Day. First run caught two script bugs before shipping (portal list is <code>itineraries</code>, audit is newest first) and a pause that hung on piped input (one reader per pause) - all fixed. GitHub Pages could not be enabled from here: <code>gh</code> is not installed and the STORY-000 brief forbids installing it; the operator enables it in the repo settings.</div></div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">08</span>
+    <h2>Fix: single-trip bookings lost after a restart (trip id reuse)</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-10-05</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value"><code>backend/src/services/booking/bookTripService.js</code> - trip id is now <code>tripIdFor(idempotencyKey)</code> (TRIP- + first 16 hex of SHA-256 of the key) instead of a per-process counter; <code>recoverBooking</code> looks a key the in-memory map does not know up in the CRM log by that id, so a replay after a restart returns the original trip (no second charge) and key reuse after a restart is still a conflict. <code>crmTransactionLog.js</code> gains <code>findTransaction(tripId)</code>. <code>mcp/booking-desk/booking.py</code> uses the same derivation (<code>trip_id_for</code>), kept in step per its header. NEW <code>bookTripService.restart.test.js</code>.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value"><code>npm run verify</code> green - 138/138 (new restart test), mypy clean incl. booking-desk. The new test runs each &quot;restart&quot; as a separate Node process on a shared data dir: two bookings -&gt; two trip ids and two CRM rows; retry after restart -&gt; replayed, same id, no extra row; same key for another customer -&gt; idempotency_conflict. Confirmed it FAILS on the old code (&quot;a booking after a restart must not reuse a trip id&quot;). JS and Python produce the identical id for the same key. <code>scripts/demo.js --auto</code> still passes all 7 steps.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">Only happened with COLABERRY_DATA_DIR set (production); tests run in memory, which is why the suite never caught it. Group bookings were already safe (hash-derived ids). Rows written under the old TRIP-n ids stay valid and cannot collide with the new format. Still not handled: two processes racing on one key at the same instant (needs a DB unique constraint).</div></div>
 </article>
   </div>
 </main>
