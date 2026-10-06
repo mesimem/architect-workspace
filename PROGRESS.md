@@ -508,3 +508,10 @@
   - What changed: `command-center/assets/data.js` `phaseOf` now takes the FIRST release covering today instead of the last; `tests/commandCenter.test.js` gains an overlapping-releases case.
   - Verification: `npm run verify` green - 137/137, mypy clean. Found during the 000-019 audit: platform sync 7de5144 rescheduled all five releases (and build start/end) onto 2026-10-01, which made the existing phase test fail (r4 returned instead of r0).
   - Notes: The reschedule itself is platform-side and was not touched. Audit also found (not fixed here, reported to the operator): single-trip bookings reuse TRIP-1.. after a restart when COLABERRY_DATA_DIR is set, so a post-restart booking is charged but never reaches the CRM log - reproduced with two processes sharing a data dir.
+
+- [x] Demo Day walkthrough script
+  - Date: 2026-10-05
+  - Session: CC-20261005-7kcq
+  - What changed: NEW `scripts/demo.js` - starts the real backend in-process on a random local port and narrates 7 steps over HTTP: book a trip (service call; no booking route exists), idempotent retry, portal sign-in + itinerary + wrong password, role-based refusals for 4 roles, triage clear vs flagged + advisor queue, segment + campaign sent twice with nobody emailed twice, admin audit trail newest first. `--auto` runs unattended. `scripts/README.md` documents it.
+  - Verification: ran end to end in `--auto` (all 7 steps, expected statuses: 200/401/403/201), interactively with piped Enter presses (7 pauses, exits), and with input closing early (finishes). No test file: a presentation script, every behaviour it shows is covered by the existing suites.
+  - Notes: Operator asked for it for Demo Day. First run caught two script bugs before shipping (portal list is `itineraries`, audit is newest first) and a pause that hung on piped input (one reader per pause) - all fixed. GitHub Pages could not be enabled from here: `gh` is not installed and the STORY-000 brief forbids installing it; the operator enables it in the repo settings.
