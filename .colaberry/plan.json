@@ -226,9 +226,9 @@
         "STORY-003",
         "STORY-004"
       ],
-      "starts_on": "2026-08-22",
-      "ends_on": "2026-08-27",
-      "is_demo_target": false
+      "starts_on": "2026-10-01",
+      "ends_on": "2026-10-01",
+      "is_demo_target": true
     },
     {
       "key": "r1",
@@ -242,9 +242,9 @@
         "STORY-006",
         "STORY-014"
       ],
-      "starts_on": "2026-08-29",
-      "ends_on": "2026-09-03",
-      "is_demo_target": true
+      "starts_on": "2026-10-01",
+      "ends_on": "2026-10-01",
+      "is_demo_target": false
     },
     {
       "key": "r2",
@@ -259,8 +259,8 @@
         "STORY-013",
         "STORY-015"
       ],
-      "starts_on": "2026-09-05",
-      "ends_on": "2026-09-10",
+      "starts_on": "2026-10-01",
+      "ends_on": "2026-10-01",
       "is_demo_target": false
     },
     {
@@ -277,8 +277,8 @@
         "STORY-017",
         "STORY-018"
       ],
-      "starts_on": "2026-09-11",
-      "ends_on": "2026-09-17",
+      "starts_on": "2026-10-01",
+      "ends_on": "2026-10-01",
       "is_demo_target": false
     },
     {
@@ -293,7 +293,7 @@
         "STORY-012",
         "STORY-019"
       ],
-      "starts_on": "2026-09-22",
+      "starts_on": "2026-10-01",
       "ends_on": "2026-10-01",
       "is_demo_target": false
     }
@@ -320,7 +320,7 @@
         "Invalid customer details"
       ],
       "task_guidance": "Implement booking flow for flights, hotels, and safaris. Ensure CRM integration for transaction logging.",
-      "due_on": "2026-08-22",
+      "due_on": "2026-10-01",
       "due_baseline_on": "2026-08-22"
     },
     {
@@ -344,7 +344,7 @@
         "System timeout"
       ],
       "task_guidance": "Develop African travel section with safari details and CRM logging for interactions.",
-      "due_on": "2026-08-24",
+      "due_on": "2026-10-01",
       "due_baseline_on": "2026-08-24"
     },
     {
@@ -368,7 +368,7 @@
         "Advisor notification failure"
       ],
       "task_guidance": "Implement request processing logic to identify and flag unclear requests for review.",
-      "due_on": "2026-08-25",
+      "due_on": "2026-10-01",
       "due_baseline_on": "2026-08-25"
     },
     {
@@ -393,7 +393,7 @@
         "Unauthorized access attempt"
       ],
       "task_guidance": "Ensure integration with the specified accounting software API for transaction logging and audit trail creation.",
-      "due_on": "2026-08-27",
+      "due_on": "2026-10-01",
       "due_baseline_on": "2026-08-27"
     },
     {
@@ -419,7 +419,7 @@
         "Unauthorized access"
       ],
       "task_guidance": "Develop secure login and portal access for customers to view and manage trips.",
-      "due_on": "2026-08-29",
+      "due_on": "2026-10-01",
       "due_baseline_on": "2026-08-29"
     },
     {
@@ -445,7 +445,7 @@
         "Role assignment error"
       ],
       "task_guidance": "Implement role-based access control for different user roles.",
-      "due_on": "2026-09-01",
+      "due_on": "2026-10-01",
       "due_baseline_on": "2026-09-01"
     },
     {
@@ -471,7 +471,7 @@
         "Customer view error"
       ],
       "task_guidance": "Develop quote generation system with customer-friendly output and internal logging.",
-      "due_on": "2026-09-05",
+      "due_on": "2026-10-01",
       "due_baseline_on": "2026-09-05"
     },
     {
@@ -497,7 +497,7 @@
         "Booking confirmation failure"
       ],
       "task_guidance": "Implement group booking functionality with shared itinerary and CRM logging.",
-      "due_on": "2026-09-07",
+      "due_on": "2026-10-01",
       "due_baseline_on": "2026-09-07"
     },
     {
@@ -523,7 +523,7 @@
         "AI processing error"
       ],
       "task_guidance": "Develop AI module to process customer preferences and suggest trips.",
-      "due_on": "2026-09-11",
+      "due_on": "2026-10-01",
       "due_baseline_on": "2026-09-12"
     },
     {
@@ -549,7 +549,7 @@
         "Update failure"
       ],
       "task_guidance": "Develop supplier management module for adding and updating supplier details.",
-      "due_on": "2026-09-13",
+      "due_on": "2026-10-01",
       "due_baseline_on": "2026-09-15"
     },
     {
@@ -575,7 +575,7 @@
         "Transaction not logged"
       ],
       "task_guidance": "Implement payment processing and balance tracking with integration to accounting software.",
-      "due_on": "2026-09-22",
+      "due_on": "2026-10-01",
       "due_baseline_on": "2026-09-24"
     },
     {
@@ -601,7 +601,7 @@
         "Dashboard error"
       ],
       "task_guidance": "Develop analytics dashboard for revenue and booking data visualization.",
-      "due_on": "2026-09-26",
+      "due_on": "2026-10-01",
       "due_baseline_on": "2026-08-23"
     },
     {
@@ -627,7 +627,7 @@
         "System crash during proposal creation"
       ],
       "task_guidance": "Develop a user interface for travel advisors to input trip details and generate proposals quickly.",
-      "due_on": "2026-09-08",
+      "due_on": "2026-10-01",
       "due_baseline_on": "2026-09-08"
     },
     {
@@ -653,7 +653,7 @@
         "Unauthorized data access"
       ],
       "task_guidance": "Develop CRM features to manage leads, customers, and booking history with audit logging.",
-      "due_on": "2026-09-03",
+      "due_on": "2026-10-01",
       "due_baseline_on": "2026-09-03"
     },
     {
@@ -679,7 +679,7 @@
         "Unauthorized product modification"
       ],
       "task_guidance": "Develop a module for creating and managing safari products with detailed itineraries and pricing.",
-      "due_on": "2026-09-10",
+      "due_on": "2026-10-01",
       "due_baseline_on": "2026-09-10"
     },
     {
@@ -705,7 +705,7 @@
         "Network latency"
       ],
       "task_guidance": "Implement load balancing and performance monitoring to ensure system scalability.",
-      "due_on": "2026-09-14",
+      "due_on": "2026-10-01",
       "due_baseline_on": "2026-09-17"
     },
     {
@@ -724,7 +724,7 @@
       "owner_agent": "Travel Advisor",
       "failure_paths": [],
       "task_guidance": "Implement exactly what the acceptance lines describe for this story, and nothing that belongs to another one.",
-      "due_on": "2026-09-16",
+      "due_on": "2026-10-01",
       "due_baseline_on": "2026-09-19"
     },
     {
@@ -743,7 +743,7 @@
       "owner_agent": "Travel Advisor",
       "failure_paths": [],
       "task_guidance": "Implement exactly what the acceptance lines describe for this story, and nothing that belongs to another one.",
-      "due_on": "2026-09-17",
+      "due_on": "2026-10-01",
       "due_baseline_on": "2026-09-21"
     },
     {
@@ -763,7 +763,7 @@
       "failure_paths": [],
       "task_guidance": "Implement exactly what the acceptance lines describe for this story, and nothing that belongs to another one.",
       "due_on": "2026-10-01",
-      "due_baseline_on": "2026-10-01"
+      "due_baseline_on": "2026-10-06"
     }
   ],
   "agents": [],
@@ -775,12 +775,13 @@
     "plan_sha256": "6c2b03662d9537f9a2f9e03d73e283da852586555decdab390812666e4eb826d"
   },
   "schedule": {
-    "build_start": "2026-08-20",
+    "build_start": "2026-10-01",
     "build_end": "2026-10-01",
     "demo_day": "2026-10-08",
-    "build_weeks": 6,
-    "demo_release_key": "r1",
+    "build_weeks": 1,
+    "demo_release_key": "r0",
     "roadmap_release_keys": [
+      "r1",
       "r2",
       "r3",
       "r4"
