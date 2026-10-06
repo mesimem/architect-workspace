@@ -1,6 +1,6 @@
 # U.S.-based Full-Service Travel Agency Platform — Stories
 
-18 stories across 5 releases, walking-skeleton first:
+17 stories across 5 releases, walking-skeleton first:
 the earliest release proves the thinnest end-to-end path including the trust
 spine, and later releases stack features on top of something already working.
 
@@ -50,8 +50,7 @@ system rather than a part of it.
 - **[STORY-009](stories/STORY-009.md)** — AI suggests trip ideas to customers _(waits on STORY-007)_
 - **[STORY-010](stories/STORY-010.md)** — Manage supplier information _(waits on STORY-007)_
 - **[STORY-016](stories/STORY-016.md)** — Ensure system scalability for multiple advisors and thousands of customers _(waits on STORY-010)_
-- **[STORY-017](stories/STORY-017.md)** — Combine multiple travel products into one package _(waits on STORY-015)_
-- **[STORY-018](stories/STORY-018.md)** — Centralize all bookings and manage their statuses _(waits on STORY-001)_
+- **[STORY-017](stories/STORY-017.md)** — STORY-017: Combine multiple travel products into one package
 
 ## r4 · Payments and Analytics — weeks 5–6
 

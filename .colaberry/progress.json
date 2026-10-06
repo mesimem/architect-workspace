@@ -2,11 +2,11 @@
   "schema_version": 2,
   "project": "U.S.-based Full-Service Travel Agency Platform",
   "totals": {
-    "stories_total": 17,
+    "stories_total": 18,
     "stories_verified": 17,
     "stories_submitted": 0,
     "stories_in_progress": 0,
-    "stories_not_started": 0,
+    "stories_not_started": 1,
     "criteria_total": 53,
     "criteria_passed": 53,
     "points_awarded": 799
@@ -869,6 +869,40 @@
         "commit_url": "https://github.com/mesimem/architect-workspace/commit/18c9010e3df948fbe8bb4f4fba577973144e9f39",
         "commit_at": "2026-10-01T22:16:10Z",
         "points_awarded": 47,
+        "outstanding": []
+      }
+    },
+    {
+      "id": "STORY-017",
+      "release": "r3",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given an advisor selects multiple travel products, when they create a package, then the system combines them into a single offering.",
+          "passed": false
+        },
+        {
+          "text": "Given an advisor tries to combine incompatible products, when they attempt to save, then the system displays an error message.",
+          "passed": false
+        },
+        {
+          "text": "Trust: The system logs all package creation and modification details in the audit trail.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": {
+        "state": "not_started",
+        "criteria_passed": 0,
+        "criteria_total": 0,
+        "verified_at": null,
+        "commit_sha": null,
+        "commit_url": null,
+        "commit_at": null,
+        "points_awarded": null,
         "outstanding": []
       }
     }

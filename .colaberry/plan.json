@@ -180,6 +180,16 @@
       "fulfilled_by": [
         "STORY-016"
       ]
+    },
+    {
+      "id": "REQ-019",
+      "kind": "FUNC",
+      "cluster": "Student Additions",
+      "priority": "should",
+      "statement": "The system must let a travel advisor combine multiple travel products into one package.",
+      "fulfilled_by": [
+        "STORY-017"
+      ]
     }
   ],
   "releases": [
@@ -243,7 +253,8 @@
       "story_ids": [
         "STORY-009",
         "STORY-010",
-        "STORY-016"
+        "STORY-016",
+        "STORY-017"
       ],
       "starts_on": "2026-09-12",
       "ends_on": "2026-09-17",
@@ -516,7 +527,7 @@
         "Update failure"
       ],
       "task_guidance": "Develop supplier management module for adding and updating supplier details.",
-      "due_on": "2026-09-15",
+      "due_on": "2026-09-14",
       "due_baseline_on": "2026-09-15"
     },
     {
@@ -672,8 +683,27 @@
         "Network latency"
       ],
       "task_guidance": "Implement load balancing and performance monitoring to ensure system scalability.",
-      "due_on": "2026-09-17",
+      "due_on": "2026-09-15",
       "due_baseline_on": "2026-09-17"
+    },
+    {
+      "id": "STORY-017",
+      "title": "STORY-017: Combine multiple travel products into one package",
+      "release": "r3",
+      "fulfills": [
+        "REQ-019"
+      ],
+      "narrative": "As a travel advisor, I want to combine multiple travel products into one package, so that I can offer comprehensive travel solutions.",
+      "acceptance": [
+        "Given an advisor selects multiple travel products, when they create a package, then the system combines them into a single offering.",
+        "Given an advisor tries to combine incompatible products, when they attempt to save, then the system displays an error message.",
+        "Trust: The system logs all package creation and modification details in the audit trail."
+      ],
+      "owner_agent": "Travel Advisor",
+      "failure_paths": [],
+      "task_guidance": "Implement exactly what the acceptance lines describe for this story, and nothing that belongs to another one.",
+      "due_on": "2026-09-17",
+      "due_baseline_on": "2026-09-19"
     }
   ],
   "agents": [],
@@ -681,8 +711,8 @@
     "name": "U.S.-based Full-Service Travel Agency Platform",
     "descriptor": "A platform specializing in African travel, offering a comprehensive range of travel services and AI-assisted features.",
     "repo_url": "https://github.com/mesimem/architect-workspace",
-    "plan_version": 2,
-    "plan_sha256": "06f93a7e11689a590fc1bcaa07b066563ef5b60a526e9e4aeb8b80df63dcd936"
+    "plan_version": 3,
+    "plan_sha256": "ce8be6a8aa8cdbbe785218e8b34ecc0e7ac76ea565cdcc53d132f8b328737493"
   },
   "schedule": {
     "build_start": "2026-08-20",
@@ -756,14 +786,14 @@
       "system architect"
     ],
     "counts": {
-      "requirements_total": 18,
+      "requirements_total": 19,
       "requirements_by_kind": {
         "CONSTRAINT": 1,
-        "FUNC": 13,
+        "FUNC": 14,
         "NFR": 1,
         "SAFE": 3
       },
-      "stories_total": 16,
+      "stories_total": 17,
       "releases_total": 5,
       "agents_total": 0,
       "failure_paths_total": 45,

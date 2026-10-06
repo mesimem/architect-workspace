@@ -122,14 +122,14 @@ A Gantt view of your releases, and under it every task with its due date. Tasks 
 - **r0** Initial MVP — 4 stories
 - **r1** Customer Portal and Security — 3 stories
 - **r2** Quotation and Group Travel — 4 stories
-- **r3** AI Assistance and Supplier Management — 3 stories
+- **r3** AI Assistance and Supplier Management — 4 stories
 - **r4** Payments and Analytics — 2 stories
 
 ### 7. AI agents
 Source: `plan.agents[]` — one card each, with `name`, `purpose`, `trigger_type`, `trigger`, `inputs`, `outputs`, `autonomy_level`, `approval_gates`, `escalation_rules`, `skills` and `owns` (the story ids it owns, which you join back to the plan and the progress file). `plan.derived.counts.agents_by_autonomy` gives you the roster breakdown without counting them yourself.
 What is NOT there: whether any agent has ever run. There is no run history, no last-run time and no success rate in these files, because none of that exists until you build the agent and it starts running. Show the design, and show "no runs recorded" — never a zero success rate, which reads as an agent that ran and failed.
 Your plan does not carry a scoped agent roster yet, so build this tab from who owns each story:
-- **Travel Advisor** — owns STORY-001, STORY-002, STORY-003, STORY-007, STORY-008, STORY-010
+- **Travel Advisor** — owns STORY-001, STORY-002, STORY-003, STORY-007, STORY-008, STORY-010, STORY-017
 - **Development Team** — owns STORY-004, STORY-013, STORY-014, STORY-015, STORY-016
 - **Customer Support** — owns STORY-005
 - **System Administrator** — owns STORY-006
@@ -187,6 +187,7 @@ Your full set, so the Command Center can show all of it:
 - **REQ-016** (FUNC, should) — The system must support marketing capabilities such as email campaigns and customer segmentation.
 - **REQ-017** (SAFE, must) — The system must maintain audit logs for all transactions and changes.
 - **REQ-018** (NFR, must) — The system must support scalability to accommodate multiple advisors and thousands of customers.
+- **REQ-019** (FUNC, should) — The system must let a travel advisor combine multiple travel products into one package.
 
 ## Your stories, in build order
 **r0 · Initial MVP**
@@ -207,6 +208,7 @@ Your full set, so the Command Center can show all of it:
 - STORY-009 — AI suggests trip ideas to customers
 - STORY-010 — Manage supplier information
 - STORY-016 — Ensure system scalability for multiple advisors and thousands of customers
+- STORY-017 — STORY-017: Combine multiple travel products into one package
 **r4 · Payments and Analytics**
 - STORY-011 — Process customer payments and track balances
 - STORY-012 — Provide analytics on revenue and bookings
@@ -375,11 +377,11 @@ If a `text` value in that file does not match its line here, the platform ignore
 and the story cannot verify; make the JSON match this list rather than the other way
 round.
 
-- [x] Given the Command Center, when it is opened, then every tab is reachable and every card drills down one level.
-- [x] Given sample mode, when any tab is shown, then the sample data is visibly labelled as sample.
-- [x] Given the Command Center, when any tab renders, then .colaberry/plan.json and .colaberry/progress.json are both committed in this repo and every tab reads its content from them at runtime rather than from hard-coded values.
-- [x] Given the Command Center, when any tab is shown, then .colaberry/manifest.json is committed in this repo and every tab shows how old that data is and warns when the age exceeds a week.
-- [x] Trust — no tab shows a number, a connection or a result the project has not actually produced.
+- [ ] Given the Command Center, when it is opened, then every tab is reachable and every card drills down one level.
+- [ ] Given sample mode, when any tab is shown, then the sample data is visibly labelled as sample.
+- [ ] Given the Command Center, when any tab renders, then .colaberry/plan.json and .colaberry/progress.json are both committed in this repo and every tab reads its content from them at runtime rather than from hard-coded values.
+- [ ] Given the Command Center, when any tab is shown, then .colaberry/manifest.json is committed in this repo and every tab shows how old that data is and warns when the age exceeds a week.
+- [ ] Trust — no tab shows a number, a connection or a result the project has not actually produced.
 
 When every box above is ticked **and** a commit names the story, the platform
 confirms it on its own — within about ten seconds if you did Step 1.
