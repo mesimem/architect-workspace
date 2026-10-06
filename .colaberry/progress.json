@@ -353,7 +353,7 @@
         "verified_at": "2026-09-24T00:53:22.462Z",
         "commit_sha": "8c6f7282fbd1b392c27a28dd763e8e36ebfacf3b",
         "commit_url": "https://github.com/mesimem/architect-workspace/commit/8c6f7282fbd1b392c27a28dd763e8e36ebfacf3b",
-        "commit_at": "2026-09-24T00:03:05Z",
+        "commit_at": "2026-09-24T00:52:40Z",
         "points_awarded": 47,
         "outstanding": []
       }
@@ -831,118 +831,6 @@
         "commit_at": "2026-10-01T22:16:10Z",
         "points_awarded": 47,
         "outstanding": []
-      }
-    },
-    {
-      "id": "STORY-017",
-      "release": "r3",
-      "acceptance_total": 3,
-      "criteria": [
-        {
-          "text": "Given an advisor selects multiple travel products, when they create a package, then the system combines them into a single offering.",
-          "passed": true,
-          "evidence": "backend/src/services/packages/packageCompatibility.test.js, packagePricing.test.js, packageStore.test.js and backend/src/http/packages.test.js. Over real HTTP an advisor POSTs two products and gets back ONE offering with its own packageId at 201 - not two records and not an echo of the request. The product shelf is stocked first through the REAL product API as a real product_manager, so this also proves the two books talk to each other rather than agreeing in a fixture. The price is DERIVED from the components rather than supplied: 445000 + 295000 = 740000, cost 330000 + 220000 = 550000, margin 190000, every figure written out by hand rather than recomputed from the implementation's own formula. createdBy comes from the resolved principal, never from the request body, so a caller cannot nominate who built it. The package is then read back through GET /api/packages/:id and asserted deepStrictEqual to what the POST returned, and through the list, where count is 1. A second identical POST is 200 with replayed: true rather than 201, creates no second row and writes no second audit entry - and a replay carrying a DIFFERENT discount returns the original undiscounted package, because a changed price is an edit and accepting it in create would reprice an offering under an entry that says 'created'."
-        },
-        {
-          "text": "Given an advisor tries to combine incompatible products, when they attempt to save, then the system displays an error message.",
-          "passed": true,
-          "evidence": "backend/src/services/packages/packageCompatibility.test.js and backend/src/http/packages.test.js. Four incompatibilities are refused with a MESSAGE, not a bare code: mixed currency, the same product listed twice, overlapping day spans, and cross-country components with no travel day between them. Over HTTP the overlap comes back 400 naming both components and both spans ('components[0] (days 1-6) and components[1] (days 5-9) overlap'), and the border case names the countries and the days. The OVERLAP BOUNDARY is pinned from both sides - startDay 6 collides, startDay 7 does not - because an off-by-one there either refuses legal back-to-back packages or silently double-books a day. A below-cost discount is refused under its own distinct reason code (invalid_pricing, not invalid_package) naming the shortfall in dollars, because 'these products do not fit' and 'this price loses money' send an advisor to different parts of the same form; compatibility is checked BEFORE price, since pricing products that cannot be taken together produces a number with no meaning. What is deliberately NOT refused is asserted too: a GAP between components is legal however large, with a test whose only job is to stop that being tightened later. After all four refusals the book is re-read and still holds exactly one package - a route that 400s AFTER calling the service would pass the status assertions and still have written the row."
-        },
-        {
-          "text": "Trust: The system logs all package creation and modification details in the audit trail.",
-          "passed": true,
-          "evidence": "backend/src/services/packages/packageStore.test.js and backend/src/http/packages.test.js - packages.created, packages.updated and packages.refused are all readable AFTERWARDS through GET /api/admin/audit with actor, resource and correlation id, which is a stronger proof than reading the module's own store. The creation entry carries the component productIds and the MARGIN, not just the sell price: a trail recording what we charged but not what we made cannot answer 'was this sold at a loss?', which is the question the below-cost floor exists to prevent ever needing. A modification writes its OWN entry and the creation entry is asserted to survive it, because the shared audited commit keys on id + version rather than id alone - keyed on the id, auditLog.js's first-write-wins rule would record the first version of a package and silently discard every later one. REFUSALS are audited too, so a refused package is distinguishable from a request that was never made, which is exactly why the route does not pre-reject incompatibilities at the boundary. The consequence is stated and tested: a mutation arriving with no correlationId is REFUSED rather than performed unaudited. And the story's system-error path is proved three ways - an audit that throws on create leaves the store EMPTY, an audit that throws on update restores the PREVIOUS version, and a store that accepts a write and loses it is caught by the read-back as not_saved. A stored package nobody can account for is the one state this module refuses to leave behind."
-        }
-      ],
-      "files_touched": [
-        "backend/src/services/packages/packageCompatibility.js",
-        "backend/src/services/packages/packagePricing.js",
-        "backend/src/services/packages/packageStore.js",
-        "backend/src/http/routes/packageRoutes.js",
-        "backend/src/http/routes/index.js",
-        "backend/src/services/authz/permissions.js",
-        "backend/src/services/quotes/quotePricing.js",
-        "docs/stories/STORY-017.md",
-        "docs/REQUIREMENTS.md",
-        "docs/TRACEABILITY.md"
-      ],
-      "tests_added": [
-        "backend/src/services/packages/packageCompatibility.test.js",
-        "backend/src/services/packages/packagePricing.test.js",
-        "backend/src/services/packages/packageStore.test.js",
-        "backend/src/http/packages.test.js"
-      ],
-      "notes": "Packages combine safari products BY REFERENCE (kind/productId/startDay), so a product reprice is never shadowed by a stale copy; the derived pricing block is stored deliberately, because it is the figure the advisor agreed to. Four incompatibility rules - mixed currency, duplicate product, overlapping day spans, cross-country with no travel day - with a GAP between components explicitly allowed. New packages.read/packages.write permissions held by advisor and product_manager only. Writes go through the shared audited commit, so a package that cannot be audited is rolled back rather than kept. Verified locally: 121/121 npm test, typecheck clean. NOTE ON THIS ENTRY: the platform plan (.colaberry/plan.json, last written 2026-08-31) contains 16 stories and has no STORY-017, so a sync rebuilt progress.json without this entry once already (commit 9a6a756). Re-added by hand. It will be removed again by each sync until the plan is republished with STORY-017 in it; the commit that carries the work is 025868e and names Story: STORY-017 in its trailer. The brief cited REQ-009, which this repo already uses for the quotation requirement (STORY-007). A REQ-019 was briefly written into docs/REQUIREMENTS.md and then REVERTED: those docs are generated from the platform plan, so a hand-written requirement would read as truth while disagreeing with every sync. The story doc records the citation and the discrepancy instead, and TRACEABILITY.md has no row for this story until the plan is republished.",
-      "updated_at": "2026-10-02T00:47:50.500Z",
-      "verification": {
-        "state": "in_progress",
-        "criteria_passed": 0,
-        "criteria_total": 3,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
-        "outstanding": [
-          "Given an advisor selects multiple travel products, when they create a package, then the system combines them into a single offering.",
-          "Given an advisor tries to combine incompatible products, when they attempt to save, then the system displays an error message.",
-          "Trust: The system logs all package creation and modification details in the audit trail."
-        ]
-      }
-    },
-    {
-      "id": "STORY-018",
-      "release": "r3",
-      "acceptance_total": 3,
-      "criteria": [
-        {
-          "text": "Given a new booking is created, when the manager views the booking dashboard, then the system displays the booking with its current status.",
-          "passed": true,
-          "evidence": "backend/src/services/booking/opsBookingBoard.test.js and backend/src/http/opsBookings.test.js. Proved against a REAL booking rather than a fixture row: the board is first asserted EMPTY, then bookTrip is called the way the application calls it, then the board is asked - so the row found can only have come from that booking. It shows status confirmed, statusIsManaged true, allowedNextStatuses [in_progress, cancelled], statusVersion 0 and statusChangedBy null, because nobody has touched it and the honest answer is not a fabricated 'changed at creation'. Over HTTP the same trip arrives at GET /api/ops/bookings with total 1, countsByStatus {confirmed: 1} and the status vocabulary alongside it, so a client builds its controls from the server's list rather than a hardcoded copy. There is NO sync step between the two calls: the board reads the crm-transactions ledger live, which is the one durable store every booking path already writes to (bookTripService one row per trip, groupBookingService one row per group MEMBER carrying groupId). That is also why the story's 'dashboard fails to display new bookings' failure path is structurally hard rather than merely tested - there is no projection, cache or overnight job between a booking existing and it being shown. Edge cases the happy path cannot produce are covered with injected ledgers: a row whose status is outside the vocabulary is still LISTED showing its real status with statusIsManaged false and no legal moves (hiding a booking is a worse answer than showing one nobody can advance), rows too malformed to key are skipped and COUNTED as unlistable rather than silently dropped, ordering is newest-first with ties broken on tripId so a dashboard's order is stable, and a row with no bookedAt sorts LAST because an absent date is not evidence of being recent."
-        },
-        {
-          "text": "Given a booking status is updated, when the manager saves the changes, then the system reflects the updated status in the dashboard.",
-          "passed": true,
-          "evidence": "backend/src/services/booking/opsBookingBoard.test.js, bookingStatusLifecycle.test.js, bookingStatusStore.test.js and backend/src/http/opsBookings.test.js. After a save the dashboard is RE-QUERIED rather than the update's own return value being trusted: the row reads in_progress with previousStatus confirmed, statusChangedBy taken from the resolved principal (never from the request body), and countsByStatus moves with it - a dashboard showing the new status in the row and the old one in its summary would be wrong in the more misleading of the two places. The status is a fixed four-value lifecycle (confirmed -> in_progress -> completed, cancelled from either live state) with completed and cancelled TERMINAL, because a trip that has been travelled cannot be un-travelled and re-opening a cancelled booking is a new booking with its own payment. Terminality is derived from an empty row in the transition table, not a second hand-kept list, and every route out of a terminal state is refused exhaustively rather than in one or two sampled cases. IDEMPOTENCY: re-sending the status a booking already has is classified NO_CHANGE, returns 200 with changed:false, writes nothing and audits nothing - a double-clicked button must not append a second entry claiming the status changed twice. FAILURE PATH 'booking status fails to update' is covered in both its forms. As a RULE: confirmed cannot jump to completed (409 illegal_transition naming the statuses that would work), a completed booking cannot be reopened (409 terminal_status), a typo is 400 unknown_target_status and not a 409, because the operator should look for their typo rather than for a rule that refused them. As an OUTAGE, against stores told to misbehave: a store that throws, one that accepts the write and silently loses it, and one that keeps the OLD row are all caught as not_saved - the read-back compares the VERSION, so staleness is caught and not just absence - and each returns 503 meaning 'unchanged, repeat the request' rather than 500. Every refusal is followed by re-reading the board to prove the booking did not move, and the service tests inject a write that THROWS if called, so 'nothing was written' is asserted rather than assumed."
-        },
-        {
-          "text": "Trust: The system logs all booking status changes in the audit trail.",
-          "passed": true,
-          "evidence": "backend/src/services/booking/bookingStatusStore.test.js and backend/src/http/opsBookings.test.js - entries are read back AFTERWARDS through GET /api/admin/audit as an admin, which is a stronger proof than reading the module's own store. The word that carries the weight is ALL: writes go through shared/auditedCommit.js, which keys each entry on deriveAuditKey(tripId, event + '.vN'), so two changes to one booking produce TRIP-1:booking.status.changed.v1 and .v2. The audit log is first-write-wins, so keyed on the tripId alone the first change would be recorded and every later one silently discarded - the code would pass its other tests while quietly failing this criterion. Asserted over HTTP by carrying a booking confirmed -> in_progress -> completed and then finding BOTH entries, not just the first. Each entry carries actor from the authenticated principal, resource, the client's own X-Correlation-ID so a change traces back to the request that caused it, and a context of exactly {tripId, from, to, version} - asserted as an EXACT key set, because the failure being guarded against is someone later adding the customer or the price to a trail that persists to disk forever. No status change exists without its entry: when the audit write throws, the row is rolled back - DELETED if it was the first change, RESTORED EXACTLY if it superseded one, since deleting there would turn an audit outage into silent data loss - and the caller gets audit_unavailable, with the test asserting no success entry survives. Refused attempts are audited too, under their own event booking.status.change_refused, which is more than the criterion asks for: a manager repeatedly trying to reopen completed bookings is a fact about a person. That audit is deliberately best-effort and asymmetrical with the write - if it fails the caller's outcome is unchanged, because the refusal already left the system exactly as it was - and a request with no usable correlation id is refused UNAUDITED rather than recorded under an invented key no later request could match."
-        }
-      ],
-      "files_touched": [
-        "backend/src/services/booking/bookingStatusLifecycle.js",
-        "backend/src/services/booking/bookingStatusStore.js",
-        "backend/src/services/booking/opsBookingBoard.js",
-        "backend/src/http/routes/opsBookingRoutes.js",
-        "backend/src/http/routes/index.js",
-        "backend/src/services/authz/permissions.js",
-        "backend/src/services/authz/permissions.test.js",
-        "docs/stories/STORY-018.md"
-      ],
-      "tests_added": [
-        "backend/src/services/booking/bookingStatusLifecycle.test.js",
-        "backend/src/services/booking/bookingStatusStore.test.js",
-        "backend/src/services/booking/opsBookingBoard.test.js",
-        "backend/src/http/opsBookings.test.js"
-      ],
-      "notes": "The centralised book of bookings was NOT built, because it already existed: crm-transactions is the one durable store every booking path writes to, one row per trip, and bookTripService's confirmed single bookings live in an in-memory Map that does not survive a restart, so that ledger row is their only durable trace. The board reads it live - no projection, no cache, no sync step that can fail. The operations status is an OVERLAY in a second store keyed on the same tripId rather than a column, because logTransaction is deliberately idempotent by returning the existing row untouched: a ledger that rewrites its rows is not a ledger. The overlay holds the status, previous status, version and who changed it when - no customer, no itinerary, no money, so it cannot drift from the ledger. A booking with no overlay row is untouched, not missing, and reads as confirmed. New ops.bookings.read/ops.bookings.write permissions on a sixth role, operations_manager, held by no other role: admin was refused because the role that reads the audit trail must not also be the role that can cancel a booking, and sales because the board is every customer's booking at once rather than the relationship-scoped read CRM_CUSTOMERS_READ was argued for; the role deliberately does NOT hold admin.audit.read, the CRM grants, or any write on products, packages, quotes or proposals. The route exposes no filters because nothing in this pipeline reads query strings (server.js parses the pathname only) and adding that is an edit to the central pipeline every route shares - the service-level filters are built and tested for whoever does it. Verified locally: 125/125 npm test, full suite, no regressions. NOTE ON THIS ENTRY: the platform plan (.colaberry/plan.json) contains 16 stories and has no STORY-017 or STORY-018, so a sync will rebuild progress.json without this entry as it already did once for STORY-017 (commit 9a6a756); it is re-added by hand and the commit that carries the work names Story: STORY-018 in its trailer. The brief cited REQ-012, which this repo already uses for the supplier requirement fulfilled by STORY-010 - plan.json's REQ-012 carries fulfilled_by: [STORY-010] and TRACEABILITY.md row 20 agrees. REQUIREMENTS.md and TRACEABILITY.md were deliberately NOT edited: those docs are generated from the platform plan, and commit fafedda already reverted one hand-written requirement (REQ-019) for exactly that reason. The story doc records the citation and the discrepancy instead.",
-      "updated_at": "2026-10-05T23:44:50.271Z",
-      "verification": {
-        "state": "in_progress",
-        "criteria_passed": 0,
-        "criteria_total": 3,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
-        "outstanding": [
-          "Given a new booking is created, when the manager views the booking dashboard, then the system displays the booking with its current status.",
-          "Given a booking status is updated, when the manager saves the changes, then the system reflects the updated status in the dashboard.",
-          "Trust: The system logs all booking status changes in the audit trail."
-        ]
       }
     }
   ]
