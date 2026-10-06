@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "_how_to_use": "Add a note by appending an object to entries: date (YYYY-MM-DD), kind (decision | note | limitation), title, body, and evidence (the file, commit or test that backs it). The Knowledge base tab lists them newest first. Never put secrets here - this repo is public.",
+  "entries": [
+    {
+      "date": "2026-10-05",
+      "kind": "decision",
+      "title": "The Command Center reads the plan at runtime",
+      "body": "Every tab fetches .colaberry/plan.json, progress.json and manifest.json when it loads. No project content is typed into the page, so a sync updates it without a code change.",
+      "evidence": "tests/commandCenter.test.js"
+    },
+    {
+      "date": "2026-10-05",
+      "kind": "decision",
+      "title": "The data model is read from the backend, not designed on paper",
+      "body": "The Data model tab lists the 16 durable stores the backend actually writes, with the fields seen in code. They are keyed JSON stores today, not SQL tables.",
+      "evidence": "command-center/data-model.json"
+    },
+    {
+      "date": "2026-10-05",
+      "kind": "limitation",
+      "title": "There is no customer entity",
+      "body": "Bookings, payments, quotes and sessions all carry a customerId, but no store holds customers, so nothing defines what a customerId refers to.",
+      "evidence": "command-center/data-model.json"
+    }
+  ]
+}

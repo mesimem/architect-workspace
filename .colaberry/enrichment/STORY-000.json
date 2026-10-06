@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "1",
+  "projectId": "aa94af89-8d07-4ef4-96ec-ea775c53d2ed",
+  "storyId": "STORY-000",
+  "projectTruthBaseRevision": 0,
+  "observedAt": "2026-10-05T23:00:00.000Z",
+  "sourceCommitSha": "5ec551b3c61c323f68aa89c2891d56c8bc3d8102",
+  "factProposals": [
+    {
+      "dimension": "data",
+      "value": "The backend persists 16 durable keyed JSON stores (bookings, booking statuses, group bookings, payment accounts, accounting receipts, audit log, advisor reviews, African-section interactions, leads, role assignments, portal sessions, quotes, proposals, safari products, travel packages, suppliers).",
+      "evidence": "command-center/data-model.json"
+    },
+    {
+      "dimension": "unknowns",
+      "value": "No store holds a customer entity: bookings, payments, quotes and sessions carry a customerId that references nothing in the data model.",
+      "evidence": "command-center/data-model.json"
+    }
+  ],
+  "decisions": [
+    {
+      "statement": "The Command Center fetches .colaberry/plan.json, progress.json and manifest.json at runtime instead of copying their contents into the page.",
+      "rationale": "The files are rewritten on every sync; a typed-in copy would silently go stale.",
+      "evidence": "command-center/assets/data.js"
+    },
+    {
+      "statement": "The Data model tab lists the stores the backend actually creates rather than a schema designed on paper.",
+      "rationale": "A designed model would show tables that do not exist; a test fails if the file and the backend disagree.",
+      "evidence": "tests/commandCenter.test.js"
+    },
+    {
+      "statement": "The knowledge-base Q&A panel answers by keyword matching over the page's data, not with a language model.",
+      "rationale": "A static public page cannot hold an API key, and an answer that guesses is worse than one that says it cannot answer.",
+      "evidence": "command-center/assets/kbChat.js"
+    }
+  ],
+  "limitations": [
+    {
+      "statement": "The Command Center must be served over HTTP (GitHub Pages or a local server); opened as a file, the browser blocks the data fetch and the page explains this.",
+      "evidence": "command-center/assets/site.js"
+    },
+    {
+      "statement": "The Data model lists top-level fields only; inner shapes of contracts, rates, itinerary and pricing were not traced.",
+      "evidence": "command-center/data-model.json"
+    }
+  ],
+  "demonstrationEvidence": [
+    {
+      "kind": "test",
+      "ref": "tests/commandCenter.test.js"
+    }
+  ],
+  "measurementEvents": []
+}

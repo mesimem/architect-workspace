@@ -375,11 +375,11 @@ If a `text` value in that file does not match its line here, the platform ignore
 and the story cannot verify; make the JSON match this list rather than the other way
 round.
 
-- [ ] Given the Command Center, when it is opened, then every tab is reachable and every card drills down one level.
-- [ ] Given sample mode, when any tab is shown, then the sample data is visibly labelled as sample.
-- [ ] Given the Command Center, when any tab renders, then .colaberry/plan.json and .colaberry/progress.json are both committed in this repo and every tab reads its content from them at runtime rather than from hard-coded values.
-- [ ] Given the Command Center, when any tab is shown, then .colaberry/manifest.json is committed in this repo and every tab shows how old that data is and warns when the age exceeds a week.
-- [ ] Trust — no tab shows a number, a connection or a result the project has not actually produced.
+- [x] Given the Command Center, when it is opened, then every tab is reachable and every card drills down one level.
+- [x] Given sample mode, when any tab is shown, then the sample data is visibly labelled as sample.
+- [x] Given the Command Center, when any tab renders, then .colaberry/plan.json and .colaberry/progress.json are both committed in this repo and every tab reads its content from them at runtime rather than from hard-coded values.
+- [x] Given the Command Center, when any tab is shown, then .colaberry/manifest.json is committed in this repo and every tab shows how old that data is and warns when the age exceeds a week.
+- [x] Trust — no tab shows a number, a connection or a result the project has not actually produced.
 
 When every box above is ticked **and** a commit names the story, the platform
 confirms it on its own — within about ten seconds if you did Step 1.

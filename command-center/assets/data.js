@@ -1,162 +1,258 @@
 /* ============================================================
-   Command Center — single source of truth
-   Every page reads from REAL_DATA (and, in Sample mode, from
-   the SAMPLE_DATA overlay produced by buildSampleData()).
-   Nothing here is invented beyond what the plan states; fields
-   with no real value yet are left null / empty and rendered as
-   explicit empty states by site.js.
+   Command Center — data layer
+   Every tab reads the project from the three files the platform
+   commits beside this page, fetched at runtime:
+     .colaberry/plan.json      the plan (what was planned)
+     .colaberry/progress.json  the state (what has happened)
+     .colaberry/manifest.json  freshness (generated_at)
+   Nothing about the project is typed into this file. See
+   docs/DATA_CONTRACT.md for the shapes and the join on story id.
+
+   Works in the browser (global CCData) and in Node (module.exports)
+   so the pure functions are unit-tested in tests/commandCenter.test.js.
    ============================================================ */
 
-var REAL_DATA = {
+var CCData = (function () {
 
-  meta: {
-    title: "Full-Service Travel Agency Platform",
-    sector: "U.S.-based, African travel specialist",
-    oneLiner: "A full-service travel agency platform for African travel — flights, hotels, and safaris booked as one trip, a customer self-service portal, AI-assisted trip ideas, and the CRM, quoting, and supplier tools an advisor team runs it on.",
-    todayISO: "2026-08-17",
-    demoDayISO: "2026-10-08",
-    buildEndsISO: "2026-10-01"
-  },
+  var BASE = "../.colaberry/";
+  var DAY_MS = 86400000;
+  var STALE_AFTER_DAYS = 7;
 
-  // REQ-xxx — full requirement set from the plan.
-  requirements: [
-    { id: "REQ-001", category: "FUNC",       priority: "must",   text: "The system must allow customers to book flights, hotels, and safaris as part of a single trip." },
-    { id: "REQ-002", category: "FUNC",       priority: "must",   text: "The system must support a major section dedicated to African travel, including safaris and cultural experiences." },
-    { id: "REQ-003", category: "FUNC",       priority: "must",   text: "The system must enable travel advisors to create customized trip proposals within 30 minutes." },
-    { id: "REQ-004", category: "CONSTRAINT", priority: "must",   text: "The system must integrate with accounting software for financial tracking." },
-    { id: "REQ-005", category: "SAFE",       priority: "must",   text: "The system must flag uncertain customer requests for travel advisor review." },
-    { id: "REQ-006", category: "FUNC",       priority: "must",   text: "The system must provide a CRM to track leads, customers, and booking history." },
-    { id: "REQ-007", category: "FUNC",       priority: "must",   text: "The system must allow customers to view and manage their itineraries through a secure portal." },
-    { id: "REQ-008", category: "SAFE",       priority: "must",   text: "The system must support secure authentication and role-based permissions." },
-    { id: "REQ-009", category: "FUNC",       priority: "must",   text: "The system must generate professional quotes and itineraries for customers." },
-    { id: "REQ-010", category: "FUNC",       priority: "must",   text: "The system must handle group travel bookings with shared itinerary information." },
-    { id: "REQ-011", category: "FUNC",       priority: "should", text: "The system must support AI capabilities to assist customers in exploring destinations and generating trip ideas." },
-    { id: "REQ-012", category: "FUNC",       priority: "must",   text: "The system must track supplier information including contracts and rates." },
-    { id: "REQ-013", category: "FUNC",       priority: "must",   text: "The system must allow customers to make payments and track their remaining balances." },
-    { id: "REQ-014", category: "FUNC",       priority: "must",   text: "The system must support the creation of detailed safari products with itineraries and pricing." },
-    { id: "REQ-015", category: "FUNC",       priority: "should", text: "The system must provide analytics on revenue, bookings, and customer data." },
-    { id: "REQ-016", category: "FUNC",       priority: "should", text: "The system must support marketing capabilities such as email campaigns and customer segmentation." },
-    { id: "REQ-017", category: "SAFE",       priority: "must",   text: "The system must maintain audit logs for all transactions and changes." },
-    { id: "REQ-018", category: "NFR",        priority: "must",   text: "The system must support scalability to accommodate multiple advisors and thousands of customers." }
-  ],
+  // ---- Loading -----------------------------------------------------
+  // A missing or unparseable file is a hard failure with a named
+  // reason: rendering a half-model would show a page that looks
+  // complete and is not.
+  function fetchJson(name) {
+    return fetch(BASE + name, { cache: "no-store" }).then(function (res) {
+      if (!res.ok) throw new Error(name + " could not be loaded (HTTP " + res.status + ")");
+      return res.json();
+    });
+  }
 
-  // Guardrails: the SAFE requirements, and what (if anything) enforces them today.
-  guardrails: [
-    {
-      id: "REQ-005",
-      promise: "The system must flag uncertain customer requests for travel advisor review.",
-      enforcedBy: null,
-      note: "No triage logic exists yet — this is a r3 (AI Assistance) capability, STORY-009."
-    },
-    {
-      id: "REQ-008",
-      promise: "The system must support secure authentication and role-based permissions.",
-      enforcedBy: null,
-      note: "Scoped for r1 (Customer Portal and Security) — STORY-005, STORY-006. Not built yet."
-    },
-    {
-      id: "REQ-017",
-      promise: "The system must maintain audit logs for all transactions and changes.",
-      enforcedBy: null,
-      note: "No story explicitly owns this yet — worth flagging for scoping before r4 (Payments) ships."
+  // The two project-authored files live beside the page, not in
+  // .colaberry/: the data model is a design artifact derived from the
+  // backend code, and the knowledge-base notes are added by hand.
+  function fetchLocal(name) {
+    return fetch(name, { cache: "no-store" }).then(function (res) {
+      if (!res.ok) throw new Error(name + " could not be loaded (HTTP " + res.status + ")");
+      return res.json();
+    });
+  }
+
+  function load() {
+    return Promise.all([
+      fetchJson("plan.json"),
+      fetchJson("progress.json"),
+      fetchJson("manifest.json"),
+      fetchLocal("data-model.json"),
+      fetchLocal("kb-notes.json")
+    ]).then(function (files) {
+      return buildModel(files[0], files[1], files[2], { dataModel: files[3], notes: files[4] });
+    });
+  }
+
+  // ---- The join ------------------------------------------------------
+  // Story state comes from progress, never from plan. An absent
+  // verification block means "not checked yet", which is a different
+  // fact from zero - state stays null so the page can say so.
+  function buildModel(plan, progress, manifest, extras) {
+    extras = extras || {};
+    var progressById = {};
+    (progress.stories || []).forEach(function (s) { progressById[s.id] = s; });
+
+    var stories = (plan.stories || []).map(function (story) {
+      var p = progressById[story.id];
+      var v = p && p.verification ? p.verification : null;
+      return {
+        id: story.id,
+        title: story.title,
+        release: story.release,
+        narrative: story.narrative,
+        owner: story.owner_agent || null,
+        fulfills: story.fulfills || [],
+        acceptance: story.acceptance || [],
+        blockedBy: story.blocked_by || [],
+        failurePaths: story.failure_paths || [],
+        dueOn: story.due_on || null,
+        dueBaselineOn: story.due_baseline_on || null,
+        slipDays: slipDays(story.due_baseline_on, story.due_on),
+        criteria: p ? p.criteria || [] : [],
+        notes: p ? p.notes || null : null,
+        state: v ? v.state : null,
+        criteriaPassed: v ? v.criteria_passed : null,
+        criteriaTotal: v ? v.criteria_total : (story.acceptance || []).length,
+        commitUrl: v ? v.commit_url : null
+      };
+    });
+    var storyById = {};
+    stories.forEach(function (s) { storyById[s.id] = s; });
+
+    var isVerified = function (id) {
+      return Boolean(storyById[id]) && storyById[id].state === "verified";
+    };
+
+    // A requirement is "built" when every story that fulfils it is
+    // verified. Derived on every load, never stored.
+    var requirements = (plan.requirements || []).map(function (r) {
+      var by = r.fulfilled_by || [];
+      return {
+        id: r.id, statement: r.statement, kind: r.kind, priority: r.priority,
+        cluster: r.cluster, fulfilledBy: by,
+        built: by.length > 0 && by.every(isVerified)
+      };
+    });
+    var reqById = {};
+    requirements.forEach(function (r) { reqById[r.id] = r; });
+
+    var derived = plan.derived || {};
+    var guardrails = (derived.guardrails || []).map(function (g) {
+      var req = reqById[g.id];
+      return {
+        id: g.id,
+        statement: g.statement,
+        enforcedBy: req ? req.fulfilledBy : [],
+        kept: Boolean(req && req.built)
+      };
+    });
+
+    var releases = (plan.releases || []).map(function (r) {
+      var ids = r.story_ids || [];
+      return {
+        key: r.key, name: r.name, goal: r.goal || "", demo: r.demo || "",
+        startsOn: r.starts_on || null, endsOn: r.ends_on || null,
+        isDemoTarget: Boolean(r.is_demo_target), storyIds: ids,
+        verifiedCount: ids.filter(isVerified).length
+      };
+    });
+
+    var project = plan.project || {};
+    return {
+      project: {
+        name: project.name || plan.project_name || "",
+        descriptor: project.descriptor || plan.descriptor || "",
+        repoUrl: project.repo_url || null
+      },
+      schedule: plan.schedule || {},
+      releases: releases,
+      totals: progress.totals || null,
+      stories: stories,
+      requirements: requirements,
+      guardrails: guardrails,
+      roles: rolesWithStories(derived.roles || [], stories),
+      measures: derived.measures || [],
+      systems: derived.systems || [],
+      agents: plan.agents || [],
+      owners: ownersOf(stories),
+      dataModel: extras.dataModel || { entities: [] },
+      notes: (extras.notes && extras.notes.entries) || [],
+      generatedAt: manifest.generated_at || null,
+      isSample: false
+    };
+  }
+
+  // Positive = the due date moved later than first given.
+  function slipDays(baseline, due) {
+    if (!baseline || !due) return null;
+    return Math.round((Date.parse(due) - Date.parse(baseline)) / DAY_MS);
+  }
+
+  // A role's stories are the ones whose narrative is written for it:
+  // "As a <role>, ..." or "As an <role>, ...".
+  function rolesWithStories(roles, stories) {
+    return roles.map(function (role) {
+      var prefix = new RegExp("^As an? " + role.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i");
+      return {
+        name: role,
+        storyIds: stories.filter(function (s) { return prefix.test(s.narrative || ""); })
+          .map(function (s) { return s.id; })
+      };
+    });
+  }
+
+  // Story owners, grouped from the plan. These are people or teams named
+  // on stories - NOT a scoped AI agent roster, and the page says so.
+  function ownersOf(stories) {
+    var byName = {};
+    var order = [];
+    stories.forEach(function (s) {
+      var name = s.owner || "Unassigned";
+      if (!byName[name]) { byName[name] = []; order.push(name); }
+      byName[name].push(s.id);
+    });
+    return order.map(function (name) { return { name: name, storyIds: byName[name] }; });
+  }
+
+  // ---- Freshness -----------------------------------------------------
+  // "Data as of", never "last synced": the stamp moves when the DATA
+  // changes, so an old stamp means either nothing happened or nobody
+  // synced. The page cannot tell which and prompts a sync either way.
+  function dataAge(generatedAt, now) {
+    var t = generatedAt ? Date.parse(generatedAt) : NaN;
+    if (isNaN(t)) {
+      return { level: "unknown", text: "Data as of: unknown - manifest.json has no generated_at", days: null };
     }
-  ],
+    var days = Math.max(0, Math.floor((now.getTime() - t) / DAY_MS));
+    var absolute = new Date(t).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+    var relative = days === 0 ? "today" : days === 1 ? "1 day ago" : days + " days ago";
+    var level = days > STALE_AFTER_DAYS ? "stale" : days >= 1 ? "aging" : "fresh";
+    var text = "Data as of " + absolute + " (" + relative + ")";
+    if (level === "stale") text += " - over a week old, sync from the portal to refresh";
+    return { level: level, text: text, days: days };
+  }
 
-  // STORY-xxx — id, title, release, due date, owning role, and (real) status.
-  // Status is intentionally null for every story: nothing has shipped yet.
-  stories: [
-    { id: "STORY-001", title: "Book a complete trip including flight, hotel, and safari",            release: "r0", due: "2026-08-15", owner: "Travel Advisor",     reqIds: ["REQ-001"] },
-    { id: "STORY-002", title: "Create a dedicated African travel section",                            release: "r0", due: "2026-08-17", owner: "Travel Advisor",     reqIds: ["REQ-002"] },
-    { id: "STORY-003", title: "Flag uncertain requests for advisor review",                            release: "r0", due: "2026-08-19", owner: "Travel Advisor",     reqIds: ["REQ-005"] },
-    { id: "STORY-004", title: "Enable integration with accounting software for transaction logging",  release: "r0", due: "2026-08-21", owner: "Development Team",   reqIds: ["REQ-004"] },
+  // ---- Where in the term are we? --------------------------------------
+  function phaseOf(schedule, releases, todayISO) {
+    var current = null, next = null;
+    releases.forEach(function (r) {
+      if (!r.startsOn || !r.endsOn) return;
+      if (todayISO >= r.startsOn && todayISO <= r.endsOn) current = r;
+      if (!next && todayISO < r.startsOn) next = r;
+    });
+    if (current) return { kind: "release", release: current };
+    if (schedule.build_start && todayISO < schedule.build_start) return { kind: "before", next: next };
+    if (schedule.build_end && todayISO > schedule.build_end) {
+      if (schedule.demo_day && todayISO <= schedule.demo_day) return { kind: "demo_prep" };
+      return { kind: "after" };
+    }
+    return { kind: "between", next: next };
+  }
 
-    { id: "STORY-005", title: "Implement secure customer portal",                                      release: "r1", due: "2026-08-24", owner: "Customer Support",   reqIds: ["REQ-007", "REQ-008"] },
-    { id: "STORY-006", title: "Implement role-based permissions",                                      release: "r1", due: "2026-08-27", owner: "System Administrator", reqIds: ["REQ-008"] },
-    { id: "STORY-014", title: "Implement CRM for tracking leads, customers, and booking history",      release: "r1", due: "2026-08-29", owner: "Development Team",   reqIds: ["REQ-006"] },
+  // ---- Sample mode ------------------------------------------------------
+  // The real model's SHAPE with made-up values, so empty tabs show what
+  // they will look like. Every invented value carries "(sample)" in its
+  // text, and the page shows a SAMPLE banner and tags on top of that.
+  function sampleModel(real) {
+    var s = JSON.parse(JSON.stringify(real));
+    s.isSample = true;
+    var states = ["verified", "verified", "in_progress", "submitted", "not_started"];
+    s.stories.forEach(function (story, i) {
+      story.state = states[i % states.length];
+      story.criteriaPassed = story.state === "verified" ? story.criteriaTotal : 0;
+    });
+    var verified = s.stories.filter(function (x) { return x.state === "verified"; }).length;
+    s.totals = {
+      stories_total: s.stories.length, stories_verified: verified,
+      stories_submitted: 0, stories_in_progress: 0, stories_not_started: 0,
+      criteria_total: s.stories.length * 3, criteria_passed: verified * 3,
+      points_awarded: verified * 40
+    };
+    s.guardrails.forEach(function (g, i) { g.kept = i === 0; });
+    s.measures = [
+      { id: "MEASURE-S1", statement: "(sample) Advisor proposal turnaround under 30 minutes" },
+      { id: "MEASURE-S2", statement: "(sample) 60% of customers manage their trip in the portal" }
+    ];
+    s.systems = ["(sample) Accounting software", "(sample) Payment processor", "(sample) Flight inventory"];
+    return s;
+  }
 
-    { id: "STORY-007", title: "Generate professional quotes for customers",                            release: "r2", due: "2026-08-31", owner: "Travel Advisor",     reqIds: ["REQ-009"] },
-    { id: "STORY-008", title: "Support group travel bookings",                                         release: "r2", due: "2026-09-02", owner: "Travel Advisor",     reqIds: ["REQ-010"] },
-    { id: "STORY-013", title: "Create customized trip proposals for travel advisors",                  release: "r2", due: "2026-09-04", owner: "Development Team",   reqIds: ["REQ-003"] },
-    { id: "STORY-015", title: "Support creation of detailed safari products with itineraries and pricing", release: "r2", due: "2026-09-07", owner: "Development Team", reqIds: ["REQ-014"] },
-
-    { id: "STORY-009", title: "AI suggests trip ideas to customers",                                   release: "r3", due: "2026-09-09", owner: "AI Developer",       reqIds: ["REQ-011"] },
-    { id: "STORY-010", title: "Manage supplier information",                                           release: "r3", due: "2026-09-12", owner: "Travel Advisor",     reqIds: ["REQ-012"] },
-    { id: "STORY-016", title: "Ensure system scalability for multiple advisors and thousands of customers", release: "r3", due: "2026-09-15", owner: "Development Team", reqIds: ["REQ-018"] },
-
-    { id: "STORY-011", title: "Process customer payments and track balances",                          release: "r4", due: "2026-09-23", owner: "Finance Manager",    reqIds: ["REQ-013"] },
-    { id: "STORY-012", title: "Provide analytics on revenue and bookings",                              release: "r4", due: "2026-10-01", owner: "Business Analyst",   reqIds: ["REQ-015"] }
-  ],
-
-  releases: [
-    { id: "r0", name: "Initial MVP",                          start: "2026-08-15", end: "2026-08-21", isDemoTarget: false },
-    { id: "r1", name: "Customer Portal and Security",         start: "2026-08-24", end: "2026-08-29", isDemoTarget: true  },
-    { id: "r2", name: "Quotation and Group Travel",           start: "2026-08-31", end: "2026-09-07", isDemoTarget: false },
-    { id: "r3", name: "AI Assistance and Supplier Management",start: "2026-09-09", end: "2026-09-15", isDemoTarget: false },
-    { id: "r4", name: "Payments and Analytics",                start: "2026-09-23", end: "2026-10-01", isDemoTarget: false }
-  ],
-
-  // Roles as written in the user stories ("As a <role>, I want ...").
-  roles: ["customer", "travel advisor", "admin", "group organizer", "manager", "sales manager"],
-
-  // Story owners — these are the people/teams responsible for each story,
-  // not a scoped roster of AI agents. See agents.html for the distinction.
-  owners: [
-    { name: "Travel Advisor",      storyIds: ["STORY-001", "STORY-002", "STORY-003", "STORY-007", "STORY-008", "STORY-010"] },
-    { name: "Development Team",    storyIds: ["STORY-004", "STORY-013", "STORY-014", "STORY-015", "STORY-016"] },
-    { name: "Customer Support",    storyIds: ["STORY-005"] },
-    { name: "System Administrator",storyIds: ["STORY-006"] },
-    { name: "AI Developer",        storyIds: ["STORY-009"] },
-    { name: "Finance Manager",     storyIds: ["STORY-011"] },
-    { name: "Business Analyst",    storyIds: ["STORY-012"] }
-  ],
-
-  // No numeric outcome targets defined in the plan yet.
-  outcomes: [],
-
-  // No external systems named in the plan yet.
-  systems: []
-};
-
-/* ------------------------------------------------------------
-   Sample data: a believable illustrative overlay, used only in
-   Sample mode so the empty tabs (Outcomes, Systems) and the
-   not-yet-real fields (story status, guardrail enforcement,
-   owner skills) show their eventual shape. Every value here is
-   fabricated and must render with a visible SAMPLE tag.
-   ------------------------------------------------------------ */
-function buildSampleData(real) {
-  var sample = JSON.parse(JSON.stringify(real));
-
-  var sampleStatusByStory = {
-    "STORY-001": "done", "STORY-002": "done", "STORY-003": "in-progress", "STORY-004": "not-started",
-    "STORY-005": "not-started", "STORY-006": "not-started", "STORY-014": "not-started",
-    "STORY-007": "not-started", "STORY-008": "not-started", "STORY-013": "not-started", "STORY-015": "not-started",
-    "STORY-009": "not-started", "STORY-010": "not-started", "STORY-016": "not-started",
-    "STORY-011": "not-started", "STORY-012": "not-started"
+  return {
+    load: load,
+    buildModel: buildModel,
+    dataAge: dataAge,
+    phaseOf: phaseOf,
+    sampleModel: sampleModel,
+    STALE_AFTER_DAYS: STALE_AFTER_DAYS
   };
-  sample.stories.forEach(function (s) { s.status = sampleStatusByStory[s.id] || "not-started"; });
+})();
 
-  sample.guardrails[0].enforcedBy = "(sample) Request triage service — confidence-score check on intake";
-  sample.guardrails[1].enforcedBy = null;
-  sample.guardrails[2].enforcedBy = null;
-
-  sample.owners.forEach(function (o) {
-    o.skills = ["(sample) placeholder skill A", "(sample) placeholder skill B"];
-  });
-
-  sample.outcomes = [
-    { id: "OUT-1", label: "(Sample) Advisor proposal turnaround", value: "22 min avg", target: "< 30 min (REQ-003)" },
-    { id: "OUT-2", label: "(Sample) Portal adoption", value: "61% of customers", target: "no target set yet" },
-    { id: "OUT-3", label: "(Sample) Flagged-request accuracy", value: "88% precision", target: "no target set yet" }
-  ];
-
-  sample.systems = [
-    { id: "SYS-1", name: "(Sample) QuickBooks Online", purpose: "accounting sync — REQ-004", status: "unknown" },
-    { id: "SYS-2", name: "(Sample) Amadeus / GDS", purpose: "flight & hotel inventory", status: "unknown" },
-    { id: "SYS-3", name: "(Sample) Stripe", purpose: "customer payments — REQ-013", status: "unknown" }
-  ];
-
-  return sample;
-}
-
-var SAMPLE_DATA = buildSampleData(REAL_DATA);
+if (typeof module !== "undefined" && module.exports) module.exports = CCData;

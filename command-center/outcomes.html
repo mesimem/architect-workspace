@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Outcomes - Command Center</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div id="topnav-root"></div>
+<main class="container" id="page-root"></main>
+<script src="assets/data.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  // Source: plan.derived.measures. The plan holds targets, never values,
+  // so no card here ever shows a measured number.
+  Site.boot("outcomes", function (data) {
+    var esc = Site.escapeHtml;
+    var body;
+    if (!data.measures.length) {
+      body = '<div class="empty-state">Your plan carries no numeric target yet, so there is nothing to measure against. ' +
+        'Each measure you add to the plan gets one card here.</div>' +
+        '<div class="grid" style="margin-top:16px;">' +
+        Site.card(Site.detailHref("empty", "measures"), "MEASURES", "None defined", "Open to see what will be here and what has to happen first.", false) +
+        '</div>';
+    } else {
+      body = '<div class="grid">' + data.measures.map(function (m) {
+        return Site.card(Site.detailHref("measure", m.id), m.id, esc(m.statement), "Value: not measured - comes from the running system", data.isSample);
+      }).join("") + '</div>';
+    }
+    document.getElementById("page-root").innerHTML = Site.pageHeader("outcomes", data.isSample) + '<div class="section">' + body + '</div>';
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI agents - Command Center</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div id="topnav-root"></div>
+<main class="container" id="page-root"></main>
+<script src="assets/data.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  // Source: plan.agents when the plan scopes a roster; until then, the story
+  // owners from plan.stories[].owner_agent - labelled as owners, not agents.
+  // No run history exists in these files, so none is shown.
+  Site.boot("agents", function (data) {
+    var esc = Site.escapeHtml;
+    var intro, cards;
+    if (data.agents.length) {
+      intro = '<p class="page-desc">' + esc(data.agents.length + " scoped agents in the plan.") + '</p>';
+      cards = data.agents.map(function (a) {
+        return Site.card(Site.detailHref("owner", a.name), esc(a.autonomy_level || "AGENT"), esc(a.name),
+          esc(a.purpose || "") + '<br>No runs recorded', false);
+      }).join("");
+    } else {
+      intro = '<div class="empty-state">Your plan does not carry a scoped AI agent roster yet. ' +
+        'The cards below are the <strong>owners</strong> named on each story - people and teams, not AI agents. ' +
+        '<a href="' + Site.detailHref("empty", "agents") + '">What a scoped roster will show</a>.</div>';
+      cards = data.owners.map(function (o) {
+        return Site.card(Site.detailHref("owner", o.name), "STORY OWNER", esc(o.name),
+          esc("Owns " + o.storyIds.join(", ")) + '<br>No skills registered yet - no runs recorded', false);
+      }).join("");
+    }
+    document.getElementById("page-root").innerHTML = Site.pageHeader("agents", false) +
+      '<div class="section">' + intro + '</div><div class="section"><div class="grid">' + cards + '</div></div>';
+  });
+</script>
+</body>
+</html>

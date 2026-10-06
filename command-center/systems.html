@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Systems - Command Center</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div id="topnav-root"></div>
+<main class="container" id="page-root"></main>
+<script src="assets/data.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  // Source: plan.derived.systems - names only. Whether one is connected is
+  // a fact about the running system, so every indicator stays grey.
+  Site.boot("systems", function (data) {
+    var esc = Site.escapeHtml;
+    var body;
+    if (!data.systems.length) {
+      body = '<div class="empty-state">Your plan names no external system yet.</div>' +
+        '<div class="grid" style="margin-top:16px;">' +
+        Site.card(Site.detailHref("empty", "systems"), "EXTERNAL SYSTEMS", "None named", "Open to see what will be here and what has to happen first.", false) +
+        '</div>';
+    } else {
+      body = '<div class="grid">' + data.systems.map(function (name) {
+        return Site.card(Site.detailHref("system", name), "SYSTEM", esc(name), Site.statusDot("unknown", null, "Connection not checked"), data.isSample);
+      }).join("") + '</div>';
+    }
+    document.getElementById("page-root").innerHTML = Site.pageHeader("systems", data.isSample) + '<div class="section">' + body + '</div>';
+  });
+</script>
+</body>
+</html>

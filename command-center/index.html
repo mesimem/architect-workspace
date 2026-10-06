@@ -3,16 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Command Center — Full-Service Travel Agency Platform</title>
+<title>Command Center</title>
 <link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
 <div id="topnav-root"></div>
 
-<main class="container">
+<main class="container" id="page-root">
+  <div id="paused"></div>
+
   <div class="page-header">
     <h1 id="cc-title"></h1>
-    <p class="page-desc" id="cc-oneliner"></p>
+    <p class="page-desc" id="cc-descriptor"></p>
   </div>
 
   <div class="section">
@@ -21,13 +23,13 @@
   </div>
 
   <div class="section">
-    <h2>What's live right now</h2>
-    <div class="card" id="whats-live"></div>
+    <h2>How far along</h2>
+    <div class="grid" id="progress"></div>
   </div>
 
   <div class="section">
-    <h2>At a glance</h2>
-    <div class="grid" id="quick-stats"></div>
+    <h2>What is live, and what is not</h2>
+    <div class="grid" id="whats-live"></div>
   </div>
 
   <div class="section">
@@ -36,140 +38,120 @@
   </div>
 
   <footer class="site-footer">
-    Data source: one shared file (<code>assets/data.js</code>). Toggle Sample/Real above — the switch applies to every tab.
+    Read at runtime from <code>.colaberry/plan.json</code>, <code>.colaberry/progress.json</code> and
+    <code>.colaberry/manifest.json</code>. Nothing on this page is live: it is as of the last sync.
+    The Sample/Real switch applies to every tab.
   </footer>
 </main>
 
 <script src="assets/data.js"></script>
 <script src="assets/site.js"></script>
 <script>
-  Site.init("overview");
+  var esc = Site.escapeHtml;
 
-  var TAB_DESCRIPTIONS = {
-    overview:   "The 30-second view: what this is, which release we're in, what's live.",
-    outcomes:   "The numbers this platform has to move. No targets defined yet.",
-    users:      "Who this is for, from the roles named in the user stories.",
-    guardrails: "The promises the system makes, and what enforces them today.",
-    systems:    "External systems this platform connects to. None named yet.",
-    pm:         "Releases, stories, and due dates — a Gantt view you can click into.",
-    agents:     "Who owns each story. Not a scoped AI agent roster yet.",
-    kb:         "Everything the project knows about itself, with a Q&A panel.",
-    "data-model": "The tables behind all of the above, derived from the requirements."
-  };
+  // One card that drills down to the tab holding its detail.
+  var card = Site.card;
 
-  function render() {
-    var data = Site.currentData();
-    var meta = data.meta;
+  function releaseName(data, key) {
+    var r = data.releases.filter(function (x) { return x.key === key; })[0];
+    return r ? esc(r.key + " - " + r.name) : esc(key || "-");
+  }
 
-    document.getElementById("cc-title").textContent = meta.title;
-    document.getElementById("cc-oneliner").textContent = meta.oneLiner + " (" + meta.sector + ")";
-
-    // ---- Where we are ----------------------------------------------------
-    var today = meta.todayISO;
-    var currentRelease = null, nextRelease = null;
-    data.releases.forEach(function (r, i) {
-      if (today >= r.start && today <= r.end) currentRelease = r;
-      if (!currentRelease && !nextRelease && today < r.start) nextRelease = r;
-    });
-
-    var releaseHtml = "";
-    if (currentRelease) {
-      var total = Site.daysBetween(currentRelease.start, currentRelease.end) + 1;
-      var elapsed = Math.min(total, Math.max(0, Site.daysBetween(currentRelease.start, today) + 1));
-      var pct = Math.round((elapsed / total) * 100);
-      releaseHtml =
-        '<div class="card">' +
-          '<div class="stat-label">CURRENT RELEASE</div>' +
-          '<div class="stat-value" style="font-size:20px;">' + Site.escapeHtml(currentRelease.id) + ' — ' + Site.escapeHtml(currentRelease.name) + '</div>' +
-          '<div class="stat-sub">' + Site.fmtDate(currentRelease.start) + ' → ' + Site.fmtDate(currentRelease.end) + '</div>' +
-          '<div style="margin-top:10px;" class="progress-track"><div class="progress-fill" style="width:' + pct + '%;"></div></div>' +
-          '<div class="stat-sub" style="margin-top:4px;">' + elapsed + ' of ' + total + ' days elapsed</div>' +
-        '</div>';
+  function renderWhereWeAre(data) {
+    var s = data.schedule;
+    var today = Site.todayISO();
+    var phase = CCData.phaseOf(s, data.releases, today);
+    var phaseValue, phaseSub;
+    if (phase.kind === "release") {
+      phaseValue = releaseName(data, phase.release.key);
+      phaseSub = Site.fmtDate(phase.release.startsOn) + " to " + Site.fmtDate(phase.release.endsOn);
+    } else if (phase.kind === "demo_prep") {
+      phaseValue = "Demo prep";
+      phaseSub = "Build ended " + Site.fmtDate(s.build_end) + "; demo is " + Site.fmtDate(s.demo_day);
+    } else if (phase.kind === "before") {
+      phaseValue = "Before the build";
+      phaseSub = "Build starts " + Site.fmtDate(s.build_start);
+    } else if (phase.kind === "after") {
+      phaseValue = "Term complete";
+      phaseSub = "Demo day was " + Site.fmtDate(s.demo_day);
     } else {
-      releaseHtml =
-        '<div class="card">' +
-          '<div class="stat-label">CURRENT RELEASE</div>' +
-          '<div class="stat-value" style="font-size:16px;">Between releases</div>' +
-          '<div class="stat-sub">Next up: ' + (nextRelease ? Site.escapeHtml(nextRelease.id) + ' — ' + Site.escapeHtml(nextRelease.name) + ' (' + Site.fmtDate(nextRelease.start) + ')' : '—') + '</div>' +
-        '</div>';
+      phaseValue = "Between releases";
+      phaseSub = phase.next ? "Next: " + releaseName(data, phase.next.key) + " on " + Site.fmtDate(phase.next.startsOn) : "No later release scheduled";
     }
 
-    var demoDays = Site.daysBetween(today, meta.demoDayISO);
-    var buildDays = Site.daysBetween(today, meta.buildEndsISO);
-    var demoHtml =
-      '<div class="card">' +
-        '<div class="stat-label">DEMO DAY</div>' +
-        '<div class="stat-value" style="font-size:20px;">' + Site.fmtDate(meta.demoDayISO) + '</div>' +
-        '<div class="stat-sub">' + demoDays + ' days away · build ends ' + Site.fmtDate(meta.buildEndsISO) + ' (' + buildDays + ' days) · then a week of demo prep</div>' +
-      '</div>';
+    var demoDays = s.demo_day ? Site.daysBetween(today, s.demo_day) : null;
+    var demoSub = demoDays === null ? "No demo day in the plan" :
+      demoDays > 0 ? demoDays + " days away" : demoDays === 0 ? "Today" : Math.abs(demoDays) + " days ago";
 
-    var demoTarget = data.releases.filter(function (r) { return r.isDemoTarget; })[0];
-    var scopeHtml =
-      '<div class="card">' +
-        '<div class="stat-label">DEMO SCOPE</div>' +
-        '<div class="stat-value" style="font-size:20px;">' + (demoTarget ? Site.escapeHtml(demoTarget.id.toUpperCase()) : "—") + '</div>' +
-        '<div class="stat-sub">' + (demoTarget ? Site.escapeHtml(demoTarget.name) + ' is this term\'s demo target. Releases after it are roadmap, not build scope.' : "No release marked as the demo target.") + '</div>' +
-      '</div>';
+    document.getElementById("where-we-are").innerHTML =
+      card("pm.html", "WHERE IN THE TERM", phaseValue, phaseSub, false) +
+      card("pm.html", "DEMO DAY", esc(Site.fmtDate(s.demo_day)), esc(demoSub), false) +
+      card("pm.html", "DEMO SCOPE", releaseName(data, s.demo_release_key),
+        "The release you demo. Later releases are roadmap.", false);
+  }
 
-    document.getElementById("where-we-are").innerHTML = releaseHtml + demoHtml + scopeHtml;
+  function renderProgress(data) {
+    var t = data.totals;
+    var el = document.getElementById("progress");
+    if (!t) {
+      el.innerHTML = '<div class="empty-state">progress.json carries no totals yet - not checked, which is not the same as zero.</div>';
+      return;
+    }
+    var sample = data.isSample;
+    var points = t.points_awarded === null || t.points_awarded === undefined ? "not awarded yet" : esc(String(t.points_awarded));
+    var untracked = data.stories.filter(function (st) { return st.state === null; }).map(function (st) { return st.id; });
+    var storySub = esc(t.stories_in_progress + " in progress, " + t.stories_submitted + " submitted, " + t.stories_not_started + " not started");
+    if (untracked.length) storySub += "<br>" + esc(untracked.join(", ") + " in the plan, not checked yet");
+    el.innerHTML =
+      card("pm.html", "STORIES VERIFIED", esc(t.stories_verified + " of " + t.stories_total), storySub, sample) +
+      card("kb.html", "ACCEPTANCE CRITERIA PASSED", esc(t.criteria_passed + " of " + t.criteria_total),
+        "Ticked in progress.json and confirmed by the platform", sample) +
+      card("pm.html", "POINTS AWARDED", points, "Awarded by the platform on verification", sample);
+  }
 
-    // ---- What's live --------------------------------------------------
-    var liveHtml = '<div class="grid">';
-    data.guardrails.forEach(function (g) {
-      var enforced = !!g.enforcedBy;
-      liveHtml += '<div>' +
-        Site.statusDot(enforced ? "up" : "unknown", null, enforced ? "Enforced" : "Not yet enforced") +
-        '<div style="font-size:13px;margin-top:4px;"><strong>' + Site.escapeHtml(g.id) + '</strong> — ' + Site.escapeHtml(g.promise) + '</div>' +
-        (enforced ? '<div class="stat-sub">' + Site.escapeHtml(g.enforcedBy) + '</div>' : '') +
-        '</div>';
-    });
-    liveHtml += '</div>';
-
-    var systemsLine = data.systems.length
-      ? '<div class="stat-sub" style="margin-top:14px;">' + data.systems.length + ' external system(s) connected.</div>'
-      : '<div class="empty-state" style="margin-top:14px;">No external systems connected yet — none are named in the plan. The <strong>Systems</strong> tab will track these once integrations start.</div>';
-
-    document.getElementById("whats-live").innerHTML =
-      '<div class="stat-label" style="margin-bottom:10px;">GUARDRAILS (' + data.guardrails.length + ' SAFE requirements)</div>' +
-      liveHtml + systemsLine;
-
-    // ---- Quick stats ----------------------------------------------------
-    var mustCount = data.requirements.filter(function (r) { return r.priority === "must"; }).length;
-    var shouldCount = data.requirements.filter(function (r) { return r.priority === "should"; }).length;
-    var doneStories = data.stories.filter(function (s) { return s.status === "done"; }).length;
-
-    var stats = [
-      { value: data.requirements.length, label: "Requirements", sub: mustCount + " must · " + shouldCount + " should" },
-      { value: data.stories.length, label: "Stories", sub: "across " + data.releases.length + " releases" },
-      { value: doneStories + " / " + data.stories.length, label: "Stories delivered", sub: Site.getMode() === "sample" ? "sample status shown" : "nothing shipped yet" },
-      { value: data.roles.length, label: "User roles", sub: data.roles.join(", ") },
-      { value: data.guardrails.length, label: "Guardrails (SAFE reqs)", sub: data.guardrails.filter(function(g){return g.enforcedBy;}).length + " enforced today" }
-    ];
-
-    document.getElementById("quick-stats").innerHTML = stats.map(function (s) {
-      return '<div class="stat"><div class="stat-value">' + Site.escapeHtml(String(s.value)) + '</div>' +
-        '<div class="stat-label">' + Site.escapeHtml(s.label) + '</div>' +
-        '<div class="stat-sub">' + Site.escapeHtml(s.sub) + '</div></div>';
+  function renderWhatsLive(data) {
+    var sample = data.isSample;
+    var guardrailCards = data.guardrails.map(function (g) {
+      var by = g.enforcedBy.length ? g.enforcedBy.join(", ") : "no story";
+      var value = g.kept ? "Kept" : "Not yet kept";
+      var sub = esc(g.statement) + "<br>" + (g.kept
+        ? esc("Enforced by " + by + " (verified)")
+        : esc("A promise made and not yet kept - " + by + " not verified"));
+      return card("guardrails.html", "GUARDRAIL " + g.id, value, sub, sample);
     }).join("");
+    if (!data.guardrails.length) {
+      guardrailCards = '<div class="empty-state">The plan has no SAFE requirement, so no guardrails. Worth fixing before building further.</div>';
+    }
 
-    // ---- Tab grid ---------------------------------------------------------
+    var systemsCard = data.systems.length
+      ? card("systems.html", "EXTERNAL SYSTEMS", esc(String(data.systems.length)),
+          Site.statusDot("unknown", null, "Connection not checked"), sample)
+      : card("systems.html", "EXTERNAL SYSTEMS", "None named",
+          "The plan names no external system yet.", false);
+
+    document.getElementById("whats-live").innerHTML = guardrailCards + systemsCard;
+  }
+
+  function renderTabs() {
     document.getElementById("tab-grid").innerHTML = Site.TABS.map(function (t) {
-      var desc = TAB_DESCRIPTIONS[t.id] || "";
-      if (t.built) {
-        return '<a class="tile current" href="' + t.href + '">' +
-          '<div class="tile-title">' + Site.escapeHtml(t.label) + '</div>' +
-          '<div class="tile-desc">' + Site.escapeHtml(desc) + '</div>' +
-          '<div class="tile-meta">you are here</div></a>';
-      }
-      return '<div class="tile disabled">' +
-        '<div class="tile-title">' + Site.escapeHtml(t.label) + '</div>' +
-        '<div class="tile-desc">' + Site.escapeHtml(desc) + '</div>' +
-        '<div class="tile-meta">not built yet</div></div>';
+      var meta = t.id === "overview" ? "you are here" : t.built ? "open" : "not built yet - open to see what goes here";
+      return '<a class="tile' + (t.id === "overview" ? " current" : "") + '" href="' + t.href + '">' +
+        '<div class="tile-title">' + esc(t.label) + '</div>' +
+        '<div class="tile-desc">' + esc(t.desc) + '</div>' +
+        '<div class="tile-meta">' + esc(meta) + '</div></a>';
     }).join("");
   }
 
-  document.addEventListener("cc-mode-changed", render);
-  render();
+  Site.boot("overview", function (data) {
+    document.title = "Command Center - " + data.project.name;
+    document.getElementById("paused").innerHTML = Site.pausedBanner();
+    document.getElementById("cc-title").textContent = data.project.name;
+    document.getElementById("cc-descriptor").textContent = data.project.descriptor;
+    renderWhereWeAre(data);
+    renderProgress(data);
+    renderWhatsLive(data);
+    renderTabs();
+  });
 </script>
 </body>
 </html>

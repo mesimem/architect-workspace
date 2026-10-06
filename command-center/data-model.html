@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data model - Command Center</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div id="topnav-root"></div>
+<main class="container" id="page-root"></main>
+<script src="assets/data.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  // Source: command-center/data-model.json - the stores the backend actually
+  // writes, read from code - joined to plan.stories for the requirements each
+  // store serves.
+  Site.boot("data-model", function (data) {
+    var esc = Site.escapeHtml;
+    var dm = data.dataModel;
+    var entities = dm.entities || [];
+    var reqsFor = function (storyIds) {
+      var reqs = {};
+      storyIds.forEach(function (id) {
+        var s = data.stories.filter(function (x) { return x.id === id; })[0];
+        (s ? s.fulfills : []).forEach(function (r) { reqs[r] = true; });
+      });
+      return Object.keys(reqs).sort();
+    };
+    var cards = entities.map(function (e) {
+      var reqs = reqsFor(e.stories || []);
+      var rel = (e.relationships || []).map(function (r) { return r.field + " -> " + r.references; });
+      return Site.card(Site.detailHref("entity", e.store), e.store, esc(e.entity),
+        esc(e.fields.length + " fields, keyed on " + e.key) +
+        (rel.length ? '<br>' + esc(rel.join("; ")) : '') +
+        (reqs.length ? '<br>Serves ' + esc(reqs.join(", ")) : ''), false);
+    }).join("");
+    document.getElementById("page-root").innerHTML = Site.pageHeader("data-model", false) +
+      '<div class="section"><div class="empty-state"><strong>Read from the backend, not designed on paper.</strong> ' + esc(dm.storage || "") +
+        '<br>Derived from: <code>' + esc(dm.derived_from || "-") + '</code></div></div>' +
+      '<div class="section"><h2>' + esc(entities.length + " stores") + '</h2>' +
+        (cards ? '<div class="grid">' + cards + '</div>' : '<div class="empty-state">No stores recorded yet.</div>') + '</div>' +
+      ((dm.caveats || []).length ? '<div class="section"><h2>Known gaps in this model</h2><ul>' +
+        dm.caveats.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join("") + '</ul></div>' : '');
+  });
+</script>
+</body>
+</html>

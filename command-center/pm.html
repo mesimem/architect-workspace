@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project management - Command Center</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div id="topnav-root"></div>
+<main class="container" id="page-root"></main>
+<script src="assets/data.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  // Source: plan.releases + plan.schedule for the bars, plan.stories for due
+  // dates (current AND baseline, so slippage shows), progress.json for state.
+  var esc = Site.escapeHtml;
+
+  function gantt(data) {
+    var s = data.schedule;
+    var dated = data.releases.filter(function (r) { return r.startsOn && r.endsOn; });
+    if (!dated.length) return '<div class="empty-state">No release has dates in the plan yet.</div>';
+    var start = s.build_start && s.build_start < dated[0].startsOn ? s.build_start : dated[0].startsOn;
+    var end = s.demo_day || dated[dated.length - 1].endsOn;
+    var span = Math.max(1, Site.daysBetween(start, end) + 1);
+    var pct = function (iso) { return Math.min(100, Math.max(0, Site.daysBetween(start, iso) / span * 100)); };
+    var today = Site.todayISO();
+    var marker = today >= start && today <= end
+      ? '<div class="gantt-today" style="left:' + pct(today) + '%;" title="Today"></div>' : '';
+    var bars = dated.map(function (r) {
+      var left = pct(r.startsOn), width = Math.max(1.5, pct(r.endsOn) + 100 / span - left);
+      return '<div class="gantt-row"><a class="gantt-label" href="' + Site.detailHref("release", r.key) + '">' +
+        esc(r.key + " " + r.name) + (r.isDemoTarget ? " (demo)" : "") + '</a>' +
+        '<div class="gantt-track">' + marker +
+        '<a class="gantt-bar' + (r.isDemoTarget ? ' demo' : '') + '" href="' + Site.detailHref("release", r.key) + '" style="left:' + left + '%;width:' + width + '%;" ' +
+        'title="' + esc(r.startsOn + " to " + r.endsOn) + '">' + esc(r.verifiedCount + "/" + r.storyIds.length) + '</a></div></div>';
+    }).join("");
+    return '<div class="card">' + bars +
+      '<div class="stat-sub" style="margin-top:8px;">' + esc(Site.fmtDate(start) + " to " + Site.fmtDate(end) +
+      " - bars show verified/total stories; the vertical line is today") + '</div></div>';
+  }
+
+  function storyTable(data) {
+    var byRelease = {};
+    data.releases.forEach(function (r, i) { byRelease[r.key] = i; });
+    var rows = data.stories.slice().sort(function (a, b) {
+      return (byRelease[a.release] - byRelease[b.release]) || String(a.dueOn).localeCompare(String(b.dueOn));
+    }).map(function (st) {
+      var slip = st.slipDays === null ? "-" : st.slipDays === 0 ? "-" : (st.slipDays > 0 ? "+" : "") + st.slipDays + " d";
+      return '<tr><td><a href="' + Site.detailHref("story", st.id) + '">' + esc(st.id) + '</a></td>' +
+        '<td><a href="' + Site.detailHref("story", st.id) + '">' + esc(st.title) + '</a></td>' +
+        '<td>' + esc(st.release) + '</td><td>' + esc(Site.fmtDate(st.dueOn)) + '</td>' +
+        '<td>' + esc(Site.fmtDate(st.dueBaselineOn)) + '</td><td class="' + (st.slipDays > 0 ? 'slip' : '') + '">' + esc(slip) + '</td>' +
+        '<td>' + Site.stateChip(st.state) + '</td></tr>';
+    }).join("");
+    return '<table class="data-table"><thead><tr><th>Story</th><th>Title</th><th>Release</th><th>Due</th><th>Baseline</th><th>Slip</th><th>State</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  function prepTable(data) {
+    var prep = data.schedule.prep || [];
+    if (!prep.length) return '';
+    return '<div class="section"><h2>Demo preparation</h2><table class="data-table"><thead><tr><th>Task</th><th>Due</th></tr></thead><tbody>' +
+      prep.map(function (p) { return '<tr><td>' + esc(p.title) + '</td><td>' + esc(Site.fmtDate(p.due_on)) + '</td></tr>'; }).join("") +
+      '</tbody></table><p class="stat-sub">These come from the plan\'s schedule; progress.json does not track them, so no state is shown.</p></div>';
+  }
+
+  Site.boot("pm", function (data) {
+    document.getElementById("page-root").innerHTML = Site.pageHeader("pm", data.isSample) +
+      '<div class="section"><h2>Releases</h2>' + gantt(data) + '</div>' +
+      '<div class="section"><h2>Every story</h2>' + storyTable(data) + '</div>' + prepTable(data);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Users &amp; use case - Command Center</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div id="topnav-root"></div>
+<main class="container" id="page-root"></main>
+<script src="assets/data.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  // Source: plan.derived.roles, matched to the stories written "As a <role>".
+  Site.boot("users", function (data) {
+    var esc = Site.escapeHtml;
+    var cards = data.roles.map(function (r) {
+      var verified = r.storyIds.filter(function (id) {
+        var s = data.stories.filter(function (x) { return x.id === id; })[0];
+        return s && s.state === "verified";
+      }).length;
+      var sub = r.storyIds.length
+        ? esc(r.storyIds.length + " stories written for this role, " + verified + " verified")
+        : "Named in the plan, but no story is written for this role yet";
+      return Site.card(Site.detailHref("role", r.name), "ROLE", esc(r.name), sub, false);
+    }).join("");
+    document.getElementById("page-root").innerHTML = Site.pageHeader("users", false) +
+      '<div class="section"><p class="page-desc">' + esc(data.project.descriptor) + '</p></div>' +
+      '<div class="section"><h2>Who it is for</h2>' +
+      (cards ? '<div class="grid">' + cards + '</div>' : '<div class="empty-state">The plan names no roles yet.</div>') + '</div>';
+  });
+</script>
+</body>
+</html>

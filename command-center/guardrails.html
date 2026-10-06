@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guardrails - Command Center</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div id="topnav-root"></div>
+<main class="container" id="page-root"></main>
+<script src="assets/data.js"></script>
+<script src="assets/site.js"></script>
+<script>
+  // Source: plan.derived.guardrails, followed through requirements[].fulfilled_by
+  // to the stories, whose verification.state comes from progress.json.
+  Site.boot("guardrails", function (data) {
+    var esc = Site.escapeHtml;
+    var body;
+    if (!data.guardrails.length) {
+      body = '<div class="empty-state">The plan has no SAFE requirement, so the system makes no promise here. Worth fixing before building further.</div>';
+    } else {
+      body = '<div class="grid">' + data.guardrails.map(function (g) {
+        var by = g.enforcedBy.length ? g.enforcedBy.join(", ") : "no story";
+        var sub = esc(g.statement) + '<br><br>' + (g.kept
+          ? esc("Enforced by " + by + ", verified.")
+          : esc("A promise made and not yet kept: " + by + " not verified."));
+        return Site.card(Site.detailHref("guardrail", g.id), g.id, g.kept ? "Kept" : "Not yet kept", sub, data.isSample);
+      }).join("") + '</div>';
+    }
+    var kept = data.guardrails.filter(function (g) { return g.kept; }).length;
+    document.getElementById("page-root").innerHTML = Site.pageHeader("guardrails", data.isSample) +
+      '<div class="section"><h2>What must never happen - ' + esc(kept + " of " + data.guardrails.length + " kept") + '</h2>' + body + '</div>';
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Knowledge base - Command Center</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div id="topnav-root"></div>
+<main class="container" id="page-root"></main>
+<script src="assets/data.js"></script>
+<script src="assets/site.js"></script>
+<script src="assets/kbChat.js"></script>
+<script>
+  // Source: plan.requirements[].fulfilled_by joined to progress.json for the
+  // traceability table; plan.stories; command-center/kb-notes.json for notes.
+  var esc = Site.escapeHtml;
+  var model = null;
+
+  function traceability(data) {
+    return '<table class="data-table"><thead><tr><th>Requirement</th><th>Kind</th><th>Priority</th><th>Statement</th><th>Covered by</th><th>Built</th></tr></thead><tbody>' +
+      data.requirements.map(function (r) {
+        var gap = !r.fulfilledBy.length;
+        return '<tr class="' + (gap && r.priority === "must" ? 'gap' : '') + '"><td><a href="' + Site.detailHref("requirement", r.id) + '">' + esc(r.id) + '</a></td>' +
+          '<td>' + esc(r.kind) + '</td><td>' + Site.priorityChip(r.priority) + '</td><td>' + esc(r.statement) + '</td>' +
+          '<td>' + (gap ? '<strong>No story</strong>' : r.fulfilledBy.map(function (id) { return Site.storyLink(data, id); }).join("<br>")) + '</td>' +
+          '<td>' + (r.built ? "Yes" : gap ? "Gap" : "Not yet") + '</td></tr>';
+      }).join("") + '</tbody></table>';
+  }
+
+  function notes(data) {
+    if (!data.notes.length) {
+      return '<div class="grid">' + Site.card(Site.detailHref("empty", "notes"), "NOTES", "None yet", "Open to see how to add one.", false) + '</div>';
+    }
+    var indexed = data.notes.map(function (n, i) { return { n: n, i: i }; });
+    indexed.sort(function (a, b) { return String(b.n.date).localeCompare(String(a.n.date)); });
+    return '<div class="grid">' + indexed.map(function (x) {
+      return Site.card(Site.detailHref("note", String(x.i)), (x.n.kind || "note").toUpperCase() + " - " + Site.fmtDate(x.n.date),
+        esc(x.n.title), esc(x.n.body), false);
+    }).join("") + '</div><p class="stat-sub">Add notes in <code>command-center/kb-notes.json</code>.</p>';
+  }
+
+  function stories(data) {
+    return '<div class="grid">' + data.stories.map(function (s) {
+      return Site.card(Site.detailHref("story", s.id), s.id + " - " + s.release, esc(s.title), Site.stateChip(s.state), data.isSample);
+    }).join("") + '</div>';
+  }
+
+  function ask(event) {
+    event.preventDefault();
+    var input = document.getElementById("kb-q");
+    var q = input.value;
+    var a = KbChat.answer(q, Site.currentData());
+    var log = document.getElementById("kb-log");
+    log.innerHTML = '<div class="chat-q">' + esc(q) + '</div><div class="chat-a">' + esc(a.text) +
+      '<div class="stat-sub">Source: <a href="' + a.cite.href + '">' + esc(a.cite.label) + '</a> tab' +
+      (Site.getMode() === "sample" ? " (sample data)" : "") + '</div></div>' + log.innerHTML;
+    input.value = "";
+  }
+
+  Site.boot("kb", function (data) {
+    var gaps = data.requirements.filter(function (r) { return !r.fulfilledBy.length && r.priority === "must"; }).length;
+    document.getElementById("page-root").innerHTML = Site.pageHeader("kb", data.isSample) +
+      '<div class="section"><h2>Ask about this project</h2><div class="card">' +
+        '<form id="kb-form" class="chat-form"><input id="kb-q" type="text" autocomplete="off" aria-label="Question" ' +
+        'placeholder="e.g. what is not built yet? / which guardrails are kept? / tell me about a story id"><button type="submit">Ask</button></form>' +
+        '<p class="stat-sub">Answers come only from the data on these pages and name the tab they came from. If the data cannot answer, it says so.</p>' +
+        '<div id="kb-log"></div></div></div>' +
+      '<div class="section"><h2>Traceability - ' + esc(data.requirements.length + " requirements") +
+        (gaps ? ', ' + esc(gaps + " must-have with no story") : '') + '</h2>' + traceability(data) + '</div>' +
+      '<div class="section"><h2>Decisions and notes</h2>' + notes(data) + '</div>' +
+      '<div class="section"><h2>Stories</h2>' + stories(data) + '</div>';
+    document.getElementById("kb-form").addEventListener("submit", ask);
+  });
+</script>
+</body>
+</html>
