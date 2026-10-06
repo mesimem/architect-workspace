@@ -110,7 +110,7 @@
   <div class="wrap">
     <p class="eyebrow">Claude Code session report</p>
     <h1>Session CC-20261005-7kcq</h1>
-    <p class="meta">4 changes logged &middot; generated 2026-10-06T02:13:09.928Z</p>
+    <p class="meta">5 changes logged &middot; generated 2026-10-06T02:27:41.081Z</p>
   </div>
 </header>
 <main>
@@ -158,6 +158,17 @@
 <div class="field"><div class="field-label">What changed</div><div class="field-value">the operator added STORY-017 and STORY-018 in the portal (sync 3b9b796 / 7df620d, REQ-019 and REQ-020); <code>.colaberry/progress.json</code> - all 6 criteria set true with per-criterion <code>evidence</code>, files_touched, tests_added and notes; <code>docs/stories/STORY-017.md</code> and <code>STORY-018.md</code> boxes ticked.</div></div>
 <div class="field"><div class="field-label">Verification</div><div class="field-value"><code>npm test</code> 134/134. Per criterion: <code>packages.test.js</code> &quot;an advisor combines two products into one priced offering&quot;, &quot;overlapping products are refused with a message that names the days&quot;, &quot;the creation is in the audit trail, readable through the API&quot;; <code>opsBookings.test.js</code> &quot;CRITERION 1 - a new booking is on the board with its status&quot;, &quot;CRITERION 2 - the saved status is reflected on the dashboard&quot;, &quot;every status change is in the trail, not only the first&quot;.</div></div>
 <div class="field"><div class="field-label">Notes</div><div class="field-value">Code shipped earlier in 025868e (STORY-017) and 4ad1ea9 (STORY-018). The portal titles carry a &quot;STORY-0nn: &quot; prefix (typed into the title field) - cosmetic, left as the platform wrote it.</div></div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">05</span>
+    <h2>STORY-019: run email campaigns to customer segments</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-10-05</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value">NEW <code>backend/src/services/marketing/</code> - <code>segmentRules.js</code> (pure: validate a segment rule, match CRM customers), <code>segmentStore.js</code> (segments keyed on name, rule stored not members, audited via <code>auditedCommit</code>), <code>contactPreferences.js</code> (email + opt-out per customer, audited, opt-out wins, address never in the trail), <code>mailClient.js</code> (in-memory outbox behind <code>COLABERRY_MAIL_API_TOKEN</code>, timeout + capped retry, replay by messageId), <code>campaignSender.js</code> (per-recipient: already_sent -&gt; opted_out -&gt; no_email_on_file -&gt; send -&gt; send_failed; sends recorded under campaignId:customerId; every outcome audited). NEW <code>http/routes/marketingRoutes.js</code> (5 routes under /api/marketing), registered in <code>routes/index.js</code>. <code>authz/permissionCatalog.js</code> + <code>permissions.js</code>: <code>marketing.read</code> / <code>marketing.write</code> for sales only. <code>command-center/data-model.json</code>: the 4 new stores. <code>command-center/kb-notes.json</code>: dropped a stale store count.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value"><code>npm run verify</code> green - 137/137 tests (was 134), mypy clean. New: <code>segmentRules.test.js</code>, <code>campaignSender.test.js</code> (incl. mail client), <code>http/marketing.test.js</code> (real server, real bookings); <code>permissions.test.js</code> extended. AC1: segment {minBookings:2} returns exactly the two repeat customers over HTTP. AC2: opted-out customer skipped as opted_out and never handed to the mail client; no_email_on_file and send_failed (with errorClass) proved at service level. AC3: send audited with actor + correlation id; re-sends leave the outbox at 1 email and add one already_sent audit entry. Failure paths: mail unconfigured -&gt; 503 before any send; reused campaign id -&gt; 409; unknown segment -&gt; 404; malformed id/body -&gt; 400; audit failure after a send -&gt; reported audited:false and never re-sent; 401/403 for every non-sales role on all routes.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">No real email is sent and no dependency was added. The portal created REQ-021 for this story instead of linking REQ-016, so REQ-016 still reads as uncovered until that is changed in the portal (not editable from the repo without breaking platform ownership of plan.json).</div></div>
 </article>
   </div>
 </main>
