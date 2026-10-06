@@ -50,6 +50,12 @@ The system must allow customers to book flights, hotels, and safaris as part of 
 
 Fulfilled by: STORY-001
 
+### REQ-020 — Functional · must
+
+The system must centralize all bookings and manage their statuses.
+
+Fulfilled by: STORY-018
+
 ## Custom Trips
 
 ### REQ-003 — Functional · must
@@ -57,6 +63,12 @@ Fulfilled by: STORY-001
 The system must enable travel advisors to create customized trip proposals within 30 minutes.
 
 Fulfilled by: STORY-013
+
+### REQ-019 — Functional · must
+
+The system must allow advisors to combine multiple travel products into one package.
+
+Fulfilled by: STORY-017
 
 ## Customer Portal
 
