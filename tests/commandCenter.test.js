@@ -127,7 +127,12 @@ for (const e of dataModel.entities) {
   assert.ok(backendStores.has(e.store), e.store + ' is a store the backend really creates');
   assert.ok(fs.existsSync(path.join(root, e.source)), e.source + ' exists');
   assert.ok(e.fields.length > 0, e.store + ' lists its fields');
-  for (const id of e.stories) assert.ok(plan.stories.some((st) => st.id === id), e.store + ' cites ' + id + ', which is in the plan');
+  // A store may cite a story built outside the platform's plan (STORY-017/018
+  // were), so the citation must resolve to the plan OR to a story doc.
+  for (const id of e.stories) {
+    assert.ok(plan.stories.some((st) => st.id === id) || fs.existsSync(path.join(root, 'docs', 'stories', id + '.md')),
+      e.store + ' cites ' + id + ', which is in the plan or documented');
+  }
   for (const r of e.relationships) assert.ok(dataModel.entities.some((x) => x.store === r.references), e.store + ' references a modelled store');
 }
 for (const store of backendStores) {
