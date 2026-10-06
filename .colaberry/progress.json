@@ -3,13 +3,13 @@
   "project": "U.S.-based Full-Service Travel Agency Platform",
   "totals": {
     "stories_total": 17,
-    "stories_verified": 14,
+    "stories_verified": 15,
     "stories_submitted": 0,
-    "stories_in_progress": 3,
+    "stories_in_progress": 2,
     "stories_not_started": 0,
-    "criteria_total": 50,
-    "criteria_passed": 39,
-    "points_awarded": 658
+    "criteria_total": 53,
+    "criteria_passed": 45,
+    "points_awarded": 705
   },
   "stories": [
     {
@@ -591,12 +591,12 @@
       "updated_at": "2026-10-06T00:31:44.671Z",
       "verification": {
         "state": "verified",
-        "criteria_passed": 0,
-        "criteria_total": 0,
+        "criteria_passed": 3,
+        "criteria_total": 3,
         "verified_at": "2026-10-06T00:39:43.127Z",
         "commit_sha": "b907a57a8d72778fa2fede4f9af0ceeab820fa2b",
         "commit_url": "https://github.com/mesimem/architect-workspace/commit/b907a57a8d72778fa2fede4f9af0ceeab820fa2b",
-        "commit_at": null,
+        "commit_at": "2026-10-06T00:32:50Z",
         "points_awarded": 47,
         "outstanding": []
       }
@@ -637,19 +637,15 @@
       "notes": "GET /api/analytics/revenue (new analytics.read permission, granted to a new manager role and to finance - NOT admin, which reads the audit trail of analytics runs) returns monthly revenue and booking trends computed from the CRM booking log on every call. Incomplete rows are excluded and named per field (status partial); duplicate tripIds and mixed currencies are flagged as mismatch (revenue withheld, never summed across currencies); an empty log is no_data, not $0. Every generation, including a failed one, is audited keyed on the request correlation id; if the audit write fails no figures are returned (503 audit_unavailable). An unreadable log is 503 source_unavailable. permissions.js was split (vocabulary moved verbatim to permissionCatalog.js) to get it back under the 500-line ceiling before adding the grant. Revenue is booked revenue: refunds and cancellations are not subtracted.",
       "updated_at": "2026-10-06T01:03:17.644Z",
       "verification": {
-        "state": "in_progress",
-        "criteria_passed": 0,
+        "state": "verified",
+        "criteria_passed": 3,
         "criteria_total": 3,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
-        "outstanding": [
-          "Given data is available, when analytics are generated, then they display revenue and booking trends.",
-          "Given data is incomplete, when analytics are generated, then the system highlights missing data.",
-          "Trust: The system logs all analytics generation activities."
-        ]
+        "verified_at": "2026-10-06T00:58:13.738Z",
+        "commit_sha": "fb1055903626fe514151c52adccd1c77d446a0a4",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/fb1055903626fe514151c52adccd1c77d446a0a4",
+        "commit_at": "2026-10-06T00:57:52Z",
+        "points_awarded": 47,
+        "outstanding": []
       }
     },
     {
