@@ -22,6 +22,7 @@ const { supplierRoutes } = require("./supplierRoutes");
 const { suggestionRoutes } = require("./suggestionRoutes");
 const { opsBookingRoutes } = require("./opsBookingRoutes");
 const { paymentRoutes } = require("./paymentRoutes");
+const { analyticsRoutes } = require("./analyticsRoutes");
 const { healthRoutes } = require("./healthRoutes");
 
 const ROUTES = [].concat(
@@ -56,7 +57,9 @@ const ROUTES = [].concat(
   // They overlap nothing else here, so the position is readability, not
   // behaviour.
   opsBookingRoutes,
-  paymentRoutes
+  paymentRoutes,
+  // STORY-012. Reads what bookings produce; /api/analytics overlaps nothing.
+  analyticsRoutes
 );
 
 module.exports = { ROUTES };

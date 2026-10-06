@@ -608,21 +608,33 @@
       "criteria": [
         {
           "text": "Given data is available, when analytics are generated, then they display revenue and booking trends.",
-          "passed": false
+          "passed": true
         },
         {
           "text": "Given data is incomplete, when analytics are generated, then the system highlights missing data.",
-          "passed": false
+          "passed": true
         },
         {
           "text": "Trust: The system logs all analytics generation activities.",
-          "passed": false
+          "passed": true
         }
       ],
-      "files_touched": [],
-      "tests_added": [],
-      "notes": null,
-      "updated_at": null,
+      "files_touched": [
+        "backend/src/services/analytics/revenueAnalytics.js",
+        "backend/src/services/analytics/analyticsService.js",
+        "backend/src/http/routes/analyticsRoutes.js",
+        "backend/src/http/routes/index.js",
+        "backend/src/services/authz/permissionCatalog.js",
+        "backend/src/services/authz/permissions.js",
+        "docs/stories/STORY-012.md"
+      ],
+      "tests_added": [
+        "backend/src/services/analytics/revenueAnalytics.test.js",
+        "backend/src/services/analytics/analyticsService.test.js",
+        "backend/src/http/analytics.test.js"
+      ],
+      "notes": "GET /api/analytics/revenue (new analytics.read permission, granted to admin and finance) returns monthly revenue and booking trends computed from the CRM booking log on every call. Incomplete rows are excluded and named per field (status partial); duplicate tripIds and mixed currencies are flagged as mismatch (revenue withheld, never summed across currencies); an empty log is no_data, not $0. Every generation, including a failed one, is audited keyed on the request correlation id; if the audit write fails no figures are returned (503 audit_unavailable). An unreadable log is 503 source_unavailable. permissions.js was split (vocabulary moved verbatim to permissionCatalog.js) to get it back under the 500-line ceiling before adding the grant. Revenue is booked revenue: refunds and cancellations are not subtracted.",
+      "updated_at": "2026-10-06T00:54:29.003Z",
       "verification": {
         "state": "in_progress",
         "criteria_passed": 0,

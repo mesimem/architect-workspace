@@ -27,8 +27,8 @@ the same criteria out of `.colaberry/progress.json`, which Claude Code keeps in
 step (see the managed block in CLAUDE.md). Ticking something you have not
 actually met only misleads you.
 
-- [ ] Given data is available, when analytics are generated, then they display revenue and booking trends.
-- [ ] Given data is incomplete, when analytics are generated, then the system highlights missing data.
-- [ ] Trust: The system logs all analytics generation activities.
+- [x] Given data is available, when analytics are generated, then they display revenue and booking trends.
+- [x] Given data is incomplete, when analytics are generated, then the system highlights missing data.
+- [x] Trust: The system logs all analytics generation activities.
 
 When every box above is ticked, stop and show the demo.
