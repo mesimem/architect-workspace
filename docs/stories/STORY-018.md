@@ -24,8 +24,8 @@ the same criteria out of `.colaberry/progress.json`, which Claude Code keeps in
 step (see the managed block in CLAUDE.md). Ticking something you have not
 actually met only misleads you.
 
-- [ ] Given a new booking is created, when the manager views the booking dashboard, then the system displays the booking with its current status.
-- [ ] Given a booking status is updated, when the manager saves the changes, then the system reflects the updated status in the dashboard.
-- [ ] Trust: The system logs all booking status changes in the audit trail.
+- [x] Given a new booking is created, when the manager views the booking dashboard, then the system displays the booking with its current status.
+- [x] Given a booking status is updated, when the manager saves the changes, then the system reflects the updated status in the dashboard.
+- [x] Trust: The system logs all booking status changes in the audit trail.
 
 When every box above is ticked, stop and show the demo.

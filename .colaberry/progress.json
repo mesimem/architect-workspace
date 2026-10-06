@@ -879,21 +879,38 @@
       "criteria": [
         {
           "text": "Given an advisor selects multiple travel products, when they create a package, then the system combines them into a single offering.",
-          "passed": false
+          "passed": true,
+          "evidence": "backend/src/http/packages.test.js \"an advisor combines two products into one priced offering\" (one packageId, priced at the sum of its parts); packageStore.test.js \"multiple products combine into a single offering\""
         },
         {
           "text": "Given an advisor tries to combine incompatible products, when they attempt to save, then the system displays an error message.",
-          "passed": false
+          "passed": true,
+          "evidence": "packages.test.js \"overlapping products are refused with a message that names the days\" and \"cross-country and duplicate components are refused too\" (400 with a message naming the components); packageStore.test.js \"incompatible products are refused, audited, and not stored\""
         },
         {
           "text": "Trust: The system logs all package creation and modification details in the audit trail.",
-          "passed": false
+          "passed": true,
+          "evidence": "packages.test.js \"the creation is in the audit trail, readable through the API\" and \"a modification is reflected immediately and audited separately\"; packageStore.test.js \"creation is audited with the components and the margin\""
         }
       ],
-      "files_touched": [],
-      "tests_added": [],
-      "notes": null,
-      "updated_at": null,
+      "files_touched": [
+        "backend/src/services/packages/packageStore.js",
+        "backend/src/services/packages/packageCompatibility.js",
+        "backend/src/services/packages/packagePricing.js",
+        "backend/src/services/quotes/quotePricing.js",
+        "backend/src/http/routes/packageRoutes.js",
+        "backend/src/http/routes/index.js",
+        "backend/src/services/authz/permissions.js"
+      ],
+      "tests_added": [
+        "backend/src/http/packages.test.js",
+        "backend/src/services/packages/packageStore.test.js",
+        "backend/src/services/packages/packageCompatibility.test.js",
+        "backend/src/services/packages/packagePricing.test.js",
+        "backend/src/services/authz/permissions.test.js"
+      ],
+      "notes": "Built 2026-10-01 (commit 025868e); the story only entered the platform plan on 2026-10-05, so its criteria are ticked now against the shipped code (CC-20261005-7kcq). POST/PATCH /api/packages behind packages.read/write; components are referenced by productId, the price is a derived snapshot; incompatibility (overlapping days, cross-country with no gap, duplicate component) is checked before price; every create, edit and refusal is audited, and an audit failure rolls the write back. Known limits: one component kind (safari products), no package booking, no delete route.",
+      "updated_at": "2026-10-06T02:11:43.306Z",
       "verification": {
         "state": "not_started",
         "criteria_passed": 0,
@@ -913,21 +930,37 @@
       "criteria": [
         {
           "text": "Given a new booking is created, when the manager views the booking dashboard, then the system displays the booking with its current status.",
-          "passed": false
+          "passed": true,
+          "evidence": "backend/src/http/opsBookings.test.js \"CRITERION 1 - a new booking is on the board with its status\"; opsBookingBoard.test.js \"CRITERION 1 - a newly booked trip appears with its current status\" (board asserted empty, then bookTrip, then the row appears as confirmed)"
         },
         {
           "text": "Given a booking status is updated, when the manager saves the changes, then the system reflects the updated status in the dashboard.",
-          "passed": false
+          "passed": true,
+          "evidence": "opsBookings.test.js \"CRITERION 2 - the saved status is reflected on the dashboard\" (dashboard re-queried after the PATCH, not the response trusted); opsBookingBoard.test.js \"CRITERION 2 - a saved status change is reflected on the dashboard\""
         },
         {
           "text": "Trust: The system logs all booking status changes in the audit trail.",
-          "passed": false
+          "passed": true,
+          "evidence": "opsBookings.test.js \"the status change is readable in the audit trail\" and \"every status change is in the trail, not only the first\"; refused changes are audited under their own event"
         }
       ],
-      "files_touched": [],
-      "tests_added": [],
-      "notes": null,
-      "updated_at": null,
+      "files_touched": [
+        "backend/src/services/booking/opsBookingBoard.js",
+        "backend/src/services/booking/bookingStatusStore.js",
+        "backend/src/services/booking/bookingStatusLifecycle.js",
+        "backend/src/http/routes/opsBookingRoutes.js",
+        "backend/src/http/routes/index.js",
+        "backend/src/services/authz/permissions.js"
+      ],
+      "tests_added": [
+        "backend/src/http/opsBookings.test.js",
+        "backend/src/services/booking/opsBookingBoard.test.js",
+        "backend/src/services/booking/bookingStatusStore.test.js",
+        "backend/src/services/booking/bookingStatusLifecycle.test.js",
+        "backend/src/services/authz/permissions.test.js"
+      ],
+      "notes": "Built 2026-10-05 (commit 4ad1ea9); the story entered the platform plan later that day, so its criteria are ticked now against the shipped code (CC-20261005-7kcq). GET /api/ops/bookings, GET /api/ops/bookings/:tripId and PATCH /api/ops/bookings/:tripId/status for a new operations_manager role. The board reads the crm-transactions ledger live; status is a versioned overlay (booking-statuses) so every change gets its own audit entry. Known limits: no query-string filters on the route, single-trip bookings are not durable across restarts (pre-existing).",
+      "updated_at": "2026-10-06T02:11:43.307Z",
       "verification": {
         "state": "not_started",
         "criteria_passed": 0,

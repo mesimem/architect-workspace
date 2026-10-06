@@ -24,8 +24,8 @@ the same criteria out of `.colaberry/progress.json`, which Claude Code keeps in
 step (see the managed block in CLAUDE.md). Ticking something you have not
 actually met only misleads you.
 
-- [ ] Given an advisor selects multiple travel products, when they create a package, then the system combines them into a single offering.
-- [ ] Given an advisor tries to combine incompatible products, when they attempt to save, then the system displays an error message.
-- [ ] Trust: The system logs all package creation and modification details in the audit trail.
+- [x] Given an advisor selects multiple travel products, when they create a package, then the system combines them into a single offering.
+- [x] Given an advisor tries to combine incompatible products, when they attempt to save, then the system displays an error message.
+- [x] Trust: The system logs all package creation and modification details in the audit trail.
 
 When every box above is ticked, stop and show the demo.

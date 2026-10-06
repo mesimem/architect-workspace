@@ -487,3 +487,10 @@
   - What changed: `git revert ba31274` - `.colaberry/plan.json` back to the platform's 16-story, 18-requirement version (STORY-017/018, REQ-019/020 and the "operations manager" role removed; r3 back to STORY-009/010/016). `tests/commandCenter.test.js`: a data-model store may now cite a story that is in the plan OR has a `docs/stories/` file, since two stores were built by STORY-017/018.
   - Verification: committed `plan.json` hashes to 91c6c6b5...e1df3a, exactly the sha256 the platform recorded for it in `manifest.json`, so syncs should refresh it again; `npm test` 134/134.
   - Notes: Operator decision. STORY-017/018 code, tests, story docs and commits are untouched - they still need to be added in the portal to verify. `ba31274` carried no Session ID and had no PROGRESS.md entry; by timing (19:09, two minutes after CC-20261005-sh14's last commit) it was most likely that session, unconfirmed.
+
+- [x] STORY-017 and STORY-018: tick their criteria now that they are in the platform plan (no code change)
+  - Date: 2026-10-05
+  - Session: CC-20261005-7kcq
+  - What changed: the operator added STORY-017 and STORY-018 in the portal (sync 3b9b796 / 7df620d, REQ-019 and REQ-020); `.colaberry/progress.json` - all 6 criteria set true with per-criterion `evidence`, files_touched, tests_added and notes; `docs/stories/STORY-017.md` and `STORY-018.md` boxes ticked.
+  - Verification: `npm test` 134/134. Per criterion: `packages.test.js` "an advisor combines two products into one priced offering", "overlapping products are refused with a message that names the days", "the creation is in the audit trail, readable through the API"; `opsBookings.test.js` "CRITERION 1 - a new booking is on the board with its status", "CRITERION 2 - the saved status is reflected on the dashboard", "every status change is in the trail, not only the first".
+  - Notes: Code shipped earlier in 025868e (STORY-017) and 4ad1ea9 (STORY-018). The portal titles carry a "STORY-0nn: " prefix (typed into the title field) - cosmetic, left as the platform wrote it.
