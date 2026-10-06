@@ -110,7 +110,7 @@
   <div class="wrap">
     <p class="eyebrow">Claude Code session report</p>
     <h1>Session CC-20261005-7kcq</h1>
-    <p class="meta">3 changes logged &middot; generated 2026-10-06T01:59:18.809Z</p>
+    <p class="meta">4 changes logged &middot; generated 2026-10-06T02:13:09.928Z</p>
   </div>
 </header>
 <main>
@@ -147,6 +147,17 @@
 <div class="field"><div class="field-label">What changed</div><div class="field-value"><code>git revert ba31274</code> - <code>.colaberry/plan.json</code> back to the platform's 16-story, 18-requirement version (STORY-017/018, REQ-019/020 and the &quot;operations manager&quot; role removed; r3 back to STORY-009/010/016). <code>tests/commandCenter.test.js</code>: a data-model store may now cite a story that is in the plan OR has a <code>docs/stories/</code> file, since two stores were built by STORY-017/018.</div></div>
 <div class="field"><div class="field-label">Verification</div><div class="field-value">committed <code>plan.json</code> hashes to 91c6c6b5...e1df3a, exactly the sha256 the platform recorded for it in <code>manifest.json</code>, so syncs should refresh it again; <code>npm test</code> 134/134.</div></div>
 <div class="field"><div class="field-label">Notes</div><div class="field-value">Operator decision. STORY-017/018 code, tests, story docs and commits are untouched - they still need to be added in the portal to verify. <code>ba31274</code> carried no Session ID and had no PROGRESS.md entry; by timing (19:09, two minutes after CC-20261005-sh14's last commit) it was most likely that session, unconfirmed.</div></div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">04</span>
+    <h2>STORY-017 and STORY-018: tick their criteria now that they are in the platform plan (no code change)</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-10-05</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value">the operator added STORY-017 and STORY-018 in the portal (sync 3b9b796 / 7df620d, REQ-019 and REQ-020); <code>.colaberry/progress.json</code> - all 6 criteria set true with per-criterion <code>evidence</code>, files_touched, tests_added and notes; <code>docs/stories/STORY-017.md</code> and <code>STORY-018.md</code> boxes ticked.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value"><code>npm test</code> 134/134. Per criterion: <code>packages.test.js</code> &quot;an advisor combines two products into one priced offering&quot;, &quot;overlapping products are refused with a message that names the days&quot;, &quot;the creation is in the audit trail, readable through the API&quot;; <code>opsBookings.test.js</code> &quot;CRITERION 1 - a new booking is on the board with its status&quot;, &quot;CRITERION 2 - the saved status is reflected on the dashboard&quot;, &quot;every status change is in the trail, not only the first&quot;.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">Code shipped earlier in 025868e (STORY-017) and 4ad1ea9 (STORY-018). The portal titles carry a &quot;STORY-0nn: &quot; prefix (typed into the title field) - cosmetic, left as the platform wrote it.</div></div>
 </article>
   </div>
 </main>
