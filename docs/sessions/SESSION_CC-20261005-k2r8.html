@@ -110,7 +110,7 @@
   <div class="wrap">
     <p class="eyebrow">Claude Code session report</p>
     <h1>Session CC-20261005-k2r8</h1>
-    <p class="meta">1 change logged &middot; generated 2026-10-06T00:58:06.219Z</p>
+    <p class="meta">2 changes logged &middot; generated 2026-10-06T01:03:20.207Z</p>
   </div>
 </header>
 <main>
@@ -125,6 +125,17 @@
 <div class="field"><div class="field-label">What changed</div><div class="field-value">NEW <code>backend/src/services/analytics/</code> - <code>revenueAnalytics.js</code> (pure: monthly revenue + booking trend from CRM booking-log rows, empty months kept as zero, incomplete rows excluded and named per field -&gt; <code>partial</code>, duplicate tripIds / mixed currencies -&gt; <code>mismatch</code> with revenue withheld, empty log -&gt; <code>no_data</code> not $0) and <code>analyticsService.js</code> (reads the log, audits EVERY generation incl. failures keyed on the request correlation id, returns no figures if the audit write fails). NEW <code>http/routes/analyticsRoutes.js</code>: <code>GET /api/analytics/revenue</code> behind new <code>analytics.read</code> (admin + finance), 503 with a stable code and message on <code>source_unavailable</code> / <code>audit_unavailable</code>. REFACTOR: <code>authz/permissions.js</code> split - the permission vocabulary moved verbatim to <code>authz/permissionCatalog.js</code> (554 -&gt; ~375 lines, back under the 500 ceiling), re-exported so no caller changed; the STORY-011 follow-up.</div></div>
 <div class="field"><div class="field-label">Verification</div><div class="field-value"><code>npm run verify</code> green - 133/133 tests (was 130), mypy clean. AC1: a real <code>bookTrip</code> booking appears in the trend over HTTP for admin and finance (<code>http/analytics.test.js</code>) and hand-computed monthly figures in <code>revenueAnalytics.test.js</code>. AC2: incomplete rows listed as <code>{recordId, fields}</code> with status <code>partial</code>, through the pure module and the service. AC3: audit entry asserted per generation (success, partial, mismatch, source failure), retry with same correlation id = one entry, audit failure = no figures. Access: customer/advisor/sales 403, anonymous 401.</div></div>
 <div class="field"><div class="field-label">Notes</div><div class="field-value">(1) Revenue = booked revenue from the booking log; refunds and cancellations are not subtracted (separate stories). (2) Months bucketed in UTC. (3) No new role: &quot;manager&quot; mapped to admin + finance, approved by the operator; the <code>permissions.js</code> split was folded into this commit rather than committed alone, also with operator agreement. (4) No frontend exists in this repo - the dashboard is a JSON endpoint, matching STORY-018. (5) <code>verification.state</code> in <code>progress.json</code> left for the platform. NOT VERIFIED BY CI: results are local.</div></div>
+</article>
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">02</span>
+    <h2>STORY-012 follow-up: analytics read by a separate manager role and finance, not admin</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-10-05</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value"><code>authz/permissions.js</code> - new <code>manager</code> role holding only <code>analytics.read</code> + <code>portal.session.end</code>; <code>analytics.read</code> removed from admin (finance keeps it). <code>authz/permissions.test.js</code> - <code>manager</code> added to the hand-written role list, new assertion block (manager holds exactly those two, finance holds analytics.read, admin and every other role do not). <code>http/analytics.test.js</code> - manager and finance get 200, admin now 403 alongside customer/advisor/sales.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value"><code>npm run verify</code> green - 133/133, mypy clean; &quot;permissions: analytics are read by the manager and finance alone&quot; and &quot;analytics http: admin and other roles get 403&quot; both run.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">Operator decision. Why not admin: admin reads the audit trail, which records every analytics run, so running the numbers and reviewing who ran them stay with different people - same reasoning that split out finance and operations_manager. <code>auth.js</code> validates tokens against the same role table, so <code>manager</code> tokens work with no other change.</div></div>
 </article>
   </div>
 </main>
