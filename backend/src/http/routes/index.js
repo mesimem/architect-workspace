@@ -23,6 +23,7 @@ const { suggestionRoutes } = require("./suggestionRoutes");
 const { opsBookingRoutes } = require("./opsBookingRoutes");
 const { paymentRoutes } = require("./paymentRoutes");
 const { analyticsRoutes } = require("./analyticsRoutes");
+const { marketingRoutes } = require("./marketingRoutes");
 const { healthRoutes } = require("./healthRoutes");
 
 const ROUTES = [].concat(
@@ -59,7 +60,10 @@ const ROUTES = [].concat(
   opsBookingRoutes,
   paymentRoutes,
   // STORY-012. Reads what bookings produce; /api/analytics overlaps nothing.
-  analyticsRoutes
+  analyticsRoutes,
+  // STORY-019. Segments are rules over the CRM's customers; /api/marketing
+  // overlaps nothing else here.
+  marketingRoutes
 );
 
 module.exports = { ROUTES };

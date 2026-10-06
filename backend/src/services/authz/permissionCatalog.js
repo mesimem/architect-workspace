@@ -197,6 +197,14 @@ const PERMISSIONS = Object.freeze({
   // a single booking nor a single balance - only aggregates - and a future
   // reporting integration should be able to hold this without either of those.
   ANALYTICS_READ: "analytics.read",
+
+  // Marketing (STORY-019). READ lists segments and who is in them; WRITE
+  // defines a segment, records a customer's contact preference, and sends a
+  // campaign. Split because sending email to customers is the action with
+  // consequences, and a reporting integration should be able to see segments
+  // without being able to mail anyone.
+  MARKETING_READ: "marketing.read",
+  MARKETING_WRITE: "marketing.write",
 });
 
 const ALL_PERMISSIONS = Object.freeze(Object.values(PERMISSIONS));

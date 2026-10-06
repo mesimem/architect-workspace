@@ -24,8 +24,8 @@ the same criteria out of `.colaberry/progress.json`, which Claude Code keeps in
 step (see the managed block in CLAUDE.md). Ticking something you have not
 actually met only misleads you.
 
-- [ ] Given customers with booking history, when a sales manager defines a segment, then the system lists the customers who match it.
-- [ ] Given a campaign is sent to a segment, when a customer has opted out or a send fails, then the system skips that customer and reports why.
-- [ ] Trust: The system logs every campaign send in the audit trail, and re-sending a campaign never emails the same customer twice.
+- [x] Given customers with booking history, when a sales manager defines a segment, then the system lists the customers who match it.
+- [x] Given a campaign is sent to a segment, when a customer has opted out or a send fails, then the system skips that customer and reports why.
+- [x] Trust: The system logs every campaign send in the audit trail, and re-sending a campaign never emails the same customer twice.
 
 When every box above is ticked, stop and show the demo.

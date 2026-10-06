@@ -980,21 +980,40 @@
       "criteria": [
         {
           "text": "Given customers with booking history, when a sales manager defines a segment, then the system lists the customers who match it.",
-          "passed": false
+          "passed": true,
+          "evidence": "backend/src/http/marketing.test.js \"a sales manager defines a segment and sees who matches\" (POST /api/marketing/segments {minBookings:2} over real bookings returns exactly the two repeat customers; GET reads the same members back); segmentRules.test.js covers each criterion, boundaries and refusals"
         },
         {
           "text": "Given a campaign is sent to a segment, when a customer has opted out or a send fails, then the system skips that customer and reports why.",
-          "passed": false
+          "passed": true,
+          "evidence": "marketing.test.js \"a campaign emails the segment and skips the opted-out customer, saying why\" (report.skipped = [[customer, opted_out]], outbox holds only the consenting address); campaignSender.test.js \"opted-out, address-less and failed recipients are skipped with a reason\" (opted_out, no_email_on_file, send_failed + errorClass)"
         },
         {
           "text": "Trust: The system logs every campaign send in the audit trail, and re-sending a campaign never emails the same customer twice.",
-          "passed": false
+          "passed": true,
+          "evidence": "marketing.test.js \"re-sending the campaign never emails the same customer twice, and is audited\" (send audited with actor and correlation id; second and third sends: outbox still 1, already_sent skip audited once); campaignSender.test.js \"every send and skip is audited, without addresses\" and \"re-sending emails only customers not yet reached\""
         }
       ],
-      "files_touched": [],
-      "tests_added": [],
-      "notes": null,
-      "updated_at": null,
+      "files_touched": [
+        "backend/src/services/marketing/segmentRules.js",
+        "backend/src/services/marketing/segmentStore.js",
+        "backend/src/services/marketing/contactPreferences.js",
+        "backend/src/services/marketing/mailClient.js",
+        "backend/src/services/marketing/campaignSender.js",
+        "backend/src/http/routes/marketingRoutes.js",
+        "backend/src/http/routes/index.js",
+        "backend/src/services/authz/permissionCatalog.js",
+        "backend/src/services/authz/permissions.js",
+        "command-center/data-model.json"
+      ],
+      "tests_added": [
+        "backend/src/services/marketing/segmentRules.test.js",
+        "backend/src/services/marketing/campaignSender.test.js",
+        "backend/src/http/marketing.test.js",
+        "backend/src/services/authz/permissions.test.js"
+      ],
+      "notes": "Built 2026-10-05 (CC-20261005-7kcq). Five routes under /api/marketing behind new marketing.read / marketing.write, granted to sales only. A segment stores its rule (minBookings, minLifetimeValueCents, lastBookedAfter/Before), never its members: members are computed from the CRM booking log on every read. No email address existed anywhere in the build, so contact preferences (address + opt-out, audited, opt-out wins) are recorded per customer; a customer with none is skipped as no_email_on_file. NO REAL EMAIL IS SENT: the mail client is an in-memory outbox behind COLABERRY_MAIL_API_TOKEN, timeout and capped retry, same pattern as the accounting client; unconfigured mail refuses the campaign (503) before anything is sent. Never-twice: a send is recorded under campaignId:customerId and checked first, and the same key is the transport idempotency key; failed sends are not recorded, so a re-send retries them. Every send and skip is audited, addresses never are. Known limits: no unsubscribe link or customer-facing opt-out route, no scheduling, single-process dedup (needs a DB unique constraint). The portal linked this story to a new REQ-021 rather than REQ-016, so REQ-016 still shows as uncovered until the plan is changed in the portal.",
+      "updated_at": "2026-10-06T02:26:45.879Z",
       "verification": null
     }
   ]

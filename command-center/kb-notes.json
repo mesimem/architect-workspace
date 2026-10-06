@@ -13,7 +13,7 @@
       "date": "2026-10-05",
       "kind": "decision",
       "title": "The data model is read from the backend, not designed on paper",
-      "body": "The Data model tab lists the 16 durable stores the backend actually writes, with the fields seen in code. They are keyed JSON stores today, not SQL tables.",
+      "body": "The Data model tab lists every durable store the backend actually writes, with the fields seen in code. They are keyed JSON stores today, not SQL tables.",
       "evidence": "command-center/data-model.json"
     },
     {

@@ -207,6 +207,12 @@ const ROLE_PERMISSIONS = Object.freeze({
     PERMISSIONS.CRM_LEADS_WRITE,
     PERMISSIONS.CRM_CUSTOMERS_READ,
     PERMISSIONS.CATALOG_READ,
+    // STORY-019: "as a sales manager, I want to send email campaigns to
+    // segments of customers". Marketing reaches the same customers
+    // CRM_CUSTOMERS_READ already shows this role, so it widens what sales can
+    // DO with its book, not whose data it can see.
+    PERMISSIONS.MARKETING_READ,
+    PERMISSIONS.MARKETING_WRITE,
     // Ending your own session is not a privilege - same reasoning as advisor.
     PERMISSIONS.PORTAL_SESSION_END,
   ]),

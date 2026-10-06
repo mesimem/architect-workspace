@@ -185,6 +185,18 @@ function main() {
   assert.strictEqual(can("sales", PERMISSIONS.PORTAL_TRIPS_READ), false);
   console.log("permissions: the CRM is reachable by sales alone, and sales reaches nothing else");
 
+  // STORY-019: marketing belongs to sales alone. Written out per role for the
+  // reason given above the CRM block: a loop over ROLES would pass silently
+  // the day a new role is added holding these grants.
+  assert.strictEqual(can("sales", PERMISSIONS.MARKETING_READ), true);
+  assert.strictEqual(can("sales", PERMISSIONS.MARKETING_WRITE), true);
+  for (const permission of [PERMISSIONS.MARKETING_READ, PERMISSIONS.MARKETING_WRITE]) {
+    for (const role of ["customer", "advisor", "admin", "product_manager", "operations_manager", "finance", "manager"]) {
+      assert.strictEqual(can(role, permission), false, role + " must not hold " + permission);
+    }
+  }
+  console.log("permissions: marketing is reachable by sales alone");
+
   // STORY-015: the product grants, stated as blast radius. The read/write split
   // is the whole point of having two permissions, so it is asserted rather than
   // described: an advisor sells from the book, a product manager authors it.
