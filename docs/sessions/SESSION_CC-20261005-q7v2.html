@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session CC-20261005-q7v2 — Change Report</title>
+<style>
+  :root {
+    --cherry: #FB2832;
+    --berry: #367895;
+    --leaf: #5BA63C;
+    --ink: #16202a;
+    --muted: #5c6b7a;
+    --rule: #dfe5ea;
+    --surface: #ffffff;
+    --canvas: #f4f6f8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: Roboto, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    line-height: 1.6;
+  }
+  code {
+    font-family: "Roboto Mono", ui-monospace, Consolas, "Courier New", monospace;
+    font-size: 0.9em;
+    background: #eef2f5;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.05em 0.35em;
+    word-break: break-word;
+  }
+  header.masthead {
+    background: var(--surface);
+    border-bottom: 3px solid var(--cherry);
+    padding: 2rem 1.5rem 1.5rem;
+  }
+  .wrap { max-width: 60rem; margin: 0 auto; }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--berry);
+    margin: 0 0 0.35rem;
+  }
+  h1 { font-size: 1.7rem; margin: 0 0 0.5rem; font-weight: 700; letter-spacing: -0.01em; }
+  .meta { color: var(--muted); font-size: 0.88rem; margin: 0; }
+  main { padding: 1.75rem 1.5rem 3rem; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--berry);
+    border-radius: 4px;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1.1rem;
+  }
+  .card-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    padding-bottom: 0.7rem;
+    margin-bottom: 0.9rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .card-index {
+    font-family: "Roboto Mono", ui-monospace, Consolas, monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    flex: none;
+  }
+  .card-head h2 { font-size: 1.06rem; margin: 0; font-weight: 600; flex: 1 1 auto; }
+  .badge {
+    flex: none;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .badge-done { background: #eaf5e4; color: #3d7327; border: 1px solid var(--leaf); }
+  .badge-open { background: #fdf1e3; color: #8a5810; border: 1px solid #E8920C; }
+  .field { display: grid; grid-template-columns: 9.5rem 1fr; gap: 1rem; padding: 0.4rem 0; }
+  .field + .field { border-top: 1px dotted var(--rule); }
+  .field-label {
+    font-size: 0.73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    padding-top: 0.2rem;
+  }
+  .field-value { font-size: 0.93rem; overflow-wrap: anywhere; }
+  footer { color: var(--muted); font-size: 0.8rem; padding: 0 1.5rem 2.5rem; }
+  @media (max-width: 40rem) {
+    .field { grid-template-columns: 1fr; gap: 0.15rem; }
+  }
+  @media print {
+    body { background: #fff; }
+    .card { break-inside: avoid; border-left-color: #999; }
+  }
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Claude Code session report</p>
+    <h1>Session CC-20261005-q7v2</h1>
+    <p class="meta">1 change logged &middot; generated 2026-10-06T00:32:14.789Z</p>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+<article class="card">
+  <header class="card-head">
+    <span class="card-index">01</span>
+    <h2>STORY-011: process customer payments and track balances</h2>
+    <span class="badge badge-done">Complete</span>
+  </header>
+<div class="field"><div class="field-label">Date</div><div class="field-value">2026-10-05</div></div>
+<div class="field"><div class="field-label">What changed</div><div class="field-value">NEW <code>backend/src/services/payments/</code> - <code>balanceLedger.js</code> (pure: balance = total - succeeded payments, derived on every read, never stored; amount validation incl. over-balance, fractional cents, $100k ceiling), <code>paymentAccountStore.js</code> (one durable account per customer+trip on <code>jsonFileStore</code>; open is idempotent and audited as <code>payments.account.opened</code>, a changed total is a 409 conflict; payments keyed on <code>paymentId</code>, a success is final, a failure may be superseded by a retry; every write read back), <code>customerPaymentService.js</code> (ownership -&gt; already-charged check against account AND audit log -&gt; validate -&gt; charge via STORY-001 mock processor with 10s timeout and ONE attempt -&gt; STORY-004 <code>transactionRecorder</code> audits every attempt and posts successes to accounting -&gt; record on account). NEW <code>backend/src/http/routes/paymentRoutes.js</code> (4 routes), registered in <code>routes/index.js</code>. EDITED <code>authz/permissions.js</code> (+<code>portal.payments.read/write</code> for customer, +<code>payments.accounts.read/write</code> and a new <code>finance</code> role; additive only) and <code>permissions.test.js</code>.</div></div>
+<div class="field"><div class="field-label">Verification</div><div class="field-value"><code>npm run verify</code> green - 130/130 tests (was 129), mypy clean. AC1: pay 150000 of 500000, balance read back as 350000 via <code>GET /api/portal/payments</code> and the finance read. AC2: <code>CUST-DECLINED</code> gets 402 + message + <code>retryable: true</code>, retry 402 again, balance unchanged; approved-on-retry proven with an injected processor in <code>customerPaymentService.test.js</code>. TRUST: <code>GET /api/admin/audit</code> shows 1 success + 2 failure <code>transaction.processed</code> entries, the <code>accounting.post</code>, and the account opening. Failure paths: processor timeout (502, one attempt, audited), store write throws / does not land (503 <code>balance_not_updated</code>; retry completes WITHOUT a second charge - processor call count asserted 1), restart durability in a second process. Authz: other customer 404, no token 401, wrong role 403 on all four routes.</div></div>
+<div class="field"><div class="field-label">Notes</div><div class="field-value">(1) Balance is per payment account, not per booking - <code>bookTripService</code> charges in full at booking, so bookings never carry a balance; booking path untouched. (2) The charge is never auto-retried: a timeout does not prove nothing was charged; the customer retries with the same <code>paymentId</code>, and a deterministic <code>PMT-&lt;sha256&gt;</code> idempotency key is passed to the processor. Known gap: a real charge that times out AND an audit write failing at the same moment relies on the processor honouring that key. (3) FOLLOW-UP / CEILING BREACH: <code>permissions.js</code> is 554 lines (526 before this story, already over the 500 hard ceiling); splitting the role table into <code>rolePermissions.js</code> was not done here to keep scope - needs its own change. (4) <code>progress.json</code> <code>verification.state</code> left for the platform to set on sync. NOT VERIFIED BY CI: results are local.</div></div>
+</article>
+  </div>
+</main>
+<footer>
+  <div class="wrap">
+    Generated from PROGRESS.md by scripts/generateSessionChangelog.js. Only entries
+    tagged <code>Session: CC-20261005-q7v2</code> appear here.
+  </div>
+</footer>
+</body>
+</html>
