@@ -77,6 +77,8 @@ assert.strictEqual(CCData.phaseOf(s, model.releases, '2000-01-01').kind, 'before
 assert.strictEqual(CCData.phaseOf(s, model.releases, s.demo_day).kind, 'demo_prep');
 assert.strictEqual(CCData.phaseOf(s, model.releases, '2099-01-01').kind, 'after');
 assert.strictEqual(CCData.phaseOf({}, [], '2026-01-01').kind, 'between', 'empty schedule does not throw');
+const overlapping = [{ key: 'r0', startsOn: '2026-10-01', endsOn: '2026-10-01' }, { key: 'r1', startsOn: '2026-10-01', endsOn: '2026-10-01' }];
+assert.strictEqual(CCData.phaseOf({}, overlapping, '2026-10-01').release.key, 'r0', 'overlapping releases: the earliest wins');
 console.log('commandCenter: phase of the term derived from the schedule');
 
 // ---- Sample mode is labelled and never touches the real model ------

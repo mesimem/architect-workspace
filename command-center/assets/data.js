@@ -205,7 +205,9 @@ var CCData = (function () {
     var current = null, next = null;
     releases.forEach(function (r) {
       if (!r.startsOn || !r.endsOn) return;
-      if (todayISO >= r.startsOn && todayISO <= r.endsOn) current = r;
+      // First match wins: releases can overlap (a rescheduled plan once put
+      // all five on one day), and the earliest is the one being worked on.
+      if (!current && todayISO >= r.startsOn && todayISO <= r.endsOn) current = r;
       if (!next && todayISO < r.startsOn) next = r;
     });
     if (current) return { kind: "release", release: current };
