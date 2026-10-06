@@ -156,6 +156,12 @@ The system must let an operations manager centralize all bookings and manage the
 
 Fulfilled by: STORY-018
 
+### REQ-021 — Functional · should
+
+The system must let a sales manager send email campaigns to segments of customers.
+
+Fulfilled by: STORY-019
+
 ## Supplier Management
 
 ### REQ-012 — Functional · must

@@ -26,5 +26,6 @@ none, because it is context rather than work.
 | REQ-018 | Non-functional | must | STORY-016 |
 | REQ-019 | Functional | should | STORY-017 |
 | REQ-020 | Functional | should | STORY-018 |
+| REQ-021 | Functional | should | STORY-019 |
 
 ✅ Every must-have requirement is fulfilled by at least one story.

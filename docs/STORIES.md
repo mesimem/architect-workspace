@@ -1,6 +1,6 @@
 # U.S.-based Full-Service Travel Agency Platform — Stories
 
-18 stories across 5 releases, walking-skeleton first:
+19 stories across 5 releases, walking-skeleton first:
 the earliest release proves the thinnest end-to-end path including the trust
 spine, and later releases stack features on top of something already working.
 
@@ -60,3 +60,4 @@ system rather than a part of it.
 
 - **[STORY-011](stories/STORY-011.md)** — Process customer payments and track balances _(waits on STORY-009)_
 - **[STORY-012](stories/STORY-012.md)** — Provide analytics on revenue and bookings _(waits on STORY-009)_
+- **[STORY-019](stories/STORY-019.md)** — STORY-019: Run email campaigns to customer segments

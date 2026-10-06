@@ -2,14 +2,14 @@
   "schema_version": 2,
   "project": "U.S.-based Full-Service Travel Agency Platform",
   "totals": {
-    "stories_total": 19,
-    "stories_verified": 17,
+    "stories_total": 20,
+    "stories_verified": 19,
     "stories_submitted": 0,
     "stories_in_progress": 0,
-    "stories_not_started": 2,
-    "criteria_total": 53,
-    "criteria_passed": 53,
-    "points_awarded": 799
+    "stories_not_started": 1,
+    "criteria_total": 62,
+    "criteria_passed": 59,
+    "points_awarded": 883
   },
   "stories": [
     {
@@ -912,14 +912,14 @@
       "notes": "Built 2026-10-01 (commit 025868e); the story only entered the platform plan on 2026-10-05, so its criteria are ticked now against the shipped code (CC-20261005-7kcq). POST/PATCH /api/packages behind packages.read/write; components are referenced by productId, the price is a derived snapshot; incompatibility (overlapping days, cross-country with no gap, duplicate component) is checked before price; every create, edit and refusal is audited, and an audit failure rolls the write back. Known limits: one component kind (safari products), no package booking, no delete route.",
       "updated_at": "2026-10-06T02:11:43.306Z",
       "verification": {
-        "state": "not_started",
-        "criteria_passed": 0,
-        "criteria_total": 0,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
+        "state": "verified",
+        "criteria_passed": 3,
+        "criteria_total": 3,
+        "verified_at": "2026-10-06T02:13:02.015Z",
+        "commit_sha": "025868eabce091788bb49d89de6a0baf6cee396a",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/025868eabce091788bb49d89de6a0baf6cee396a",
+        "commit_at": "2026-10-01T23:07:07Z",
+        "points_awarded": 42,
         "outstanding": []
       }
     },
@@ -962,16 +962,40 @@
       "notes": "Built 2026-10-05 (commit 4ad1ea9); the story entered the platform plan later that day, so its criteria are ticked now against the shipped code (CC-20261005-7kcq). GET /api/ops/bookings, GET /api/ops/bookings/:tripId and PATCH /api/ops/bookings/:tripId/status for a new operations_manager role. The board reads the crm-transactions ledger live; status is a versioned overlay (booking-statuses) so every change gets its own audit entry. Known limits: no query-string filters on the route, single-trip bookings are not durable across restarts (pre-existing).",
       "updated_at": "2026-10-06T02:11:43.307Z",
       "verification": {
-        "state": "not_started",
-        "criteria_passed": 0,
-        "criteria_total": 0,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
+        "state": "verified",
+        "criteria_passed": 3,
+        "criteria_total": 3,
+        "verified_at": "2026-10-06T02:13:02.059Z",
+        "commit_sha": "4ad1ea98bd8df015705d57eba81feb34c313df94",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/4ad1ea98bd8df015705d57eba81feb34c313df94",
+        "commit_at": "2026-10-05T23:50:42Z",
+        "points_awarded": 42,
         "outstanding": []
       }
+    },
+    {
+      "id": "STORY-019",
+      "release": "r4",
+      "acceptance_total": 3,
+      "criteria": [
+        {
+          "text": "Given customers with booking history, when a sales manager defines a segment, then the system lists the customers who match it.",
+          "passed": false
+        },
+        {
+          "text": "Given a campaign is sent to a segment, when a customer has opted out or a send fails, then the system skips that customer and reports why.",
+          "passed": false
+        },
+        {
+          "text": "Trust: The system logs every campaign send in the audit trail, and re-sending a campaign never emails the same customer twice.",
+          "passed": false
+        }
+      ],
+      "files_touched": [],
+      "tests_added": [],
+      "notes": null,
+      "updated_at": null,
+      "verification": null
     }
   ]
 }

@@ -200,6 +200,16 @@
       "fulfilled_by": [
         "STORY-018"
       ]
+    },
+    {
+      "id": "REQ-021",
+      "kind": "FUNC",
+      "cluster": "Student Additions",
+      "priority": "should",
+      "statement": "The system must let a sales manager send email campaigns to segments of customers.",
+      "fulfilled_by": [
+        "STORY-019"
+      ]
     }
   ],
   "releases": [
@@ -280,9 +290,10 @@
       "week_start": 5,
       "story_ids": [
         "STORY-011",
-        "STORY-012"
+        "STORY-012",
+        "STORY-019"
       ],
-      "starts_on": "2026-09-24",
+      "starts_on": "2026-09-22",
       "ends_on": "2026-10-01",
       "is_demo_target": false
     }
@@ -564,7 +575,7 @@
         "Transaction not logged"
       ],
       "task_guidance": "Implement payment processing and balance tracking with integration to accounting software.",
-      "due_on": "2026-09-24",
+      "due_on": "2026-09-22",
       "due_baseline_on": "2026-09-24"
     },
     {
@@ -590,7 +601,7 @@
         "Dashboard error"
       ],
       "task_guidance": "Develop analytics dashboard for revenue and booking data visualization.",
-      "due_on": "2026-10-01",
+      "due_on": "2026-09-26",
       "due_baseline_on": "2026-08-23"
     },
     {
@@ -734,6 +745,25 @@
       "task_guidance": "Implement exactly what the acceptance lines describe for this story, and nothing that belongs to another one.",
       "due_on": "2026-09-17",
       "due_baseline_on": "2026-09-21"
+    },
+    {
+      "id": "STORY-019",
+      "title": "STORY-019: Run email campaigns to customer segments",
+      "release": "r4",
+      "fulfills": [
+        "REQ-021"
+      ],
+      "narrative": "As a sales manager, I want to send email campaigns to segments of customers, so that I can market trips to the right people.",
+      "acceptance": [
+        "Given customers with booking history, when a sales manager defines a segment, then the system lists the customers who match it.",
+        "Given a campaign is sent to a segment, when a customer has opted out or a send fails, then the system skips that customer and reports why.",
+        "Trust: The system logs every campaign send in the audit trail, and re-sending a campaign never emails the same customer twice."
+      ],
+      "owner_agent": "Travel Advisor",
+      "failure_paths": [],
+      "task_guidance": "Implement exactly what the acceptance lines describe for this story, and nothing that belongs to another one.",
+      "due_on": "2026-10-01",
+      "due_baseline_on": "2026-10-01"
     }
   ],
   "agents": [],
@@ -741,8 +771,8 @@
     "name": "U.S.-based Full-Service Travel Agency Platform",
     "descriptor": "A platform specializing in African travel, offering a comprehensive range of travel services and AI-assisted features.",
     "repo_url": "https://github.com/mesimem/architect-workspace",
-    "plan_version": 4,
-    "plan_sha256": "677b38dbd45f063ae937120a2870c1a72336c47e27682230e50ed17884ca50f4"
+    "plan_version": 5,
+    "plan_sha256": "6c2b03662d9537f9a2f9e03d73e283da852586555decdab390812666e4eb826d"
   },
   "schedule": {
     "build_start": "2026-08-20",
@@ -817,14 +847,14 @@
       "operations manager"
     ],
     "counts": {
-      "requirements_total": 20,
+      "requirements_total": 21,
       "requirements_by_kind": {
         "CONSTRAINT": 1,
-        "FUNC": 15,
+        "FUNC": 16,
         "NFR": 1,
         "SAFE": 3
       },
-      "stories_total": 18,
+      "stories_total": 19,
       "releases_total": 5,
       "agents_total": 0,
       "failure_paths_total": 45,

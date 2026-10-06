@@ -123,13 +123,13 @@ A Gantt view of your releases, and under it every task with its due date. Tasks 
 - **r1** Customer Portal and Security — 3 stories
 - **r2** Quotation and Group Travel — 4 stories
 - **r3** AI Assistance and Supplier Management — 5 stories
-- **r4** Payments and Analytics — 2 stories
+- **r4** Payments and Analytics — 3 stories
 
 ### 7. AI agents
 Source: `plan.agents[]` — one card each, with `name`, `purpose`, `trigger_type`, `trigger`, `inputs`, `outputs`, `autonomy_level`, `approval_gates`, `escalation_rules`, `skills` and `owns` (the story ids it owns, which you join back to the plan and the progress file). `plan.derived.counts.agents_by_autonomy` gives you the roster breakdown without counting them yourself.
 What is NOT there: whether any agent has ever run. There is no run history, no last-run time and no success rate in these files, because none of that exists until you build the agent and it starts running. Show the design, and show "no runs recorded" — never a zero success rate, which reads as an agent that ran and failed.
 Your plan does not carry a scoped agent roster yet, so build this tab from who owns each story:
-- **Travel Advisor** — owns STORY-001, STORY-002, STORY-003, STORY-007, STORY-008, STORY-010, STORY-017, STORY-018
+- **Travel Advisor** — owns STORY-001, STORY-002, STORY-003, STORY-007, STORY-008, STORY-010, STORY-017, STORY-018, STORY-019
 - **Development Team** — owns STORY-004, STORY-013, STORY-014, STORY-015, STORY-016
 - **Customer Support** — owns STORY-005
 - **System Administrator** — owns STORY-006
@@ -189,6 +189,7 @@ Your full set, so the Command Center can show all of it:
 - **REQ-018** (NFR, must) — The system must support scalability to accommodate multiple advisors and thousands of customers.
 - **REQ-019** (FUNC, should) — The system must let a travel advisor combine multiple travel products into one package.
 - **REQ-020** (FUNC, should) — The system must let an operations manager centralize all bookings and manage their statuses.
+- **REQ-021** (FUNC, should) — The system must let a sales manager send email campaigns to segments of customers.
 
 ## Your stories, in build order
 **r0 · Initial MVP**
@@ -214,6 +215,7 @@ Your full set, so the Command Center can show all of it:
 **r4 · Payments and Analytics**
 - STORY-011 — Process customer payments and track balances
 - STORY-012 — Provide analytics on revenue and bookings
+- STORY-019 — STORY-019: Run email campaigns to customer segments
 
 ## Done means — these exact lines
 These are the acceptance criteria the platform checks. They go into `.colaberry/progress.json` **word for word** — they are matched by text, so a reworded line does not count.
