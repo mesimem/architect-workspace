@@ -28,6 +28,8 @@
 //   operations_manager - delivery: the booking board, and moving each booking
 //                     along its lifecycle. NOT the CRM, NOT authoring products,
 //                     NOT the audit trail that records what they did.
+//   finance         - payment accounts: opens what a customer owes, reads
+//                     balances. NOT paying on a customer's behalf (STORY-011).
 //
 // STORY-015 added `product_manager` for the same reason STORY-014 added
 // `sales`, and against the same alternative. Giving the product grants to
@@ -252,6 +254,17 @@ const PERMISSIONS = Object.freeze({
   // customer's booking history is what they have actually paid for. The second
   // is the more sensitive of the two and does not come free with the first.
   CRM_CUSTOMERS_READ: "crm.customers.read",
+
+  // Payments (STORY-011). The customer's side: read and pay down THEIR OWN
+  // balances - ownership is enforced per account in customerPaymentService.
+  // Split because paying moves money and reading does not.
+  PORTAL_PAYMENTS_READ: "portal.payments.read",
+  PORTAL_PAYMENTS_WRITE: "portal.payments.write",
+  // The finance side: open an account for what a customer owes, and read any
+  // account. Separate from the portal grants because these reach every
+  // customer's balance, not one's own.
+  PAYMENTS_ACCOUNTS_READ: "payments.accounts.read",
+  PAYMENTS_ACCOUNTS_WRITE: "payments.accounts.write",
 });
 
 const ALL_PERMISSIONS = Object.freeze(Object.values(PERMISSIONS));
@@ -273,6 +286,9 @@ const ROLE_PERMISSIONS = Object.freeze({
     // their own preferences, and REQ-011 exists to serve them - so if any role
     // holds it, this one must.
     PERMISSIONS.SUGGESTIONS_REQUEST,
+    // STORY-011: their own balances, and paying them.
+    PERMISSIONS.PORTAL_PAYMENTS_READ,
+    PERMISSIONS.PORTAL_PAYMENTS_WRITE,
   ]),
 
   advisor: Object.freeze([
@@ -448,6 +464,18 @@ const ROLE_PERMISSIONS = Object.freeze({
     // The destinations those products visit, for the same reason.
     PERMISSIONS.CATALOG_READ,
     // Ending your own session is not a privilege - same reasoning as advisor.
+    PERMISSIONS.PORTAL_SESSION_END,
+  ]),
+
+  // STORY-011. The Finance Manager the story names: opens payment accounts and
+  // reads balances across customers. A seventh role rather than a grant on
+  // admin, for the reason given for operations_manager - admin reads the audit
+  // trail that records what finance did. Deliberately absent: ADMIN_*, CRM_*,
+  // and PORTAL_PAYMENTS_WRITE - finance opens what is owed, it never pays on a
+  // customer's behalf.
+  finance: Object.freeze([
+    PERMISSIONS.PAYMENTS_ACCOUNTS_READ,
+    PERMISSIONS.PAYMENTS_ACCOUNTS_WRITE,
     PERMISSIONS.PORTAL_SESSION_END,
   ]),
 });

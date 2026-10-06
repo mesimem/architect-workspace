@@ -128,6 +128,7 @@ function main() {
     "admin",
     "advisor",
     "customer",
+    "finance",
     "operations_manager",
     "product_manager",
     "sales",
@@ -337,6 +338,42 @@ function main() {
   assert.strictEqual(can("operations_manager", PERMISSIONS.ADVISOR_REVIEWS_READ), false);
   assert.strictEqual(can("operations_manager", PERMISSIONS.PORTAL_TRIPS_READ), false);
   console.log("permissions: the booking board is reachable by the operations manager alone");
+
+  // STORY-011: payments. A customer reads and pays their own balance; finance
+  // opens accounts and reads any of them. Each negative is a boundary a later
+  // story could erase by accident.
+  assert.strictEqual(can("customer", PERMISSIONS.PORTAL_PAYMENTS_READ), true);
+  assert.strictEqual(can("customer", PERMISSIONS.PORTAL_PAYMENTS_WRITE), true);
+  assert.strictEqual(
+    can("customer", PERMISSIONS.PAYMENTS_ACCOUNTS_WRITE),
+    false,
+    "a customer must not open or change what they owe"
+  );
+  assert.strictEqual(can("customer", PERMISSIONS.PAYMENTS_ACCOUNTS_READ), false);
+  assert.strictEqual(can("finance", PERMISSIONS.PAYMENTS_ACCOUNTS_READ), true);
+  assert.strictEqual(can("finance", PERMISSIONS.PAYMENTS_ACCOUNTS_WRITE), true);
+  assert.strictEqual(
+    can("finance", PERMISSIONS.PORTAL_PAYMENTS_WRITE),
+    false,
+    "finance opens what is owed but must not pay on a customer's behalf"
+  );
+  assert.strictEqual(
+    can("finance", PERMISSIONS.ADMIN_AUDIT_READ),
+    false,
+    "finance must not read the trail that records what they did"
+  );
+  assert.strictEqual(can("finance", PERMISSIONS.CRM_CUSTOMERS_READ), false);
+  for (const role of ["advisor", "admin", "sales", "product_manager", "operations_manager"]) {
+    for (const permission of [
+      PERMISSIONS.PORTAL_PAYMENTS_READ,
+      PERMISSIONS.PORTAL_PAYMENTS_WRITE,
+      PERMISSIONS.PAYMENTS_ACCOUNTS_READ,
+      PERMISSIONS.PAYMENTS_ACCOUNTS_WRITE,
+    ]) {
+      assert.strictEqual(can(role, permission), false, role + " must not hold " + permission);
+    }
+  }
+  console.log("permissions: payments reach the customer (own) and finance alone");
 
   console.log("permissions: all tests passed");
 }

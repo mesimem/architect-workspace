@@ -559,21 +559,36 @@
       "criteria": [
         {
           "text": "Given a payment is made, when processed, then the system updates the balance.",
-          "passed": false
+          "passed": true
         },
         {
           "text": "Given a payment fails, when retried, then the system processes it again or shows an error.",
-          "passed": false
+          "passed": true
         },
         {
           "text": "Trust: The system logs all payment transactions.",
-          "passed": false
+          "passed": true
         }
       ],
-      "files_touched": [],
-      "tests_added": [],
-      "notes": null,
-      "updated_at": null,
+      "files_touched": [
+        "backend/src/services/payments/balanceLedger.js",
+        "backend/src/services/payments/paymentAccountStore.js",
+        "backend/src/services/payments/customerPaymentService.js",
+        "backend/src/http/routes/paymentRoutes.js",
+        "backend/src/http/routes/index.js",
+        "backend/src/services/authz/permissions.js",
+        "backend/src/services/authz/permissions.test.js",
+        "docs/stories/STORY-011.md"
+      ],
+      "tests_added": [
+        "backend/src/services/payments/balanceLedger.test.js",
+        "backend/src/services/payments/paymentAccountStore.test.js",
+        "backend/src/services/payments/paymentAccountStore.durability.test.js",
+        "backend/src/services/payments/customerPaymentService.test.js",
+        "backend/src/http/payments.test.js"
+      ],
+      "notes": "Balance is per payment account (one per customer per trip, opened by the new finance role), because bookTripService charges the full price at booking and so never leaves a balance; the booking path is untouched. The balance is DERIVED from total minus succeeded payments on every read, never stored, so it cannot go stale. Payments reuse the STORY-001 mock processor and the STORY-004 transactionRecorder: every attempt is audited before anything else, only successes post to accounting. Retries are keyed on paymentId: a succeeded payment never charges again, and a charge whose balance write failed is found in the audit log on retry and finished without a second charge. The charge itself has a 10s timeout and is never auto-retried (a timeout does not prove nothing was charged). AC2 \"processes it again\" is proven with an injected processor in customerPaymentService.test.js; over HTTP the mock always declines CUST-DECLINED, so the HTTP test proves the \"shows an error\" half. Follow-up: permissions.js is 554 lines, over the 500-line ceiling (was 526 before this story); splitting the role table out is logged separately.",
+      "updated_at": "2026-10-06T00:31:44.671Z",
       "verification": {
         "state": "in_progress",
         "criteria_passed": 0,

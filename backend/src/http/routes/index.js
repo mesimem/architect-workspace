@@ -21,6 +21,7 @@ const { packageRoutes } = require("./packageRoutes");
 const { supplierRoutes } = require("./supplierRoutes");
 const { suggestionRoutes } = require("./suggestionRoutes");
 const { opsBookingRoutes } = require("./opsBookingRoutes");
+const { paymentRoutes } = require("./paymentRoutes");
 const { healthRoutes } = require("./healthRoutes");
 
 const ROUTES = [].concat(
@@ -54,7 +55,8 @@ const ROUTES = [].concat(
   // /api/admin/metrics, despite its permission being named ops.metrics.read).
   // They overlap nothing else here, so the position is readability, not
   // behaviour.
-  opsBookingRoutes
+  opsBookingRoutes,
+  paymentRoutes
 );
 
 module.exports = { ROUTES };
