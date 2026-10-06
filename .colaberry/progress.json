@@ -3,13 +3,13 @@
   "project": "U.S.-based Full-Service Travel Agency Platform",
   "totals": {
     "stories_total": 17,
-    "stories_verified": 16,
+    "stories_verified": 17,
     "stories_submitted": 0,
-    "stories_in_progress": 1,
+    "stories_in_progress": 0,
     "stories_not_started": 0,
     "criteria_total": 53,
-    "criteria_passed": 48,
-    "points_awarded": 752
+    "criteria_passed": 53,
+    "points_awarded": 799
   },
   "stories": [
     {
@@ -66,21 +66,15 @@
       "notes": "Repaired in place, not rebuilt: the August Overview (hand-typed data.js, 8 greyed-out tabs, no data-age stamp, stale Real-mode facts) now reads .colaberry/plan.json + progress.json + manifest.json at runtime. AC1: all 9 tabs are linked pages; every card is a link to a tab or to detail.html?type=&id=, and cards with nothing behind them open a page saying what will be there and what must happen first. AC2: Sample mode shows a SAMPLE banner on every page, a SAMPLE tag on every invented card, and (sample) in the invented text; Sample is derived from the real model and never mutates it. AC3: plan/progress tracked in git; no plan content in any page (a test greps every tab for the project name and id prefixes). Two project-authored files are also read at runtime: command-center/data-model.json (the 16 stores the backend actually creates, test-checked against createJsonFileStore calls) and command-center/kb-notes.json. AC4: manifest tracked; Data as of <date> (<age>) on every tab, red warning over 7 days, unknown if generated_at is missing. AC5: Real mode shows only file-derived facts - systems grey and not checked, agents tab says owners not agents with no runs recorded, stories absent from progress.json show Not checked yet rather than 0. KB chat is deterministic keyword matching over the model and cites the tab; outside the data it says it cannot answer. Needs HTTP to load (GitHub Pages, or python -m http.server); .nojekyll added so Pages serves .colaberry/. Pages itself not turned on (optional Step 4). Webhook (Step 1) skipped.",
       "updated_at": "2026-10-06T01:39:40.185Z",
       "verification": {
-        "state": "in_progress",
-        "criteria_passed": 0,
+        "state": "verified",
+        "criteria_passed": 5,
         "criteria_total": 5,
-        "verified_at": null,
-        "commit_sha": null,
-        "commit_url": null,
-        "commit_at": null,
-        "points_awarded": null,
-        "outstanding": [
-          "Given the Command Center, when it is opened, then every tab is reachable and every card drills down one level.",
-          "Given sample mode, when any tab is shown, then the sample data is visibly labelled as sample.",
-          "Given the Command Center, when any tab renders, then .colaberry/plan.json and .colaberry/progress.json are both committed in this repo and every tab reads its content from them at runtime rather than from hard-coded values.",
-          "Given the Command Center, when any tab is shown, then .colaberry/manifest.json is committed in this repo and every tab shows how old that data is and warns when the age exceeds a week.",
-          "Trust — no tab shows a number, a connection or a result the project has not actually produced."
-        ]
+        "verified_at": "2026-10-06T01:41:25.877Z",
+        "commit_sha": "733eb24f54246f4fdf3362cfb09b7d60d1a5042b",
+        "commit_url": "https://github.com/mesimem/architect-workspace/commit/733eb24f54246f4fdf3362cfb09b7d60d1a5042b",
+        "commit_at": "2026-10-06T01:41:03Z",
+        "points_awarded": 47,
+        "outstanding": []
       }
     },
     {
