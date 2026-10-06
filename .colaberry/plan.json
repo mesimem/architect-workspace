@@ -180,6 +180,26 @@
       "fulfilled_by": [
         "STORY-016"
       ]
+    },
+    {
+      "id": "REQ-019",
+      "kind": "FUNC",
+      "cluster": "Custom Trips",
+      "priority": "must",
+      "statement": "The system must allow advisors to combine multiple travel products into one package.",
+      "fulfilled_by": [
+        "STORY-017"
+      ]
+    },
+    {
+      "id": "REQ-020",
+      "kind": "FUNC",
+      "cluster": "Booking Services",
+      "priority": "must",
+      "statement": "The system must centralize all bookings and manage their statuses.",
+      "fulfilled_by": [
+        "STORY-018"
+      ]
     }
   ],
   "releases": [
@@ -243,7 +263,9 @@
       "story_ids": [
         "STORY-009",
         "STORY-010",
-        "STORY-016"
+        "STORY-016",
+        "STORY-017",
+        "STORY-018"
       ],
       "starts_on": "2026-09-12",
       "ends_on": "2026-09-17",
@@ -674,6 +696,58 @@
       "task_guidance": "Implement load balancing and performance monitoring to ensure system scalability.",
       "due_on": "2026-09-17",
       "due_baseline_on": "2026-09-17"
+    },
+    {
+      "id": "STORY-017",
+      "title": "Combine multiple travel products into one package",
+      "release": "r3",
+      "fulfills": [
+        "REQ-019"
+      ],
+      "narrative": "As a travel advisor, I want to combine multiple travel products into one package, so that I can offer comprehensive travel solutions.",
+      "acceptance": [
+        "Given an advisor selects multiple travel products, when they create a package, then the system combines them into a single offering.",
+        "Given an advisor tries to combine incompatible products, when they attempt to save, then the system displays an error message.",
+        "Trust: The system logs all package creation and modification details in the audit trail."
+      ],
+      "blocked_by": [
+        "STORY-015"
+      ],
+      "owner_agent": "Travel Advisor",
+      "failure_paths": [
+        "Incompatible products are combined into a package.",
+        "Package creation fails due to system error.",
+        "Unauthorized access to package creation."
+      ],
+      "task_guidance": "Develop functionality to combine travel products into packages. Ensure compatibility checks and seamless integration with booking systems.",
+      "due_on": "2026-09-17",
+      "due_baseline_on": "2026-09-17"
+    },
+    {
+      "id": "STORY-018",
+      "title": "Centralize all bookings and manage their statuses",
+      "release": "r3",
+      "fulfills": [
+        "REQ-020"
+      ],
+      "narrative": "As an operations manager, I want to centralize all bookings and manage their statuses, so that I can efficiently oversee operations.",
+      "acceptance": [
+        "Given a new booking is created, when the manager views the booking dashboard, then the system displays the booking with its current status.",
+        "Given a booking status is updated, when the manager saves the changes, then the system reflects the updated status in the dashboard.",
+        "Trust: The system logs all booking status changes in the audit trail."
+      ],
+      "blocked_by": [
+        "STORY-001"
+      ],
+      "owner_agent": "Operations Manager",
+      "failure_paths": [
+        "Booking status fails to update.",
+        "Dashboard fails to display new bookings.",
+        "Unauthorized access to booking management features."
+      ],
+      "task_guidance": "Implement a centralized booking dashboard to manage and update booking statuses. Ensure real-time updates and audit logging.",
+      "due_on": "2026-09-17",
+      "due_baseline_on": "2026-09-17"
     }
   ],
   "agents": [],
@@ -753,20 +827,21 @@
       "manager",
       "sales manager",
       "product manager",
-      "system architect"
+      "system architect",
+      "operations manager"
     ],
     "counts": {
-      "requirements_total": 18,
+      "requirements_total": 20,
       "requirements_by_kind": {
+        "FUNC": 15,
         "CONSTRAINT": 1,
-        "FUNC": 13,
-        "NFR": 1,
-        "SAFE": 3
+        "SAFE": 3,
+        "NFR": 1
       },
-      "stories_total": 16,
+      "stories_total": 18,
       "releases_total": 5,
       "agents_total": 0,
-      "failure_paths_total": 45,
+      "failure_paths_total": 54,
       "agents_by_autonomy": {}
     }
   }
