@@ -32,11 +32,14 @@
 //      idempotencyKey. A confirmed booking replays; a failed one re-runs.
 //   4. Handled vs not handled. HANDLED: missing/malformed key, blank
 //      customer, unavailable inventory, declined payment, exact replay, key
-//      reuse with different arguments. NOT HANDLED: concurrent calls racing
-//      on one key (single process, in-memory Maps — a real deployment needs
-//      a unique constraint in Postgres), partial supplier failure, refunds.
+//      reuse with different arguments, and (since 2026-10-05) a replay or a
+//      new booking after a restart - see tripIdFor and recoverBooking below.
+//      NOT HANDLED: concurrent calls racing on one key (single process — a
+//      real deployment needs a unique constraint in Postgres), partial
+//      supplier failure, refunds.
 
-const { logTransaction } = require("./crmTransactionLog");
+const crypto = require("crypto");
+const { logTransaction, findTransaction } = require("./crmTransactionLog");
 const { processPayment } = require("./paymentService");
 // STORY-003: an unavailable selection is handed to a travel advisor, who can
 // find the alternative the customer cannot. Declined payments and invalid
@@ -76,10 +79,40 @@ const BOOKINGS_BY_KEY = new Map();
 // booking.
 const FINGERPRINT_BY_KEY = new Map();
 
-let nextTripId = 1;
+// THE TRIP ID IS DERIVED FROM THE IDEMPOTENCY KEY (fixed 2026-10-05).
+// It used to be `TRIP-${nextTripId++}` from a per-process counter. With
+// COLABERRY_DATA_DIR set, the CRM log survives a restart but the counter did
+// not, so the first booking after a restart was issued TRIP-1 again, charged,
+// and then silently dropped by logTransaction (idempotent by tripId) - a paid
+// booking invisible to the CRM, the portal, analytics and the ops board.
+// Hashing the key makes the id the same on every run for the same booking and
+// different for different bookings, with nothing to remember across restarts -
+// the scheme group bookings already use (groupBookingWriteGuard.js). 64 bits
+// of SHA-256 makes an accidental collision between two keys negligible.
+function tripIdFor(idempotencyKey) {
+  return "TRIP-" + crypto.createHash("sha256").update(idempotencyKey).digest("hex").slice(0, 16).toUpperCase();
+}
 
 function fingerprintOf({ customerId, flightId, hotelId, safariId }) {
   return JSON.stringify([customerId, flightId, hotelId, safariId]);
+}
+
+// The in-memory replay map forgets everything on restart; the CRM log does
+// not. So a key the map does not know is looked up in the log by its derived
+// trip id, and a booking made before the restart is replayed instead of being
+// charged a second time. Returns the booking, CONFLICT, or null.
+const CONFLICT = Symbol("idempotency_conflict");
+function recoverBooking(idempotencyKey, fingerprint) {
+  const row = findTransaction(tripIdFor(idempotencyKey));
+  if (!row) return null;
+  const legs = row.legs || {};
+  const rowFingerprint = fingerprintOf({
+    customerId: row.customerId, flightId: legs.flightId, hotelId: legs.hotelId, safariId: legs.safariId,
+  });
+  if (rowFingerprint !== fingerprint) return CONFLICT;
+  BOOKINGS_BY_KEY.set(idempotencyKey, row);
+  FINGERPRINT_BY_KEY.set(idempotencyKey, fingerprint);
+  return row;
 }
 
 // The trip price is the sum of its legs. Only ever called after the
@@ -181,9 +214,9 @@ async function bookTrip({ customerId, flightId, hotelId, safariId, idempotencyKe
 
   // Checked FIRST, before any validation or side effect — the ordering the
   // blueprint's booking sequence diagram specifies.
-  const existing = BOOKINGS_BY_KEY.get(idempotencyKey);
+  const existing = BOOKINGS_BY_KEY.get(idempotencyKey) || recoverBooking(idempotencyKey, fingerprint);
   if (existing) {
-    if (FINGERPRINT_BY_KEY.get(idempotencyKey) !== fingerprint) {
+    if (existing === CONFLICT || FINGERPRINT_BY_KEY.get(idempotencyKey) !== fingerprint) {
       return {
         status: "idempotency_conflict",
         message:
@@ -285,7 +318,7 @@ async function bookTrip({ customerId, flightId, hotelId, safariId, idempotencyKe
     };
   }
 
-  const tripId = `TRIP-${nextTripId++}`;
+  const tripId = tripIdFor(idempotencyKey);
   const booking = {
     tripId,
     customerId,

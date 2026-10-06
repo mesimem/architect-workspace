@@ -21,4 +21,10 @@ function getLoggedTransactions() {
   return Array.from(TRANSACTIONS.values());
 }
 
-module.exports = { logTransaction, getLoggedTransactions };
+// One row by tripId, or null. bookTripService uses it to recognise a booking
+// it made before a restart, which its in-memory replay map has forgotten.
+function findTransaction(tripId) {
+  return (typeof tripId === "string" && TRANSACTIONS.get(tripId)) || null;
+}
+
+module.exports = { logTransaction, getLoggedTransactions, findTransaction };

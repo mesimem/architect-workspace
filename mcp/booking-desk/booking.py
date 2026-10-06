@@ -41,6 +41,7 @@ Failure-first notes (CLAUDE.md requires these in writing):
 from __future__ import annotations
 
 import copy
+import hashlib
 import time
 from collections.abc import Callable
 
@@ -61,7 +62,13 @@ _BOOKINGS_BY_KEY: dict[str, dict] = {}
 _FINGERPRINT_BY_KEY: dict[str, tuple] = {}
 _TRANSACTION_LOG: list[dict] = []
 
-_next_trip_number = 1
+
+def trip_id_for(idempotency_key: str) -> str:
+    """Trip id derived from the idempotency key, matching tripIdFor() in
+    bookTripService.js (changed there 2026-10-05). The JS used a per-process
+    counter that reissued TRIP-1 after a restart; a hash of the key is the
+    same for the same booking on every run and needs nothing remembered."""
+    return "TRIP-" + hashlib.sha256(idempotency_key.encode("utf-8")).hexdigest()[:16].upper()
 
 
 # An observer for the two supplier boundaries below, called as
@@ -107,8 +114,6 @@ def book_trip(
     optional and defaults to a no-op, so this function's behaviour and return
     value are identical whether or not anyone is listening.
     """
-    global _next_trip_number
-
     observe = emit or _no_emit
 
     fingerprint = (customer_id, flight_id, hotel_id, safari_id)
@@ -189,12 +194,11 @@ def book_trip(
 
     booking = {
         "status": "confirmed",
-        "trip_id": f"TRIP-{_next_trip_number}",
+        "trip_id": trip_id_for(idempotency_key),
         "customer_id": customer_id,
         "legs": {"flight_id": flight_id, "hotel_id": hotel_id, "safari_id": safari_id},
         "message": None,
     }
-    _next_trip_number += 1
 
     _BOOKINGS_BY_KEY[idempotency_key] = booking
     _FINGERPRINT_BY_KEY[idempotency_key] = fingerprint
