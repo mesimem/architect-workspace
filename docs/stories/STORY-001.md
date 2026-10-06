@@ -27,8 +27,8 @@ the same criteria out of `.colaberry/progress.json`, which Claude Code keeps in
 step (see the managed block in CLAUDE.md). Ticking something you have not
 actually met only misleads you.
 
-- [ ] Given a customer selects a flight, hotel, and safari, when they proceed to checkout, then the system confirms the booking as one trip.
-- [ ] Given a customer selects unavailable dates, when they try to book, then the system shows an error message.
-- [ ] Trust: The system logs the booking transaction in the CRM.
+- [x] Given a customer selects a flight, hotel, and safari, when they proceed to checkout, then the system confirms the booking as one trip.
+- [x] Given a customer selects unavailable dates, when they try to book, then the system shows an error message.
+- [x] Trust: The system logs the booking transaction in the CRM.
 
 When every box above is ticked, stop and show the demo.

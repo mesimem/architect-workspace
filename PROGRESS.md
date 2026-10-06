@@ -466,3 +466,10 @@
   - What changed: `authz/permissions.js` - new `manager` role holding only `analytics.read` + `portal.session.end`; `analytics.read` removed from admin (finance keeps it). `authz/permissions.test.js` - `manager` added to the hand-written role list, new assertion block (manager holds exactly those two, finance holds analytics.read, admin and every other role do not). `http/analytics.test.js` - manager and finance get 200, admin now 403 alongside customer/advisor/sales.
   - Verification: `npm run verify` green - 133/133, mypy clean; "permissions: analytics are read by the manager and finance alone" and "analytics http: admin and other roles get 403" both run.
   - Notes: Operator decision. Why not admin: admin reads the audit trail, which records every analytics run, so running the numbers and reviewing who ran them stay with different people - same reasoning that split out finance and operations_manager. `auth.js` validates tokens against the same role table, so `manager` tokens work with no other change.
+
+- [x] STORY-001: close out the full-trip booking story (criteria ticked, no code change)
+  - Date: 2026-10-05
+  - Session: CC-20261005-7kcq
+  - What changed: `.colaberry/progress.json` STORY-001 entry - all 3 criteria set true, files_touched / tests_added / notes filled in; `docs/stories/STORY-001.md` acceptance boxes ticked. The code itself (`bookTripService.js`, `crmTransactionLog.js`, `paymentService.js`) was built in session CC-20260828-b4k2 and is unchanged.
+  - Verification: `npm test` 133/133 pass; `bookTripService.test.js` asserts AC1 (one confirmed trip carrying all three legs), AC2 (unavailable selection -> status `unavailable` + "One or more selections are not available.", no tripId) and AC3 (CRM transaction log written once per trip).
+  - Notes: The story sat at 0/3 because the criteria were never ticked and no commit carried a `Story: STORY-001` trailer the platform accepted - not because work was missing. `verification.state` left for the platform to set on sync.

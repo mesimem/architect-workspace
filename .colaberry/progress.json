@@ -67,21 +67,27 @@
       "criteria": [
         {
           "text": "Given a customer selects a flight, hotel, and safari, when they proceed to checkout, then the system confirms the booking as one trip.",
-          "passed": false
+          "passed": true
         },
         {
           "text": "Given a customer selects unavailable dates, when they try to book, then the system shows an error message.",
-          "passed": false
+          "passed": true
         },
         {
           "text": "Trust: The system logs the booking transaction in the CRM.",
-          "passed": false
+          "passed": true
         }
       ],
-      "files_touched": [],
-      "tests_added": [],
-      "notes": null,
-      "updated_at": null,
+      "files_touched": [
+        "backend/src/services/booking/bookTripService.js",
+        "backend/src/services/booking/crmTransactionLog.js",
+        "backend/src/services/booking/paymentService.js"
+      ],
+      "tests_added": [
+        "backend/src/services/booking/bookTripService.test.js"
+      ],
+      "notes": "Built in August (CC-20260828-b4k2, commit 423ed0b) and never ticked; checked against the code on 2026-10-05 (CC-20261005-7kcq), no code change needed. AC1: flight+hotel+safari confirm as ONE trip (one tripId, legs {flightId,hotelId,safariId}, status confirmed). AC2: an unavailable selection returns status unavailable with the message \"One or more selections are not available.\" and creates no trip (it is also routed to an advisor, STORY-003). AC3: every confirmed booking is written once to the CRM transaction log (crmTransactionLog.js, idempotent by tripId, durable when COLABERRY_DATA_DIR is set). Failure paths also covered: declined payment, invalid customer, missing/malformed idempotency key, key reuse with different arguments. Known limits: inventory is an in-memory stand-in and the confirmed-bookings Map is per-process (the CRM log row is the durable trace).",
+      "updated_at": "2026-10-06T01:17:51.590Z",
       "verification": {
         "state": "in_progress",
         "criteria_passed": 0,
